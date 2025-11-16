@@ -71,18 +71,8 @@ Follow these instructions to get a copy of the project up and running on your lo
     npm install
     ```
 
-3.  **Set up environment variables:**
 
-    The application requires an API key for the Google Gemini API. This key is used for the AI-powered contact form and image generation features.
-
-    - Create a `.env` file in the root of the project.
-    - Add your API key to the file:
-      ```
-      API_KEY=your_google_gemini_api_key_here
-      ```
-    - You can obtain a key from the [Google AI Studio](https://aistudio.google.com/).
-
-4.  **Run the development server:**
+3.  **Run the development server:**
     ```bash
     npm run dev
     ```
@@ -114,25 +104,6 @@ src/
 └── index.tsx     # Application entry point
 ```
 
----
-
-## Credentials for Demo
-
-You can use the following credentials to test the application's authentication flows.
-
-### Student Access
-
--   **Email:** Use any valid email format (e.g., `student@example.com`).
--   **Password:** Use any password.
-
-### Admin Access
-
--   **Email:** `admin@sed.com`
--   **Password:** `adminpassword123`
-
-Navigate to `/login` and use these credentials to access the admin portal.
-
----
 
 ## 📜 License
 
