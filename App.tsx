@@ -13,12 +13,31 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardPage from './pages/DashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
+import ErrorBoundary from './components/ErrorBoundary';
+import ServicesPage from './pages/ServicesPage';
+import PartnersPage from './pages/PartnersPage';
+import ServiceDetailPage from './pages/ServiceDetailPage';
+import PartnerDetailPage from './pages/PartnerDetailPage';
+import ContactPage from './pages/ContactPage';
+// Admin Imports
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminPartnersPage from './pages/AdminPartnersPage';
+import AdminPartnerFormPage from './pages/AdminPartnerFormPage';
+import AdminServicesPage from './pages/AdminServicesPage';
+import AdminServiceFormPage from './pages/AdminServiceFormPage';
+import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
+import AdminCoursesPage from './pages/AdminCoursesPage';
+import AdminCourseFormPage from './pages/AdminCourseFormPage';
 
 const App: React.FC = () => {
   const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].includes(location.pathname);
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const showHeaderFooter = !isAuthPage && !isAdminPage;
 
   // Effect to handle scrolling when the page or hash changes
   useEffect(() => {
@@ -55,29 +74,129 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-white text-dark-gray font-inter">
-      {!isAuthPage && <Header />}
+      {showHeaderFooter && <Header />}
       <main>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/programs/:courseSlug" element={<CourseDetailPage />} />
-          <Route path="/programs" element={<ProgramsPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            {/* User-facing routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/programs/:courseSlug" element={<CourseDetailPage />} />
+            <Route path="/programs" element={<ProgramsPage />} />
+            <Route path="/services/:serviceSlug" element={<ServiceDetailPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/partners/:partnerSlug" element={<PartnerDetailPage />} />
+            <Route path="/partners" element={<PartnersPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Admin routes */}
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboardPage />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/partners" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminPartnersPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/partners/new" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminPartnerFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/partners/edit/:partnerSlug" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminPartnerFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/services" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminServicesPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/services/new" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminServiceFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/services/edit/:serviceSlug" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminServiceFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/submissions" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminSubmissionsPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/courses" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminCoursesPage />
+                </AdminProtectedRoute>
+              } 
+            />
+             <Route 
+              path="/admin/courses/new" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminCourseFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/courses/edit/:courseSlug" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminCourseFormPage />
+                </AdminProtectedRoute>
+              } 
+            />
+            
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
-      {!isAuthPage && <Footer />}
-      {showScrollTop && !isAuthPage && (
+      {showHeaderFooter && <Footer />}
+      {showScrollTop && showHeaderFooter && (
         <button
           onClick={scrollTop}
           className="fixed bottom-8 right-8 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 z-50"

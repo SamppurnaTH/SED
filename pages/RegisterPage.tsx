@@ -26,6 +26,11 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
+    if (email.toLowerCase() === 'admin@sed.com') {
+      setError('This email is reserved for administration and cannot be used for registration.');
+      return;
+    }
+
     // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import { useContactSubmissions } from '../contexts/ContactSubmissionsContext';
 
 const ContactForm: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const ContactForm: React.FC = () => {
     const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [responseMessage, setResponseMessage] = useState('');
     const [submittedName, setSubmittedName] = useState('');
+    const { addSubmission } = useContactSubmissions();
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -51,6 +53,12 @@ const ContactForm: React.FC = () => {
             });
 
             setResponseMessage(response.text);
+            addSubmission({
+                name: formData.name,
+                email: formData.email,
+                subject: formData.subject,
+                message: formData.message,
+            });
             setSubmissionStatus('success');
             setSubmittedName(formData.name);
             setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form

@@ -10,7 +10,7 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
   const saved = isCourseSaved(course.name);
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 transform flex flex-col border border-gray-100 relative overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 transform flex flex-col border border-gray-100 relative overflow-hidden">
       <div className="relative">
         <img
           src={course.imageUrl}
@@ -49,8 +49,13 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
             </li>
           ))}
         </ul>
-        <Link to={`/programs/${course.slug}`} className="mt-6 font-poppins font-bold text-primary self-start hover:underline" aria-label={`View details for ${course.name} program`}>
-          View Program &rarr;
+        <Link 
+          to={`/programs/${course.slug}`} 
+          className="group mt-6 inline-flex items-center font-poppins font-bold text-primary self-start hover:text-accent transition-colors duration-300" 
+          aria-label={`View details for ${course.name} program`}
+        >
+          <span className="group-hover:underline">View Program</span>
+          <span className="ml-2 transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
         </Link>
       </div>
     </div>

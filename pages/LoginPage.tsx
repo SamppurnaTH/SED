@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminAuth } from '../contexts/AdminAuthContext';
 import Logo from '../components/icons/Logo';
 import { EmailIcon, PasswordIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '../components/icons/AuthIcons';
 
@@ -9,28 +10,50 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [error, setError] = useState<string | React.ReactNode>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login: studentLogin } = useAuth();
+  const { login: adminLogin } = useAdminAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
+
     if (!email || !password) {
       setError('Please fill in both fields.');
+      setIsLoading(false);
       return;
     }
 
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        setError('Please enter a valid email address.');
-        return;
+    if (email.toLowerCase() === 'admin@sed.com') {
+      try {
+        const success = await adminLogin(email, password);
+        if (success) {
+          navigate('/admin/dashboard');
+        } else {
+          setError('Invalid admin credentials. Please try again.');
+        }
+      } catch (err) {
+        console.error("Admin login failed:", err);
+        setError('An unexpected error occurred during admin login.');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+          setError('Please enter a valid email address.');
+          setIsLoading(false);
+          return;
+      }
+      
+      console.log('Logging in student with:', { email, password });
+      studentLogin({ name: 'Demo User', email });
+      // No need to set loading to false, navigation is immediate
+      navigate('/');
     }
-
-    console.log('Logging in with:', { email, password });
-    login({ name: 'Demo User', email });
-    navigate('/');
   };
 
   return (
@@ -124,7 +147,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
         
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <div className="text-sm text-red-600 text-center">{error}</div>}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -149,9 +172,20 @@ const LoginPage: React.FC = () => {
         <div>
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+            disabled={isLoading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 disabled:bg-primary/70 disabled:cursor-not-allowed"
           >
-            Sign In
+            {isLoading ? (
+                <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </div>
       </form>
