@@ -1,7 +1,7 @@
 
 # SCHOLASTIC A EDU. DEPOT (SED) - Tech Training Academy
 
-![SED Tech Academy Homepage](https://storage.googleapis.com/aistudio-project-files/55a156e5-234b-4f59-9065-24836f6d140e/SCHOLASTIC%20A%20EDU.%20DEPOT.png)
+![SED Tech Academy Homepage](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop)
 
 This repository contains the source code for a modern, premium-quality web application for **SCHOLASTIC A EDU. DEPOT**, a fictional tech training academy that trains students for IT jobs through industry-focused courses, real-time projects, and placement support.
 
@@ -44,6 +44,7 @@ The application is split into two main sections: a feature-rich public-facing we
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **Routing:** [React Router](https://reactrouter.com/)
 - **State Management:** React Context API
+- **AI Integration:** [Google Gemini API](https://ai.google.dev/gemini-api)
 - **Build Tool:** [Vite](https://vitejs.dev/)
 
 ---
@@ -70,8 +71,18 @@ Follow these instructions to get a copy of the project up and running on your lo
     npm install
     ```
 
+3.  **Set up environment variables:**
 
-3.  **Run the development server:**
+    The application requires an API key for the Google Gemini API. This key is used for the AI-powered contact form and image generation features.
+
+    - Create a `.env` file in the root of the project.
+    - Add your API key to the file:
+      ```
+      API_KEY=your_google_gemini_api_key_here
+      ```
+    - You can obtain a key from the [Google AI Studio](https://aistudio.google.com/).
+
+4.  **Run the development server:**
     ```bash
     npm run dev
     ```
@@ -103,6 +114,25 @@ src/
 └── index.tsx     # Application entry point
 ```
 
+---
+
+## Credentials for Demo
+
+You can use the following credentials to test the application's authentication flows.
+
+### Student Access
+
+-   **Email:** Use any valid email format (e.g., `student@example.com`).
+-   **Password:** Use any password.
+
+### Admin Access
+
+-   **Email:** `admin@sed.com`
+-   **Password:** `adminpassword123`
+
+Navigate to `/login` and use these credentials to access the admin portal.
+
+---
 
 ## 📜 License
 
