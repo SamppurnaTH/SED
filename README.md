@@ -44,7 +44,6 @@ The application is split into two main sections: a feature-rich public-facing we
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 - **Routing:** [React Router](https://reactrouter.com/)
 - **State Management:** React Context API
-- **AI Integration:** [Google Gemini API](https://ai.google.dev/gemini-api)
 - **Build Tool:** [Vite](https://vitejs.dev/)
 
 ---
