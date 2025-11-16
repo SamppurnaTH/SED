@@ -272,9 +272,28 @@ const AdminCourseFormPage: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Slug validation
         if (!isEditing && courses.some(c => c.slug === formData.slug)) {
             alert('Error: This slug is already in use. Please choose a unique one.');
             return;
+        }
+
+        // Curriculum validation
+        for (const week of formData.curriculum) {
+            if (!week.title.trim()) {
+                alert(`Error: Week ${week.week} is missing a title.`);
+                return;
+            }
+            if (week.topics.length === 0 || week.topics.every(t => !t.trim())) {
+                alert(`Error: Week ${week.week} must have at least one topic.`);
+                return;
+            }
+             for (const topic of week.topics) {
+                if (!topic.trim()) {
+                    alert(`Error: Week ${week.week} has an empty topic. Please fill it in or remove it.`);
+                    return;
+                }
+            }
         }
 
         if (isEditing && courseSlug) {
@@ -311,9 +330,9 @@ const AdminCourseFormPage: React.FC = () => {
                     {isEditing ? `Editing "${formData.name}"` : 'Create New Course'}
                 </h2>
 
-                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md space-y-8">
+                <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-xl shadow-md space-y-8">
                     {/* Basic Info */}
-                    <fieldset className="space-y-4 border-b pb-6">
+                    <fieldset className="space-y-6 border-b pb-6">
                         <legend className="text-lg font-semibold text-primary">Basic Information</legend>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -333,7 +352,7 @@ const AdminCourseFormPage: React.FC = () => {
                             <label htmlFor="description" className="block text-sm font-medium text-dark-gray mb-1">Description</label>
                             <textarea name="description" value={formData.description} onChange={handleSimpleChange} rows={4} required className="w-full border border-gray-300 rounded-lg p-2"></textarea>
                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div>
                                 <label htmlFor="category" className="block text-sm font-medium text-dark-gray mb-1">Category</label>
                                 <select name="category" value={formData.category} onChange={handleSimpleChange} required className="w-full border border-gray-300 rounded-lg p-2">
@@ -347,38 +366,38 @@ const AdminCourseFormPage: React.FC = () => {
                                 <label htmlFor="duration" className="block text-sm font-medium text-dark-gray mb-1">Course Duration</label>
                                 <input type="text" name="duration" value={formData.duration} onChange={handleSimpleChange} required placeholder="e.g., 8 Weeks" className="w-full border border-gray-300 rounded-lg p-2"/>
                             </div>
-                             <div>
-                                <label htmlFor="courseImageUpload" className="block text-sm font-medium text-dark-gray mb-1">Course Image</label>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-full">
-                                        <input
-                                            id="courseImageUpload"
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => handleFileChange(e, 'imageUrl')}
-                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Upload an image or click "Generate".</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleGenerateImage}
-                                        disabled={isGeneratingImage || !formData.name}
-                                        className="bg-secondary text-primary font-poppins font-bold py-2 px-4 rounded-lg hover:bg-secondary/80 transition-all duration-300 shadow-sm whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px]"
-                                    >
-                                        {isGeneratingImage ? (
-                                            <>
-                                                <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            'Generate Image'
-                                        )}
-                                    </button>
+                        </div>
+                         <div>
+                            <label htmlFor="courseImageUpload" className="block text-sm font-medium text-dark-gray mb-1">Course Image</label>
+                            <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <div className="w-full">
+                                    <input
+                                        id="courseImageUpload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileChange(e, 'imageUrl')}
+                                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Upload an image (under 2MB) or click "Generate".</p>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateImage}
+                                    disabled={isGeneratingImage || !formData.name}
+                                    className="bg-secondary text-primary font-poppins font-bold py-2 px-4 rounded-lg hover:bg-secondary/80 transition-all duration-300 shadow-sm whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center min-w-[140px] w-full sm:w-auto"
+                                >
+                                    {isGeneratingImage ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        'Generate Image'
+                                    )}
+                                </button>
                             </div>
                         </div>
                          {formData.imageUrl && (
@@ -390,10 +409,10 @@ const AdminCourseFormPage: React.FC = () => {
                     </fieldset>
 
                     {/* Details */}
-                    <fieldset className="space-y-4 border-b pb-6">
+                    <fieldset className="space-y-6 border-b pb-6">
                         <legend className="text-lg font-semibold text-primary">Course Details</legend>
                         <div>
-                            <label htmlFor="points" className="block text-sm font-medium text-dark-gray mb-1">Short Points (comma-separated)</label>
+                            <label htmlFor="points" className="block text-sm font-medium text-dark-gray mb-1">Short Points (comma-separated, for cards)</label>
                             <input type="text" name="points" value={formData.points.join(', ')} onChange={handleArrayChange} required className="w-full border border-gray-300 rounded-lg p-2"/>
                         </div>
                         <div>
@@ -459,7 +478,7 @@ const AdminCourseFormPage: React.FC = () => {
                     </fieldset>
 
                     {/* Instructor */}
-                    <fieldset className="space-y-4 border-b pb-6">
+                    <fieldset className="space-y-6 border-b pb-6">
                          <legend className="text-lg font-semibold text-primary">Instructor</legend>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div>
@@ -494,7 +513,7 @@ const AdminCourseFormPage: React.FC = () => {
                     </fieldset>
                     
                      {/* Pricing */}
-                    <fieldset className="space-y-4 border-b pb-6">
+                    <fieldset className="space-y-6 border-b pb-6">
                          <legend className="text-lg font-semibold text-primary">Pricing</legend>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
