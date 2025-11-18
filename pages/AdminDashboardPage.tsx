@@ -1,4 +1,6 @@
 
+
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
@@ -7,6 +9,7 @@ import { usePartners } from '../contexts/PartnersContext';
 import { useServices } from '../contexts/ServicesContext';
 import { useContactSubmissions } from '../contexts/ContactSubmissionsContext';
 import { useCourses } from '../contexts/CoursesContext';
+import { VideoIcon, ContentCreationIcon, AnalyticsIcon, BlogIcon } from '../components/icons/AdminIcons';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; to?: string }> = ({ title, value, icon, to }) => {
     const content = (
@@ -30,7 +33,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.Re
 
 
 const AdminDashboardPage: React.FC = () => {
-    const { logout } = useAdminAuth();
+    const { logout, adminUser } = useAdminAuth();
     const { partners } = usePartners();
     const { services } = useServices();
     const { submissions } = useContactSubmissions();
@@ -44,6 +47,9 @@ const AdminDashboardPage: React.FC = () => {
     const courseCount = courses.length;
     const serviceCount = services.length;
     const leadCount = submissions.length;
+    
+    const dashboardTitle = adminUser?.role === 'marketing' ? 'Marketing Dashboard' : 'Admin Dashboard';
+
 
     return (
         <div className="min-h-screen bg-light-gray">
@@ -51,7 +57,7 @@ const AdminDashboardPage: React.FC = () => {
                 <div className="container mx-auto px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <Logo className="h-8 w-8 text-primary" />
-                        <h1 className="font-poppins font-bold text-xl text-dark-gray">Admin Dashboard</h1>
+                        <h1 className="font-poppins font-bold text-xl text-dark-gray">{dashboardTitle}</h1>
                     </div>
                     <button
                         onClick={handleLogout}
@@ -89,6 +95,33 @@ const AdminDashboardPage: React.FC = () => {
                         icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
                     />
                 </div>
+                <h2 className="text-2xl font-poppins font-semibold text-dark-gray mb-6 mt-12">Management & Tools</h2>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard
+                        title="Manage Blog"
+                        value="Posts"
+                        to="/admin/blog"
+                        icon={<BlogIcon className="h-6 w-6 text-primary" />}
+                    />
+                    <StatCard
+                        title="AI Content Generator"
+                        value="Draft"
+                        to="/admin/content-generator"
+                        icon={<ContentCreationIcon className="h-6 w-6 text-primary" />}
+                    />
+                    <StatCard
+                        title="Video Generation"
+                        value="Create"
+                        to="/admin/videos"
+                        icon={<VideoIcon className="h-6 w-6 text-primary" />}
+                    />
+                    <StatCard
+                        title="Advanced Analytics"
+                        value="View"
+                        to="/admin/analytics"
+                        icon={<AnalyticsIcon className="h-6 w-6 text-primary" />}
+                    />
+                 </div>
             </main>
         </div>
     );

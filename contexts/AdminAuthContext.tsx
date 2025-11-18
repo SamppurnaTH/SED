@@ -1,59 +1,89 @@
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../constants';
+
+interface AdminUser {
+  email: string;
+  role: 'admin' | 'marketing' | 'trainer';
+}
 
 interface AdminAuthContextType {
+  adminUser: AdminUser | null;
   isAdminAuthenticated: boolean;
-  login: (email: string, pass: string) => Promise<boolean>;
+  login: (email: string, pass: string) => Promise<AdminUser | null>;
   logout: () => void;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
     try {
-      return localStorage.getItem('isAdminAuthenticated') === 'true';
+      const userJson = localStorage.getItem('adminUser');
+      const token = localStorage.getItem('adminToken');
+      if (userJson && token) {
+        return JSON.parse(userJson);
+      }
+      return null;
     } catch (error) {
       console.error("Could not access localStorage:", error);
-      return false;
+      return null;
     }
   });
 
   const navigate = useNavigate();
 
-  // Hardcoded credentials for demo purposes
-  const ADMIN_EMAIL = 'admin@sed.com';
-  const ADMIN_PASSWORD = 'adminpassword123';
+  const login = async (email: string, pass: string): Promise<AdminUser | null> => {
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass }),
+        });
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
-    // Simulate network delay to feel like a real backend call
-    await new Promise(resolve => setTimeout(resolve, 500));
+        const data = await response.json();
 
-    if (email.toLowerCase() === ADMIN_EMAIL && pass === ADMIN_PASSWORD) {
-      try {
-        localStorage.setItem('isAdminAuthenticated', 'true');
-      } catch (error) {
-        console.error("Could not write to localStorage:", error);
-      }
-      setIsAdminAuthenticated(true);
-      return true;
+        if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+        }
+        
+        if (data.user.role === 'admin' || data.user.role === 'marketing' || data.user.role === 'trainer') {
+            const userToStore: AdminUser = data.user;
+            try {
+                localStorage.setItem('adminUser', JSON.stringify(userToStore));
+                localStorage.setItem('adminToken', data.token);
+            } catch (error) {
+                console.error("Could not write to localStorage:", error);
+            }
+            setAdminUser(userToStore);
+            return userToStore;
+        }
+
+        throw new Error('This login is for administrators only.');
+    } catch (error: any) {
+        if (error.message && error.message.includes('Failed to fetch')) {
+             throw new Error('Unable to connect to the server. Please ensure the backend is running.');
+        }
+        throw error;
     }
-    return false;
   };
 
   const logout = () => {
     try {
-      localStorage.removeItem('isAdminAuthenticated');
+      localStorage.removeItem('adminUser');
+      localStorage.removeItem('adminToken');
     } catch (error) {
       console.error("Could not remove from localStorage:", error);
     }
-    setIsAdminAuthenticated(false);
+    setAdminUser(null);
     navigate('/login');
   };
 
+  const isAdminAuthenticated = !!adminUser;
+
   return (
-    <AdminAuthContext.Provider value={{ isAdminAuthenticated, login, logout }}>
+    <AdminAuthContext.Provider value={{ adminUser, isAdminAuthenticated, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

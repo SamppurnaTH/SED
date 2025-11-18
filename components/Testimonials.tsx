@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { testimonials } from '../constants';
 
@@ -31,9 +32,9 @@ const Testimonials: React.FC = () => {
   };
 
   return (
-    <section id="testimonials" className="py-20 lg:py-28 bg-light-gray">
+    <section id="testimonials" className="py-20 lg:py-28 bg-secondary">
       <div className="container mx-auto px-6 text-center">
-        <h2 className="font-poppins font-bold text-3xl md:text-4xl text-dark-gray">
+        <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">
           What Our Students Say
         </h2>
         <div className="relative mt-12 max-w-3xl mx-auto h-96 md:h-80 overflow-hidden">
@@ -51,14 +52,14 @@ const Testimonials: React.FC = () => {
                   <img
                     src={testimonial.imageUrl}
                     alt={testimonial.name}
-                    className="w-24 h-24 rounded-full object-cover shadow-lg mb-6 border-4 border-white"
+                    className="w-24 h-24 rounded-full object-cover shadow-lg mb-6 border-4 border-secondary"
                     loading="lazy"
                     decoding="async"
                   />
-                  <blockquote className="text-xl md:text-2xl font-light text-dark-gray/90 italic max-w-2xl">
+                  <blockquote className="text-xl md:text-2xl font-light text-primary/90 italic max-w-2xl">
                     "{testimonial.quote}"
                   </blockquote>
-                  <p className="mt-6 font-poppins font-bold text-lg text-dark-gray">
+                  <p className="mt-6 font-poppins font-bold text-lg text-primary">
                     {testimonial.name}
                   </p>
                   <p className="text-primary font-medium">
@@ -75,7 +76,7 @@ const Testimonials: React.FC = () => {
               key={index}
               onClick={() => goToSlide(index)}
               className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                currentIndex === index ? 'bg-primary' : 'bg-gray-300 hover:bg-gray-400'
+                currentIndex === index ? 'bg-primary' : 'bg-primary/20 hover:bg-primary/40'
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
             ></button>

@@ -1,12 +1,27 @@
+
 // FIX: Removed incorrect import of 'FAQ' from './constants'. The 'FAQ' interface
 // is defined within this file, so the import was unnecessary and caused a
 // circular dependency.
+
+// Add Razorpay type definition
+declare global {
+  interface Window {
+    Razorpay: any;
+    // aistudio: any; // Restored for Veo - Removed to fix conflict with existing declaration
+  }
+}
 
 export interface Instructor {
   name: string;
   title: string;
   imageUrl: string;
   bio: string;
+}
+
+export interface Topic {
+  title: string;
+  videoUrl?: string;
+  content?: string;
 }
 
 export interface Course {
@@ -30,7 +45,7 @@ export interface Course {
   curriculum: {
     week: number;
     title: string;
-    topics: string[];
+    topics: Topic[];
   }[];
   projects: {
     title: string;
@@ -38,6 +53,7 @@ export interface Course {
     imageUrl: string;
   }[];
   faqs: FAQ[];
+  deadlines?: { date: string; task: string; }[];
 }
 
 
@@ -86,6 +102,21 @@ export interface Testimonial {
   imageUrl: string;
 }
 
+// FIX: Add BlogPost interface for blog-related data structures.
+export interface BlogPost {
+  slug: string;
+  title: string;
+  content: string;
+  imageUrl: string;
+  category: string;
+  tags: string[];
+  author: {
+    name: string;
+    imageUrl: string;
+  };
+  publishedDate: string; // ISO date string
+}
+
 // FIX: Add the FAQ interface to define the shape of FAQ objects.
 export interface FAQ {
   question: string;
@@ -107,4 +138,44 @@ export interface ContactSubmission {
   subject: string;
   message: string;
   submittedAt: string;
+}
+
+export interface GeneratedVideo {
+  video: {
+    uri: string;
+    aspectRatio: string;
+  };
+}
+
+export interface VideoGenerationResponse {
+  generatedVideos: GeneratedVideo[];
+}
+
+export interface VideoGenerationOperation {
+  name: string;
+  done: boolean;
+  response?: VideoGenerationResponse;
+  error?: any;
+}
+
+export interface Order {
+  course: Course;
+  orderId: string;
+  transactionDate: string;
+  paymentMethod: string;
+}
+
+export interface EnrolledCourseInfo {
+  courseSlug: string;
+  progress: number;
+  completedLessons?: string[]; // New field for LMS
+}
+
+// Moved from ToastContext to avoid circular dependencies
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface Toast {
+  id: string;
+  message: string;
+  type: ToastType;
 }

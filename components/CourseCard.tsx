@@ -10,7 +10,8 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
   const saved = isCourseSaved(course.name);
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 transform flex flex-col border border-gray-100 relative overflow-hidden">
+    <div className="group bg-secondary rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-300 transform flex flex-col h-full relative overflow-hidden border border-primary/10">
+      <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-accent transition-all duration-300 -z-10"></div>
       <div className="relative">
         <img
           src={course.imageUrl}
@@ -19,14 +20,14 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
           loading="lazy"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 
         <button
           onClick={() => toggleSaveCourse(course.name)}
           className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-300 z-10 ${
             saved
-              ? 'bg-primary/80 text-white scale-110 backdrop-blur-sm'
-              : 'bg-white/80 text-gray-600 hover:bg-white backdrop-blur-sm'
+              ? 'bg-accent/90 text-white scale-110 backdrop-blur-sm'
+              : 'bg-secondary/80 text-primary hover:bg-secondary backdrop-blur-sm'
           }`}
           aria-label={
             saved
@@ -40,8 +41,8 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
 
       <div className="p-6 flex flex-col flex-grow">
         <p className="font-semibold text-primary text-sm">{course.category}</p>
-        <h3 className="font-poppins font-bold text-xl mt-2 text-dark-gray">{course.name}</h3>
-        <ul className="mt-4 space-y-2 text-dark-gray/80 flex-grow">
+        <h3 className="font-poppins font-bold text-xl mt-2 text-text-primary">{course.name}</h3>
+        <ul className="mt-4 space-y-2 text-text-muted flex-grow">
           {course.points.map((point, index) => (
             <li key={index} className="flex items-start">
               <svg className="w-5 h-5 text-primary mr-2 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
@@ -51,11 +52,11 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
         </ul>
         <Link 
           to={`/programs/${course.slug}`} 
-          className="group mt-6 inline-flex items-center font-poppins font-bold text-primary self-start hover:text-accent transition-colors duration-300" 
+          className="group/link mt-6 inline-flex items-center font-poppins font-bold text-primary self-start hover:text-accent transition-colors duration-300" 
           aria-label={`View details for ${course.name} program`}
         >
-          <span className="group-hover:underline">View Program</span>
-          <span className="ml-2 transition-transform duration-300 group-hover:translate-x-1">&rarr;</span>
+          <span className="group-hover/link:underline">View Program</span>
+          <span className="ml-2 transition-transform duration-300 group-hover/link:translate-x-1">&rarr;</span>
         </Link>
       </div>
     </div>

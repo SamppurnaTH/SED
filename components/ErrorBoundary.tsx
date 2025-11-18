@@ -10,7 +10,13 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = { hasError: false };
+  // FIX: Refactored to use modern class property syntax for state initialization
+  // and an arrow function for the event handler. This approach is more concise
+  // and automatically handles 'this' binding, resolving the errors where component
+  // properties like 'state', 'setState', and 'props' were not being found.
+  state: State = {
+    hasError: false,
+  };
 
   public static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
@@ -21,12 +27,9 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  // FIX: The `handleRetry` method is converted to an arrow function to ensure `this` is correctly bound.
-  // When passed as a prop to a child component, a regular class method loses its `this` context, causing `this.setState` to fail.
-  // This also resolves the second error regarding `this.props` which was likely a cascading type issue from the incorrect `this` context.
   private handleRetry = () => {
     this.setState({ hasError: false });
-  }
+  };
 
   public render() {
     if (this.state.hasError) {

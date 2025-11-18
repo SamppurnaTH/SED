@@ -1,11 +1,18 @@
+
 import React from 'react';
 import ContactForm from '../components/ContactForm';
 import FAQ from '../components/FAQ';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon } from '../components/icons/contactIcons';
+import MetaTags from '../components/MetaTags';
 
 const ContactPage: React.FC = () => {
   return (
     <>
+      <MetaTags
+        title="Contact Us | SED Tech Academy"
+        description="We're here to help. Reach out to us with any questions or inquiries, and we'll get back to you as soon as possible."
+      />
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-light-gray to-white pt-32 pb-20 lg:pt-48 lg:pb-28 text-center overflow-hidden">
         <div className="absolute top-0 right-0 -z-0 transform translate-x-1/2 -translate-y-1/2">
@@ -66,7 +73,7 @@ const ContactPage: React.FC = () => {
             </div>
 
             {/* Right Column: Contact Form */}
-            <div className="bg-dark-gray text-white p-8 md:p-12 rounded-2xl shadow-lg">
+            <div className="bg-primary text-white p-8 md:p-12 rounded-2xl shadow-lg">
                 <ContactForm />
             </div>
           </div>

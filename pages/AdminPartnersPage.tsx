@@ -6,7 +6,7 @@ import { usePartners } from '../contexts/PartnersContext';
 import Logo from '../components/icons/Logo';
 
 const AdminPartnersPage: React.FC = () => {
-    const { logout } = useAdminAuth();
+    const { logout, adminUser } = useAdminAuth();
     const { partners, deletePartner } = usePartners();
     const navigate = useNavigate();
 
@@ -20,6 +20,9 @@ const AdminPartnersPage: React.FC = () => {
             deletePartner(slug);
         }
     }
+    
+    const dashboardName = adminUser?.role === 'marketing' ? 'Marketing Dashboard' : 'Admin Dashboard';
+
 
     return (
         <div className="min-h-screen bg-light-gray">
@@ -29,7 +32,7 @@ const AdminPartnersPage: React.FC = () => {
                         <Logo className="h-8 w-8 text-primary" />
                          <nav aria-label="breadcrumb">
                           <ol className="flex items-center space-x-2 text-sm">
-                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">Dashboard</Link></li>
+                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">{dashboardName}</Link></li>
                             <li><span className="text-dark-gray/50">/</span></li>
                             <li><span className="font-semibold text-dark-gray">Manage Partners</span></li>
                           </ol>
@@ -71,7 +74,7 @@ const AdminPartnersPage: React.FC = () => {
                                 {partners.length > 0 ? partners.map(partner => (
                                     <tr key={partner.slug} className="bg-white border-b hover:bg-primary/5">
                                         <td className="px-6 py-4">
-                                            <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-10 w-auto object-contain" />
+                                            <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-10 w-auto object-contain" loading="lazy" decoding="async" />
                                         </td>
                                         <th scope="row" className="px-6 py-4 font-bold whitespace-nowrap">
                                             {partner.name}

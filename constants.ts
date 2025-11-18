@@ -1,5 +1,16 @@
-// FIX: Import the FAQ type to be used for the new faqs constant.
-import { Course, Partner, NavLink, Feature, TeamMember, CoreValue, Testimonial, FAQ, Service } from './types';
+
+// FIX: Import the BlogPost type to be used for the new blogPosts constant.
+import { Course, Partner, NavLink, Feature, TeamMember, CoreValue, Testimonial, FAQ, Service, BlogPost } from './types';
+
+export const API_URL = 'http://localhost:3001/api';
+
+// Helper to convert string array to Topic array matching the Course interface
+// Updated to include videoUrl and content for rich LMS experience in static/demo mode
+const toTopics = (topics: string[]) => topics.map(title => ({ 
+  title,
+  videoUrl: 'https://www.youtube.com/watch?v=9bZkp7q19f0', // Placeholder video (Psy - Gangnam Style as a generic tech placeholder or replace with specific tech talks)
+  content: `### ${title}\n\nIn this lesson, we explore the fundamentals of **${title}**. \n\nKey takeaways include understanding the core syntax, best practices, and real-world applications. Practice by writing your own code snippets and reviewing the documentation.\n\n#### Learning Outcomes:\n- Understand ${title} concepts\n- Apply techniques in project\n- Debug common issues`
+}));
 
 export const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
@@ -64,14 +75,14 @@ export const courses: Course[] = [
       inclusions: ['Lifetime access to course materials', 'Dedicated placement support', 'Certificate of Completion', '1:1 with industry mentors']
     },
     curriculum: [
-      { week: 1, title: 'Frontend Foundations: HTML, CSS & Git', topics: ['Semantic HTML5', 'Advanced CSS, Flexbox, Grid', 'Responsive Design', 'Version Control with Git & GitHub'] },
-      { week: 2, title: 'JavaScript Fundamentals', topics: ['Data Types & Variables', 'Functions & Scope', 'DOM Manipulation', 'ES6+ Features (Arrow Functions, Promises)'] },
-      { week: 3, title: 'Deep Dive into React', topics: ['Components, Props & State', 'React Hooks (useState, useEffect)', 'React Router for SPAs', 'State Management with Context API'] },
-      { week: 4, title: 'Backend Development with Node.js & Express', topics: ['Building RESTful APIs', 'Middleware & Routing', 'Asynchronous JavaScript (Async/Await)', 'Connecting to Databases'] },
-      { week: 5, title: 'Database Management with MongoDB', topics: ['NoSQL Concepts', 'CRUD Operations with Mongoose', 'Data Modeling & Schemas', 'Database Indexing & Aggregation'] },
-      { week: 6, title: 'Full Stack Integration & Authentication', topics: ['Connecting React Frontend to Express Backend', 'JWT-based Authentication', 'Password Hashing', 'Protected Routes'] },
-      { week: 7, title: 'Advanced Topics & Deployment', topics: ['WebSockets for Real-time Apps', 'Testing (Unit & Integration)', 'Deployment to Vercel/Heroku', 'CI/CD Basics'] },
-      { week: 8, title: 'Capstone Project', topics: ['Project Planning & Architecture', 'Building a Full-Fledged MERN App', 'Code Reviews & Refactoring', 'Final Presentation'] }
+      { week: 1, title: 'Frontend Foundations: HTML, CSS & Git', topics: toTopics(['Semantic HTML5', 'Advanced CSS, Flexbox, Grid', 'Responsive Design', 'Version Control with Git & GitHub']) },
+      { week: 2, title: 'JavaScript Fundamentals', topics: toTopics(['Data Types & Variables', 'Functions & Scope', 'DOM Manipulation', 'ES6+ Features (Arrow Functions, Promises)']) },
+      { week: 3, title: 'Deep Dive into React', topics: toTopics(['Components, Props & State', 'React Hooks (useState, useEffect)', 'React Router for SPAs', 'State Management with Context API']) },
+      { week: 4, title: 'Backend Development with Node.js & Express', topics: toTopics(['Building RESTful APIs', 'Middleware & Routing', 'Asynchronous JavaScript (Async/Await)', 'Connecting to Databases']) },
+      { week: 5, title: 'Database Management with MongoDB', topics: toTopics(['NoSQL Concepts', 'CRUD Operations with Mongoose', 'Data Modeling & Schemas', 'Database Indexing & Aggregation']) },
+      { week: 6, title: 'Full Stack Integration & Authentication', topics: toTopics(['Connecting React Frontend to Express Backend', 'JWT-based Authentication', 'Password Hashing', 'Protected Routes']) },
+      { week: 7, title: 'Advanced Topics & Deployment', topics: toTopics(['WebSockets for Real-time Apps', 'Testing (Unit & Integration)', 'Deployment to Vercel/Heroku', 'CI/CD Basics']) },
+      { week: 8, title: 'Capstone Project', topics: toTopics(['Project Planning & Architecture', 'Building a Full-Fledged MERN App', 'Code Reviews & Refactoring', 'Final Presentation']) }
     ],
     projects: [
       { title: 'E-commerce Platform', description: 'Build a complete e-commerce site with product listings, a shopping cart, user authentication, and an admin panel for product management.', imageUrl: 'https://images.unsplash.com/photo-1522204523234-8729aa6e3d5f?q=80&w=2070&auto=format&fit=crop' },
@@ -86,6 +97,11 @@ export const courses: Course[] = [
         question: "What kind of placement support can I expect?",
         answer: "We provide comprehensive placement support including resume building, mock interviews, and access to our network of over 300 hiring partners to help you land your dream job."
       }
+    ],
+    deadlines: [
+      { date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), task: 'Submit Project 1: Portfolio Website' },
+      { date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), task: 'Mid-term Quiz' },
+      { date: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(), task: 'Submit Final Capstone Project' },
     ]
   },
   {
@@ -118,20 +134,24 @@ export const courses: Course[] = [
       inclusions: ['Lifetime access to course materials', 'Dedicated placement support', 'Certificate of Completion', 'Cloud credits for projects']
     },
     curriculum: [
-        { week: 1, title: 'Data Engineering Fundamentals & Python', topics: ['Introduction to Data Engineering', 'Advanced Python for Data', 'SQL for Data Analysis', 'Data Modeling Concepts'] },
-        { week: 2, title: 'Data Warehousing & Data Lakes', topics: ['ETL vs ELT', 'Dimensional Modeling', 'Introduction to Big Data & Hadoop', 'Working with HDFS'] },
-        { week: 3, title: 'Distributed Computing with Spark', topics: ['Spark Architecture & RDDs', 'DataFrames & Spark SQL', 'Spark Streaming for Real-time Data', 'Performance Tuning in Spark'] },
-        { week: 4, title: 'Data Orchestration & Workflow Automation', topics: ['Introduction to Apache Airflow', 'Building DAGs', 'Scheduling & Monitoring Pipelines', 'Best Practices for Workflow Management'] },
-        { week: 5, title: 'Messaging Systems with Kafka', topics: ['Kafka Fundamentals', 'Producers, Consumers & Brokers', 'Building a Real-time Data Pipeline', 'Kafka Connect & Schema Registry'] },
-        { week: 6, title: 'Cloud Data Engineering on AWS', topics: ['Introduction to AWS Data Services (S3, Glue, Redshift)', 'Building a Data Lake on S3', 'Serverless ETL with AWS Lambda', 'Using Amazon Athena for Queries'] },
-        { week: 7, title: 'Data Governance and Security', topics: ['Data Quality Frameworks', 'Data Lineage & Catalogs', 'Security Best Practices', 'Compliance (GDPR, etc.)'] },
-        { week: 8, title: 'Capstone Project: End-to-End Data Pipeline', topics: ['Architecting a Scalable Pipeline', 'Ingesting, Processing & Storing Data', 'Creating Dashboards for Insights', 'Project Demonstration'] }
+        { week: 1, title: 'Data Engineering Fundamentals & Python', topics: toTopics(['Introduction to Data Engineering', 'Advanced Python for Data', 'SQL for Data Analysis', 'Data Modeling Concepts']) },
+        { week: 2, title: 'Data Warehousing & Data Lakes', topics: toTopics(['ETL vs ELT', 'Dimensional Modeling', 'Introduction to Big Data & Hadoop', 'Working with HDFS']) },
+        { week: 3, title: 'Distributed Computing with Spark', topics: toTopics(['Spark Architecture & RDDs', 'DataFrames & Spark SQL', 'Spark Streaming for Real-time Data', 'Performance Tuning in Spark']) },
+        { week: 4, title: 'Data Orchestration & Workflow Automation', topics: toTopics(['Introduction to Apache Airflow', 'Building DAGs', 'Scheduling & Monitoring Pipelines', 'Best Practices for Workflow Management']) },
+        { week: 5, title: 'Messaging Systems with Kafka', topics: toTopics(['Kafka Fundamentals', 'Producers, Consumers & Brokers', 'Building a Real-time Data Pipeline', 'Kafka Connect & Schema Registry']) },
+        { week: 6, title: 'Cloud Data Engineering on AWS', topics: toTopics(['Introduction to AWS Data Services (S3, Glue, Redshift)', 'Building a Data Lake on S3', 'Serverless ETL with AWS Lambda', 'Using Amazon Athena for Queries']) },
+        { week: 7, title: 'Data Governance and Security', topics: toTopics(['Data Quality Frameworks', 'Data Lineage & Catalogs', 'Security Best Practices', 'Compliance (GDPR, etc.)']) },
+        { week: 8, title: 'Capstone Project: End-to-End Data Pipeline', topics: toTopics(['Architecting a Scalable Pipeline', 'Ingesting, Processing & Storing Data', 'Creating Dashboards for Insights', 'Project Demonstration']) }
     ],
     projects: [
         { title: 'Real-Time Analytics Dashboard', description: 'Build an end-to-end pipeline that ingests streaming data using Kafka, processes it with Spark, and visualizes insights on a live dashboard.', imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop' },
         { title: 'Cloud Data Warehouse Solution', description: 'Design and implement a scalable data warehouse on AWS, using services like Glue for ETL and Redshift for analytics to answer business queries.', imageUrl: 'https://images.unsplash.com/photo-1633493717311-b1e3e4cf3220?q=80&w=2070&auto=format&fit=crop' },
     ],
-    faqs: []
+    faqs: [],
+    deadlines: [
+      { date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), task: 'Data Modeling Assignment' },
+      { date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), task: 'Spark Mini-Project Submission' },
+    ]
   },
   {
     name: 'DevOps',
@@ -163,20 +183,24 @@ export const courses: Course[] = [
       inclusions: ['Lifetime access to course materials', 'Dedicated placement support', 'Certificate of Completion', 'Exam preparation for CKA']
     },
     curriculum: [
-        { week: 1, title: 'Introduction to DevOps & Linux Basics', topics: ['DevOps Principles (CAMS)', 'Shell Scripting', 'Linux Command Line', 'Networking Fundamentals'] },
-        { week: 2, title: 'Version Control & CI with Git and Jenkins', topics: ['Git Fundamentals', 'Branching Strategies', 'Setting up Jenkins', 'Building Automated CI Pipelines'] },
-        { week: 3, title: 'Containerization with Docker', topics: ['Docker Architecture', 'Writing Dockerfiles', 'Docker Compose for Multi-container Apps', 'Managing Images with Docker Hub'] },
-        { week: 4, title: 'Container Orchestration with Kubernetes', topics: ['Kubernetes Core Concepts (Pods, Services, Deployments)', 'Managing State with Volumes', 'Networking in Kubernetes', 'Using Helm Charts'] },
-        { week: 5, title: 'Infrastructure as Code (IaC) with Terraform', topics: ['IaC Principles', 'Writing Terraform Configurations', 'Managing AWS/GCP Resources', 'Terraform Modules & State Management'] },
-        { week: 6, title: 'Configuration Management with Ansible', topics: ['Ansible Architecture', 'Writing Playbooks', 'Managing Multiple Servers', 'Roles & Best Practices'] },
-        { week: 7, title: 'Monitoring & Logging', topics: ['Prometheus for Monitoring', 'Grafana for Visualization', 'Setting up the ELK Stack (Elasticsearch, Logstash, Kibana)', 'Alerting & SLOs'] },
-        { week: 8, title: 'Capstone Project: Fully Automated Application Deployment', topics: ['Designing a CI/CD workflow for a microservice app', 'Provisioning infrastructure with Terraform', 'Deploying to Kubernetes', 'Implementing monitoring'] }
+        { week: 1, title: 'Introduction to DevOps & Linux Basics', topics: toTopics(['DevOps Principles (CAMS)', 'Shell Scripting', 'Linux Command Line', 'Networking Fundamentals']) },
+        { week: 2, title: 'Version Control & CI with Git and Jenkins', topics: toTopics(['Git Fundamentals', 'Branching Strategies', 'Setting up Jenkins', 'Building Automated CI Pipelines']) },
+        { week: 3, title: 'Containerization with Docker', topics: toTopics(['Docker Architecture', 'Writing Dockerfiles', 'Docker Compose for Multi-container Apps', 'Managing Images with Docker Hub']) },
+        { week: 4, title: 'Container Orchestration with Kubernetes', topics: toTopics(['Kubernetes Core Concepts (Pods, Services, Deployments)', 'Managing State with Volumes', 'Networking in Kubernetes', 'Using Helm Charts']) },
+        { week: 5, title: 'Infrastructure as Code (IaC) with Terraform', topics: toTopics(['IaC Principles', 'Writing Terraform Configurations', 'Managing AWS/GCP Resources', 'Terraform Modules & State Management']) },
+        { week: 6, title: 'Configuration Management with Ansible', topics: toTopics(['Ansible Architecture', 'Writing Playbooks', 'Managing Multiple Servers', 'Roles & Best Practices']) },
+        { week: 7, title: 'Monitoring & Logging', topics: toTopics(['Prometheus for Monitoring', 'Grafana for Visualization', 'Setting up the ELK Stack (Elasticsearch, Logstash, Kibana)', 'Alerting & SLOs']) },
+        { week: 8, title: 'Capstone Project: Fully Automated Application Deployment', topics: toTopics(['Designing a CI/CD workflow for a microservice app', 'Provisioning infrastructure with Terraform', 'Deploying to Kubernetes', 'Implementing monitoring']) }
     ],
     projects: [
         { title: 'Automated CI/CD Pipeline for a Web App', description: 'Create a complete pipeline that automatically builds, tests, and deploys a web application to a Kubernetes cluster on every code commit.', imageUrl: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2106&auto=format&fit=crop' },
-        { title: 'Scalable Cloud Infrastructure with Terraform', description: 'Write Terraform code to provision a secure, scalable, and resilient cloud infrastructure on AWS or GCP to host a production-grade application.', imageUrl: 'https://images.unsplash.com/photo-1587293852726-70cdb121d15a?q=80&w=2070&auto=format&fit=crop' },
+        { title: 'Scalable Cloud Infrastructure with Terraform', description: 'Write Terraform code to provision a secure, scalable, and resilient cloud infrastructure on AWS or GCP to host a production-grade application.', imageUrl: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1931&auto=format&fit=crop' },
     ],
-    faqs: []
+    faqs: [],
+    deadlines: [
+      { date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(), task: 'Jenkins Pipeline Setup' },
+      { date: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(), 'task': 'Kubernetes Deployment Task' },
+    ]
   },
   {
     name: 'AI/ML',
@@ -208,24 +232,216 @@ export const courses: Course[] = [
       inclusions: ['Lifetime access to course materials', 'Dedicated placement support', 'Certificate of Completion', 'GPU usage for projects']
     },
     curriculum: [
-        { week: 1, title: 'Python for ML & Data Science Foundations', topics: ['NumPy for Numerical Computing', 'Pandas for Data Manipulation', 'Data Visualization with Matplotlib & Seaborn', 'Linear Algebra & Probability Basics'] },
-        { week: 2, title: 'Supervised Learning', topics: ['Linear & Logistic Regression', 'Decision Trees & Random Forests', 'Support Vector Machines (SVM)', 'Model Evaluation Metrics'] },
-        { week: 3, title: 'Unsupervised Learning & Feature Engineering', topics: ['K-Means Clustering', 'Principal Component Analysis (PCA)', 'Feature Scaling & Selection', 'Handling Missing Data'] },
-        { week: 4, title: 'Introduction to Deep Learning & Neural Networks', topics: ['What are Neural Networks?', 'Building a Neural Network with TensorFlow/Keras', 'Activation Functions & Optimizers', 'Backpropagation Explained'] },
-        { week: 5, title: 'Computer Vision with CNNs', topics: ['Convolutional Neural Networks (CNNs)', 'Image Classification Projects', 'Transfer Learning with Pre-trained Models', 'Object Detection Basics'] },
-        { week: 6, title: 'Natural Language Processing (NLP)', topics: ['Text Preprocessing', 'Word Embeddings (Word2Vec, GloVe)', 'Recurrent Neural Networks (RNNs) & LSTMs', 'Building a Sentiment Analysis Model'] },
-        { week: 7, title: 'Advanced Topics & MLOps', topics: ['Introduction to Transformers (BERT)', 'Model Deployment with Flask/FastAPI', 'Containerizing ML Models with Docker', 'Experiment Tracking with MLflow'] },
-        { week: 8, title: 'Capstone Project: End-to-End ML Application', topics: ['Problem Formulation & Data Collection', 'Model Training & Tuning', 'Building an API for the Model', 'Creating a User Interface'] }
+        { week: 1, title: 'Python for ML & Data Science Foundations', topics: toTopics(['NumPy for Numerical Computing', 'Pandas for Data Manipulation', 'Data Visualization with Matplotlib & Seaborn', 'Linear Algebra & Probability Basics']) },
+        { week: 2, title: 'Supervised Learning', topics: toTopics(['Linear & Logistic Regression', 'Decision Trees & Random Forests', 'Support Vector Machines (SVM)', 'Model Evaluation Metrics']) },
+        { week: 3, title: 'Unsupervised Learning & Feature Engineering', topics: toTopics(['K-Means Clustering', 'Principal Component Analysis (PCA)', 'Feature Scaling & Selection', 'Handling Missing Data']) },
+        { week: 4, title: 'Introduction to Deep Learning & Neural Networks', topics: toTopics(['What are Neural Networks?', 'Building a Neural Network with TensorFlow/Keras', 'Activation Functions & Optimizers', 'Backpropagation Explained']) },
+        { week: 5, title: 'Computer Vision with CNNs', topics: toTopics(['Convolutional Neural Networks (CNNs)', 'Image Classification Projects', 'Transfer Learning with Pre-trained Models', 'Object Detection Basics']) },
+        { week: 6, title: 'Natural Language Processing (NLP)', topics: toTopics(['Text Preprocessing', 'Word Embeddings (Word2Vec, GloVe)', 'Recurrent Neural Networks (RNNs) & LSTMs', 'Building a Sentiment Analysis Model']) },
+        { week: 7, title: 'Advanced Topics & MLOps', topics: toTopics(['Introduction to Transformers (BERT)', 'Model Deployment with Flask/FastAPI', 'Containerizing ML Models with Docker', 'Experiment Tracking with MLflow']) },
+        { week: 8, title: 'Capstone Project: End-to-End ML Application', topics: toTopics(['Problem Formulation & Data Collection', 'Model Training & Tuning', 'Building an API for the Model', 'Creating a User Interface']) }
     ],
     projects: [
         { title: 'Image Classifier for Medical Diagnosis', description: 'Train a deep learning model to classify medical images (e.g., X-rays) to detect certain conditions, achieving high accuracy using transfer learning.', imageUrl: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2070&auto=format&fit=crop' },
         { title: 'Sentiment Analysis of Customer Reviews', description: 'Build an NLP model to analyze a large dataset of customer reviews and classify them as positive, negative, or neutral to derive business insights.', imageUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e2775df?q=80&w=2070&auto=format&fit=crop' },
     ],
-    faqs: []
+    faqs: [],
+    deadlines: [
+      { date: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString(), task: 'Submit NLP Model' },
+      { date: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), task: 'Final Project Presentation' },
+    ]
+  },
+  {
+    name: 'Cybersecurity',
+    slug: 'cybersecurity',
+    tagline: 'Become a certified defender of the digital world.',
+    description: 'This program provides comprehensive training in cybersecurity principles, tools, and best practices. You will learn to identify vulnerabilities, detect and respond to incidents, and secure networks and systems against cyber threats. Gain hands-on experience in ethical hacking, risk management, and compliance.',
+    points: ['Ethical Hacking', 'Network Security', 'Industry Certifications'],
+    category: 'Cybersecurity',
+    imageUrl: 'https://images.unsplash.com/photo-1544890269-92d887f3cca7?q=80&w=2070&auto=format&fit=crop',
+    duration: '10 Weeks Intensive Program',
+    highlights: ['Prepare for CompTIA Security+', 'Hands-on Cyber Labs', 'Incident Response Drills', 'Expert-led Training'],
+    learningObjectives: [
+      'Understand core cybersecurity concepts, threats, and vulnerabilities.',
+      'Implement network security controls and protocols.',
+      'Conduct penetration testing and vulnerability assessments.',
+      'Analyze and respond to security incidents.',
+      'Learn about compliance frameworks like GDPR and ISO 27001.'
+    ],
+    instructor: {
+      name: 'Ravi Kumar',
+      title: 'Certified Ethical Hacker (CEH)',
+      imageUrl: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=1887&auto=format&fit=crop',
+      bio: 'Ravi is a cybersecurity expert with over a decade of experience in protecting corporate networks. He is passionate about teaching the next generation of cyber defenders.',
+    },
+    pricing: {
+      amount: 95000,
+      currency: 'INR',
+      note: 'EMI options available starting at ₹7,917/month.',
+      inclusions: ['Exam vouchers for certifications', 'Lifetime access to course materials', 'Dedicated placement support', 'Virtual lab access']
+    },
+    curriculum: [
+      { week: 1, title: 'Introduction to Cybersecurity', topics: toTopics(['Threats and Attacks', 'Security Principles', 'Networking Fundamentals']) },
+      { week: 2, title: 'Network Security', topics: toTopics(['Firewalls and VPNs', 'Intrusion Detection Systems', 'Wireless Network Security']) },
+      { week: 3, title: 'Ethical Hacking', topics: toTopics(['Reconnaissance', 'Scanning Networks', 'Gaining Access', 'Maintaining Access']) },
+      { week: 4, title: 'Web Application Security', topics: toTopics(['OWASP Top 10', 'SQL Injection', 'Cross-Site Scripting (XSS)']) },
+      { week: 5, title: 'Cryptography', topics: toTopics(['Symmetric and Asymmetric Encryption', 'Public Key Infrastructure (PKI)', 'Hashing Algorithms']) },
+      { week: 6, title: 'Incident Response', topics: toTopics(['Detection and Analysis', 'Containment and Eradication', 'Post-Incident Recovery']) },
+      { week: 7, title: 'Cloud Security', topics: toTopics(['Securing AWS and Azure', 'Container Security', 'Serverless Security']) },
+      { week: 8, title: 'Compliance and Auditing', topics: toTopics(['ISO 27001', 'GDPR', 'Security Audits']) },
+      { week: 9, title: 'Advanced Topics', topics: toTopics(['Malware Analysis', 'Forensics', 'Threat Intelligence']) },
+      { week: 10, title: 'Capstone Project and Certification Prep', topics: toTopics(['Live Security Assessment', 'CompTIA Security+ Exam Prep']) }
+    ],
+    projects: [
+      { title: 'Corporate Network Security Audit', description: 'Perform a full security audit on a simulated corporate network, identify vulnerabilities, and present a mitigation report.', imageUrl: 'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?q=80&w=2070&auto=format&fit=crop' },
+      { title: 'Live Incident Response Simulation', description: 'Participate in a team-based drill to respond to a live, simulated cyber-attack, from detection to resolution.', imageUrl: 'https://images.unsplash.com/photo-1585144860135-ea5741334200?q=80&w=2070&auto=format&fit=crop' },
+    ],
+    faqs: [],
+    deadlines: []
+  },
+  {
+    name: 'Cloud Computing',
+    slug: 'cloud-computing',
+    tagline: 'Master the cloud with AWS and Azure expertise.',
+    description: 'This program is designed to make you a proficient cloud professional. You will gain deep knowledge of core cloud services for compute, storage, networking, and databases. The curriculum covers both AWS and Azure, preparing you for top certifications and high-demand cloud roles.',
+    points: ['AWS & Azure Training', 'Hands-on Labs', 'Certification Focused'],
+    category: 'Cloud & DevOps',
+    imageUrl: 'https://images.unsplash.com/photo-1590903341499-c2b6a5a083a3?q=80&w=2070&auto=format&fit=crop',
+    duration: '10 Weeks Intensive Program',
+    highlights: ['Dual Platform Expertise', 'Infrastructure as Code', 'Serverless Architecture', 'Prepare for AWS/Azure Certification'],
+    learningObjectives: [
+      'Design and deploy scalable, highly available, and fault-tolerant systems on AWS and Azure.',
+      'Manage cloud infrastructure using Terraform and CloudFormation.',
+      'Build serverless applications using AWS Lambda and Azure Functions.',
+      'Implement cloud security best practices.',
+      'Understand cloud cost management and optimization.'
+    ],
+    instructor: {
+      name: 'Meera Iyer',
+      title: 'Cloud Solutions Architect',
+      imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2070&auto=format&fit=crop',
+      bio: 'Meera is a certified AWS and Azure architect with extensive experience in migrating and managing enterprise workloads in the cloud. She loves simplifying complex cloud concepts.',
+    },
+    pricing: {
+      amount: 88000,
+      currency: 'INR',
+      note: 'EMI options available starting at ₹7,333/month.',
+      inclusions: ['Cloud platform credits', 'Certification exam vouchers', 'Lifetime access to materials', 'Dedicated placement support']
+    },
+    curriculum: [
+      { week: 1, title: 'Cloud Fundamentals', topics: toTopics(['Cloud Computing Models', 'Global Infrastructure', 'Core Services Overview']) },
+      { week: 2, title: 'AWS Core Services', topics: toTopics(['EC2, S3, VPC', 'IAM', 'RDS']) },
+      { week: 3, title: 'Azure Core Services', topics: toTopics(['Virtual Machines, Blob Storage', 'Virtual Networks', 'Azure AD']) },
+      { week: 4, title: 'Infrastructure as Code', topics: toTopics(['Terraform Basics', 'Managing AWS with Terraform', 'Managing Azure with Terraform']) },
+      { week: 5, title: 'Serverless Computing', topics: toTopics(['AWS Lambda', 'API Gateway', 'Azure Functions']) },
+      { week: 6, title: 'Cloud Native & Containers', topics: toTopics(['Docker on the Cloud', 'Amazon EKS', 'Azure Kubernetes Service (AKS)']) },
+      { week: 7, title: 'Cloud Security', topics: toTopics(['Identity and Access Management', 'Network Security Groups', 'Data Encryption']) },
+      { week: 8, title: 'Cloud Monitoring & Management', topics: toTopics(['AWS CloudWatch', 'Azure Monitor', 'Cost Management']) },
+      { week: 9, title: 'Migration & Advanced Architectures', topics: toTopics(['Cloud Migration Strategies', 'Well-Architected Framework', 'High Availability and Disaster Recovery']) },
+      { week: 10, title: 'Capstone Project & Certification Prep', topics: toTopics(['Deploying a 3-tier application', 'AWS/Azure Certification Exam Prep']) }
+    ],
+    projects: [
+      { title: 'Deploy a Scalable Web Application', description: 'Deploy a multi-tier, scalable, and highly available web application on both AWS and Azure using infrastructure as code.', imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop' },
+      { title: 'Serverless Data Processing Pipeline', description: 'Build a serverless pipeline that processes uploaded images to create thumbnails using Lambda or Azure Functions.', imageUrl: 'https://images.unsplash.com/photo-1633493717311-b1e3e4cf3220?q=80&w=2070&auto=format&fit=crop' },
+    ],
+    faqs: [],
+    deadlines: []
+  },
+  {
+    name: 'UI/UX Design',
+    slug: 'ui-ux-design',
+    tagline: 'Craft beautiful and user-centric digital experiences.',
+    description: 'This course covers the entire UI/UX design process, from user research and wireframing to prototyping and usability testing. You will learn design principles, master tools like Figma, and build a portfolio of projects that showcase your ability to create intuitive and engaging digital products.',
+    points: ['User Research', 'Prototyping in Figma', 'Portfolio Building'],
+    category: 'Design',
+    imageUrl: 'https://images.unsplash.com/photo-1611263297333-4a13340003ce?q=80&w=2070&auto=format&fit=crop',
+    duration: '8 Weeks Intensive Program',
+    highlights: ['Master Figma from Scratch', 'Build a Professional Portfolio', 'Real-world Case Studies', 'End-to-end Design Process'],
+    learningObjectives: [
+      'Conduct user research and create user personas.',
+      'Design wireframes, mockups, and interactive prototypes.',
+      'Understand principles of visual design, typography, and color theory.',
+      'Master design tools like Figma.',
+      'Perform usability testing and iterate on designs.'
+    ],
+    instructor: {
+      name: 'Aisha Khan',
+      title: 'Senior Product Designer @ CreativeCo',
+      imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop',
+      bio: 'Aisha is a passionate designer with a knack for creating user-friendly interfaces. She has worked on apps used by millions and loves mentoring new designers.',
+    },
+    pricing: {
+      amount: 70000,
+      currency: 'INR',
+      note: 'EMI options available starting at ₹5,833/month.',
+      inclusions: ['Figma Pro access for course duration', 'Portfolio review sessions', 'Lifetime access to materials', 'Dedicated placement support']
+    },
+    curriculum: [
+      { week: 1, title: 'Foundations of UX Design', topics: toTopics(['Design Thinking', 'User Research Methods', 'Personas and Journey Mapping']) },
+      { week: 2, title: 'Information Architecture & Wireframing', topics: toTopics(['Sitemaps and User Flows', 'Low-fidelity Wireframing', 'Prototyping Basics']) },
+      { week: 3, title: 'UI Design Principles', topics: toTopics(['Visual Hierarchy', 'Color Theory', 'Typography', 'Grid Systems']) },
+      { week: 4, title: 'Mastering Figma', topics: toTopics(['Interface and Tools', 'Components and Auto Layout', 'Interactive Prototyping']) },
+      { week: 5, title: 'Designing for Web', topics: toTopics(['Responsive Design', 'Landing Page Design', 'Forms and UI Elements']) },
+      { week: 6, title: 'Designing for Mobile', topics: toTopics(['iOS vs. Android Guidelines', 'Mobile-First Design', 'Gestures and Interactions']) },
+      { week: 7, title: 'Usability Testing', topics: toTopics(['Planning and Conducting Tests', 'Analyzing Feedback', 'Iterating on Designs']) },
+      { week: 8, title: 'Portfolio & Career Prep', topics: toTopics(['Building a Case Study', 'Portfolio Website Design', 'Interview Preparation']) }
+    ],
+    projects: [
+      { title: 'Mobile App for a Local Business', description: 'Design a complete mobile application for a local business, from user research and wireframes to a high-fidelity interactive prototype.', imageUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=1974&auto=format&fit=crop' },
+      { title: 'Website Redesign Case Study', description: 'Choose an existing website, identify its usability issues, and design a complete redesign, documenting your process in a professional case study.', imageUrl: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?q=80&w=2070&auto=format&fit=crop' },
+    ],
+    faqs: [],
+    deadlines: []
+  },
+  {
+    name: 'Digital Marketing',
+    slug: 'digital-marketing',
+    tagline: 'Drive growth with data-driven marketing strategies.',
+    description: 'This comprehensive program covers all key aspects of digital marketing, including SEO, SEM, social media marketing, content marketing, and analytics. You will learn to create and execute effective campaigns that drive traffic, generate leads, and increase sales. The course is hands-on, with live projects and case studies.',
+    points: ['SEO & SEM', 'Social Media Strategy', 'Google Analytics'],
+    category: 'Marketing',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
+    duration: '8 Weeks Intensive Program',
+    highlights: ['Manage Live Ad Campaigns', 'Master Google Analytics', 'Content & SEO Strategy', 'Prepare for Google Ads Certification'],
+    learningObjectives: [
+      'Develop and implement a comprehensive digital marketing strategy.',
+      'Optimize websites for search engines (SEO).',
+      'Manage paid advertising campaigns on Google and social media.',
+      'Create engaging content and manage social media presence.',
+      'Analyze campaign performance using Google Analytics.'
+    ],
+    instructor: {
+      name: 'Sameer Patel',
+      title: 'Digital Marketing Manager @ Growthify',
+      imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1887&auto=format&fit=crop',
+      bio: 'Sameer is a results-driven marketer with a proven track record of scaling businesses through digital channels. He is an expert in performance marketing and analytics.',
+    },
+    pricing: {
+      amount: 65000,
+      currency: 'INR',
+      note: 'EMI options available starting at ₹5,417/month.',
+      inclusions: ['Live ad budget for projects', 'Certification exam prep', 'Lifetime access to materials', 'Dedicated placement support']
+    },
+    curriculum: [
+      { week: 1, title: 'Digital Marketing Fundamentals', topics: toTopics(['Marketing Funnel', 'Customer Personas', 'Strategy Frameworks']) },
+      { week: 2, title: 'Search Engine Optimization (SEO)', topics: toTopics(['Keyword Research', 'On-Page and Off-Page SEO', 'Technical SEO']) },
+      { week: 3, title: 'Search Engine Marketing (SEM)', topics: toTopics(['Google Ads', 'Campaign Structure', 'Bid Strategies', 'Ad Copywriting']) },
+      { week: 4, title: 'Social Media Marketing', topics: toTopics(['Platform Strategies (Facebook, Instagram, LinkedIn)', 'Content Creation', 'Community Management']) },
+      { week: 5, title: 'Content Marketing', topics: toTopics(['Content Strategy', 'Blogging and Copywriting', 'Email Marketing']) },
+      { week: 6, title: 'Web Analytics', topics: toTopics(['Google Analytics', 'Tracking and Measurement', 'Reporting and Dashboards']) },
+      { week: 7, title: 'Advanced Topics', topics: toTopics(['Conversion Rate Optimization (CRO)', 'Influencer Marketing', 'Affiliate Marketing']) },
+      { week: 8, title: 'Capstone Project & Certification', topics: toTopics(['Developing an Integrated Campaign', 'Budgeting and ROI Analysis', 'Google Ads Certification Prep']) }
+    ],
+    projects: [
+      { title: 'Launch a Google Ads Campaign', description: 'Plan, create, and manage a live Google Ads campaign for a product or service with a real budget, optimizing it for conversions.', imageUrl: 'https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2071&auto=format&fit=crop' },
+      { title: 'Develop a Content & SEO Strategy', description: 'Create a comprehensive content and SEO strategy for a website, including keyword research, a content calendar, and backlink-building ideas.', imageUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop' },
+    ],
+    faqs: [],
+    deadlines: []
   },
 ];
 
-export const courseCategories = ['All', 'Web Development', 'Data Science', 'Cloud & DevOps', 'AI & ML'];
+export const courseCategories = ['All', 'Web Development', 'Data Science', 'Cloud & DevOps', 'AI & ML', 'Cybersecurity', 'Design', 'Marketing'];
 
 export const partners: Partner[] = [
   { 
@@ -390,5 +606,93 @@ export const faqs: FAQ[] = [
   {
     question: 'Do you offer any scholarships or EMI options?',
     answer: 'Yes, we believe that financial constraints should not be a barrier to quality education. We offer various scholarship programs for meritorious students and easy EMI options to make our programs more affordable. Please contact our admissions team for more details.',
+  },
+];
+
+export const services: Service[] = [
+  {
+    title: 'Corporate Training',
+    slug: 'corporate-training',
+    tagline: 'Upskill your workforce with cutting-edge tech programs.',
+    description: 'We partner with organizations to deliver customized training programs that address specific skill gaps and business objectives. Our curriculum is designed to enhance employee productivity and drive innovation.',
+    features: ['Customized curriculum', 'Expert industry trainers', 'Flexible delivery models', 'Measurable impact'],
+  },
+  {
+    title: 'Campus Recruitment Training',
+    slug: 'campus-recruitment-training',
+    tagline: 'Prepare students for top-tier placements.',
+    description: 'Our comprehensive training program equips college students with the technical and soft skills needed to excel in campus recruitment drives. We focus on aptitude, coding, and interview preparation.',
+    features: ['Industry-aligned syllabus', 'Mock interviews & assessments', 'Resume building workshops', 'Partnerships with colleges'],
+  },
+  {
+    title: 'Custom Curriculum Development',
+    slug: 'custom-curriculum-development',
+    tagline: 'Tailored learning content for educational institutions.',
+    description: 'We collaborate with colleges and universities to design and develop modern, industry-relevant curricula that make students job-ready from day one.',
+    features: ['Focus on practical skills', 'Integration of new technologies', 'Faculty development programs', 'Project-based learning modules'],
+  },
+  {
+    title: 'Career Counseling & Mentorship',
+    slug: 'career-counseling',
+    tagline: 'Navigate your tech career path with expert guidance.',
+    description: 'Our experienced mentors provide one-on-one guidance to help individuals identify their career goals, build a roadmap, and overcome challenges in their professional journey.',
+    features: ['Personalized career roadmap', '1-on-1 mentorship sessions', 'Skill gap analysis', 'Industry insights'],
+  },
+  {
+    title: 'Workshops & Webinars',
+    slug: 'workshops-webinars',
+    tagline: 'Short-term, high-impact learning sessions.',
+    description: 'We conduct specialized workshops and webinars on emerging technologies and in-demand skills, providing a platform for continuous learning and professional development.',
+    features: ['Led by industry experts', 'Hands-on and interactive', 'Focus on specific tools/technologies', 'Networking opportunities'],
+  },
+  {
+    title: 'Project Incubation',
+    slug: 'project-incubation',
+    tagline: 'Turn your innovative ideas into real-world projects.',
+    description: 'We provide the resources, mentorship, and environment for students and professionals to build and deploy their own tech projects, fostering an entrepreneurial mindset and practical experience.',
+    features: ['Guidance from idea to launch', 'Access to tech stack & tools', 'Portfolio-worthy projects', 'Collaboration with peers'],
+  },
+];
+
+// FIX: Add and export blogPosts data to be used by the blog context and components.
+export const blogPosts: BlogPost[] = [
+  {
+    slug: 'why-full-stack-development-is-still-in-demand',
+    title: 'Why Full Stack Development is Still in High Demand in 2024',
+    content: 'Full stack development continues to be one of the most sought-after skills in the tech industry. In this post, we explore why companies are still eagerly hiring full stack developers and how our program can get you job-ready.\n\nThe ability to work on both the frontend and backend of an application makes you a versatile and valuable asset to any team. You can take a project from concept to completion, which is a huge advantage for startups and large corporations alike. Our Full Stack Development course covers the MERN stack, ensuring you learn the most relevant technologies.\n\nFrom building interactive user interfaces with React to creating robust server-side APIs with Node.js, our curriculum is designed to give you a comprehensive skill set. Enroll today and take the first step towards a rewarding career as a full-stack developer.',
+    imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070&auto=format&fit=crop',
+    category: 'Web Development',
+    tags: ['full stack', 'web development', 'career', 'tech trends'],
+    author: {
+      name: 'Priya Sharma',
+      imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1888&auto=format&fit=crop',
+    },
+    publishedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    slug: 'demystifying-data-engineering-pipelines',
+    title: 'Demystifying Data Engineering: Building Robust Pipelines',
+    content: "Data is the new oil, but it's useless without the right infrastructure to process it. Data engineers are the architects of this infrastructure. This article breaks down what a data pipeline is, the key technologies involved like Spark and Kafka, and how our Data Engineering course provides hands-on experience building scalable systems.\n\nWe'll cover the differences between ETL and ELT, the importance of data warehousing, and how to orchestrate complex workflows using tools like Apache Airflow. Our program dives deep into these concepts, preparing you to tackle real-world data challenges.\n\nReady to build the backbone of modern data analytics? Join our Data Engineering program and become an indispensable part of the data revolution.",
+    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+    category: 'Data Science',
+    tags: ['data engineering', 'big data', 'etl', 'spark', 'kafka'],
+    author: {
+      name: 'Rahul Verma',
+      imageUrl: 'https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2071&auto=format&fit=crop',
+    },
+    publishedDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    slug: 'the-rise-of-devops-culture',
+    title: 'More Than Just Tools: The Rise of DevOps Culture',
+    content: "DevOps is more than just a set of tools; it's a cultural shift that breaks down silos between development and operations teams. Learn about the core principles of DevOps—collaboration, automation, and continuous improvement—and see how our program prepares you for the cultural and technical aspects of a modern DevOps role.\n\nWe focus on hands-on experience with CI/CD pipelines using Jenkins, containerization with Docker and Kubernetes, and infrastructure as code with Terraform. This holistic approach ensures you understand both the 'why' and the 'how' of DevOps.\n\nBy embracing a DevOps mindset, organizations can deliver better software faster. Our course will give you the skills to lead this transformation. ",
+    imageUrl: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2106&auto=format&fit=crop',
+    category: 'Cloud & DevOps',
+    tags: ['devops', 'ci-cd', 'automation', 'cloud', 'culture'],
+    author: {
+      name: 'Anjali Desai',
+      imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1961&auto=format&fit=crop',
+    },
+    publishedDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];

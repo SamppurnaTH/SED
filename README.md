@@ -1,116 +1,148 @@
 
-# SCHOLASTIC A EDU. DEPOT (SED) - Tech Training Academy
+# 🎓 SCHOLASTIC A EDU. DEPOT (SED) - Next-Gen EdTech Platform
 
-![SED Tech Academy Homepage](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop)
+![SED Tech Academy Banner](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop)
 
-This repository contains the source code for a modern, premium-quality web application for **SCHOLASTIC A EDU. DEPOT**, a fictional tech training academy that trains students for IT jobs through industry-focused courses, real-time projects, and placement support.
+[![React](https://img.shields.io/badge/Frontend-React_18-blue?logo=react)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-forestgreen?logo=mongodb)](https://www.mongodb.com/)
+[![AI Powered](https://img.shields.io/badge/AI-Gemini_%2B_Veo-purple?logo=google)](https://ai.google.dev/)
+[![AWS S3](https://img.shields.io/badge/Storage-AWS_S3-orange?logo=amazon-aws)](https://aws.amazon.com/s3/)
 
----
-
-## ✨ Features
-
-The application is split into two main sections: a feature-rich public-facing website and a comprehensive admin portal for content management.
-
-### 🎓 User-Facing Features
-
-- **Fully Responsive Design:** A seamless experience across desktops, tablets, and mobile devices.
-- **Dynamic Homepage:** Featuring a hero section with animated counters, partner logo carousel, and course highlights.
-- **Detailed Program Pages:** In-depth information for each course, including curriculum, projects, instructor bios, pricing, and FAQs.
-- **Interactive Course Demos:** A live code editor for select courses to give prospective students a hands-on feel.
-- **Save Courses:** Users can bookmark their favorite courses for easy access later.
-- **Student Authentication:** Secure login, registration, and password management flows.
-- **Personalized Dashboard:** A dedicated dashboard for logged-in students to view their saved courses.
-- **AI-Powered Contact Form:** An intelligent contact form that uses the Gemini API to provide instant, helpful auto-replies.
-- **Partners & Services:** Dedicated pages to browse hiring partners and corporate services.
-- **Robust Navigation & SEO:** Built with React Router for seamless navigation and designed with SEO best practices in mind.
-
-### 🔑 Admin Portal Features
-
-- **Secure Admin Login:** Separate, secure login for administrators.
-- **High-Level Dashboard:** An at-a-glance view of key metrics like the number of courses, partners, services, and contact submissions.
-- **Full CRUD Functionality:**
-    - **Course Management:** Add, edit, and delete courses with an extensive form covering all details from curriculum to instructor bios.
-    - **Partner Management:** Manage the list of hiring partners.
-    - **Service Management:** Add, edit, and delete corporate services offered by the academy.
-- **AI-Powered Image Generation:** Generate course banner images directly from the course creation form using the Gemini API.
-- **View Submissions:** View all contact form submissions in a clean, tabular format.
-- **Export to CSV:** Easily export all contact submissions to a CSV file for lead management.
+**SCHOLASTIC A EDU. DEPOT (SED)** is a production-grade Learning Management System (LMS) and Tech Academy platform. It bridges the gap between academic learning and industry demands through AI-driven tools, real-world projects, and a seamless learning experience.
 
 ---
 
-## 🚀 Tech Stack
+## 🚀 Key Features
 
-- **Frontend:** [React](https://reactjs.org/), [TypeScript](https://www.typescriptlang.org/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **Routing:** [React Router](https://reactrouter.com/)
-- **State Management:** React Context API
-- **Build Tool:** [Vite](https://vitejs.dev/)
+### 👨‍🎓 Student Experience (LMS)
+*   **Course Discovery**: Advanced filtering, search, and categorization of tech programs.
+*   **Interactive Learning**:
+    *   **Video Player**: Built-in LMS lesson player supporting YouTube & MP4 streams.
+    *   **Progress Tracking**: Granular tracking of completed lessons and course percentage.
+*   **AI Tools**:
+    *   **AI Resume Builder**: Generates professional resumes using **Gemini 2.5 Flash**.
+    *   **RAG Chatbot**: Context-aware AI assistant that answers queries using **Local RAG (Ollama)** or Cloud Fallback.
+    *   **Interactive Demos**: Live code editors for web development courses.
+*   **Secure Checkout**: Integrated **Razorpay** payment gateway for secure transactions.
+*   **User Dashboard**: Manage enrolled courses, view order history, and save favorites.
+
+### 🛠️ Admin & Marketing Portal (CMS)
+*   **Content Management**: Full CRUD for Courses, Partners, Services, and Blog Posts.
+*   **AI Content Studio**:
+    *   **Copywriter**: Auto-generate marketing blogs and social posts.
+    *   **Image Generator**: Create course banners on the fly using **Gemini 2.5 Flash Image**.
+    *   **Video Studio**: Generate promotional videos using **Google Veo**.
+*   **Analytics Dashboard**: Real-time visualization of Revenue, Enrollments, and Lead generation.
+*   **Lead Management**: View and export contact form submissions to CSV.
+
+### 👨‍🏫 Trainer Tools
+*   **Video Explainer Generator**: Create AI-driven video concepts for curriculum enhancement.
 
 ---
 
-## 🛠️ Getting Started
+## 🏗️ Technical Architecture
 
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+The application follows a **Decoupled Monorepo** structure (Frontend + Backend).
 
-### Prerequisites
+### Frontend
+*   **Framework**: React (Vite/CRA) + TypeScript
+*   **Styling**: Tailwind CSS + Custom Animations
+*   **State Management**: React Context API
+*   **Routing**: React Router v6
 
-- [Node.js](https://nodejs.org/) (v18 or later recommended)
-- `npm` or `yarn` package manager
+### Backend API
+*   **Runtime**: Node.js + Express
+*   **Database**: MongoDB (Mongoose ODM)
+*   **Security**: Helmet, Rate Limiting, JWT Auth, Input Validation (express-validator)
+*   **Storage**: AWS S3 (via Multer) for scalable image hosting
+*   **Communication**: Nodemailer (SMTP) for HTML emails
 
-### Installation & Setup
+### 🤖 AI & RAG Layer
+The backend acts as a **Secure Proxy** for all AI operations to protect API Keys.
+1.  **Cloud AI**: Proxies requests to Google Gemini (Text/Image) and Veo (Video).
+2.  **Local RAG (Hybrid)**:
+    *   Attempts to connect to a local **Ollama** instance + **ChromaDB** for vector search.
+    *   Falls back gracefully to Cloud Gemini if local AI services are offline.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/scholastic-a-edu-depot.git
-    cd scholastic-a-edu-depot
-    ```
+---
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+## ⚙️ Installation & Setup
 
+### 1. Prerequisites
+*   Node.js (v18+)
+*   MongoDB Connection String (Atlas or Local)
+*   (Optional) Local Ollama & ChromaDB for RAG features.
 
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    The application will be available at `http://localhost:5173`.
-
-### Build for Production
-
-To create a production-ready build of the app:
-
+### 2. Clone Repository
 ```bash
-npm run build
+git clone https://github.com/your-org/sed-platform.git
+cd sed-platform
 ```
-The optimized files will be located in the `dist/` directory.
+
+### 3. Backend Setup
+Navigate to the backend folder and install dependencies.
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file in `backend/` with the following secrets:
+
+| Variable | Description |
+| :--- | :--- |
+| `PORT` | Server port (e.g., 3001) |
+| `MONGO_URI` | MongoDB Connection String |
+| `JWT_SECRET` | Secret key for signing auth tokens |
+| `API_KEY` | Google Gemini/Veo API Key |
+| `AWS_ACCESS_KEY_ID` | AWS IAM Key for S3 |
+| `AWS_SECRET_ACCESS_KEY` | AWS IAM Secret |
+| `AWS_BUCKET_NAME` | S3 Bucket Name |
+| `AWS_REGION` | AWS Region (e.g., us-east-1) |
+| `RAZORPAY_KEY_ID` | Razorpay Public Key |
+| `RAZORPAY_KEY_SECRET` | Razorpay Secret Key |
+| `SMTP_HOST` | Email Server Host (e.g., smtp.gmail.com) |
+| `SMTP_USER` | SMTP Username |
+| `SMTP_PASS` | SMTP Password |
+| `ENABLE_AI_FEATURES` | `true` to enable RAG/Local LLM checks |
+
+Start the server:
+```bash
+npm start
+# Server runs at http://localhost:3001
+```
+
+### 4. Frontend Setup
+Open a new terminal, navigate to the root, and install dependencies (if using a package manager for frontend, otherwise it runs via script injection in this specific environment).
+
+*Note: In a standard React setup:*
+```bash
+npm install
+npm start
+# App runs at http://localhost:3000
+```
 
 ---
 
-## 📂 Project Structure
+## 🔐 Security Features
 
-The project follows a standard React application structure:
-
-```
-src/
-├── components/   # Reusable UI components (e.g., Header, CourseCard)
-├── contexts/     # React Context providers for global state
-├── pages/        # Top-level page components (e.g., HomePage, AdminDashboardPage)
-├── constants/    # Static data and constants
-├── types.ts      # TypeScript type definitions
-├── App.tsx       # Main application component with routing
-└── index.tsx     # Application entry point
-```
+*   **Authentication**: Role-based access control (Student, Admin, Marketing, Trainer).
+*   **Data Integrity**: All inputs sanitized via `express-validator`.
+*   **API Protection**:
+    *   `helmet` for secure HTTP headers.
+    *   `express-rate-limit` to prevent DDoS/Brute-force.
+*   **Asset Security**: Direct S3 uploads via backend signed streams; no public write access to bucket.
 
 ---
 
-## 🧑‍💻 Author
-Venu Thota
-Python Developer | Data Scientist | ML Engineer | Full Stack Developer | Ethical Hacker Enthusiast | Prompt Engineer
+## 🧪 Testing & AI Fallbacks
+
+*   **AI Fallback**: If you do not have a local Ollama instance running, the Chatbot automatically switches to "Cloud Mode" using the Gemini API to answer questions based on database context.
+*   **Video Proxy**: The backend streams Veo video previews to the frontend, bypassing CORS and Auth restrictions on the raw Google Cloud URLs.
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is proprietary software developed for **SCHOLASTIC A EDU. DEPOT**.
+Unauthorized copying or distribution is strictly prohibited.

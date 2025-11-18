@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Course } from '../types';
 
@@ -19,7 +20,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ item, isOpen, onClick }) 
         className="w-full flex justify-between items-center text-left py-5 px-2 gap-4"
         aria-expanded={isOpen}
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-6">
             <span className="text-primary font-bold text-lg w-12 flex-shrink-0">
                 Week {item.week}
             </span>
@@ -48,8 +49,8 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ item, isOpen, onClick }) 
             <ul className="pb-6 pl-14 pr-2 space-y-3">
             {item.topics.map((topic, index) => (
                 <li key={index} className="flex items-start text-dark-gray/80">
-                    <svg className="w-5 h-5 text-secondary mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                    <span>{topic}</span>
+                    <svg className="w-5 h-5 text-primary mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                    <span>{topic.title}</span>
                 </li>
             ))}
             </ul>

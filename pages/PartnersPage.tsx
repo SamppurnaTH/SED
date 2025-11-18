@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import CTA from '../components/CTA';
 import PartnerCard from '../components/PartnerCard';
 import { usePartners } from '../contexts/PartnersContext';
+import MetaTags from '../components/MetaTags';
 
 const PartnersPage: React.FC = () => {
     const { partners } = usePartners();
@@ -14,6 +15,10 @@ const PartnersPage: React.FC = () => {
 
     return (
         <>
+            <MetaTags
+              title="Our Hiring Partners | SED Tech Academy"
+              description="We collaborate with leading companies in the tech industry to create unparalleled placement opportunities for our students."
+            />
             {/* Hero Section */}
             <section className="relative bg-gradient-to-br from-light-gray to-white pt-32 pb-20 lg:pt-48 lg:pb-28 text-center overflow-hidden">
                 <div className="absolute top-0 left-0 -z-0 transform -translate-x-1/2 -translatey-1/2">

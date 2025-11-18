@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 interface AnimatedCounterProps {
@@ -9,7 +10,6 @@ interface AnimatedCounterProps {
 
 const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ end, duration = 2000, startAnimation, suffix = '' }) => {
   const [count, setCount] = useState(0);
-  // FIX: Initialize useRef with null and update the type to allow for null.
   const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -43,8 +43,7 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ end, duration = 2000,
   }, [startAnimation, end, duration]);
 
   return (
-    <p className="font-poppins font-bold text-4xl text-primary">
-      {/* FIX: Explicitly provide a locale to toLocaleString to prevent potential environment-specific errors. */}
+    <p className="font-poppins font-bold text-4xl">
       {count.toLocaleString('en-US')}{suffix}
     </p>
   );

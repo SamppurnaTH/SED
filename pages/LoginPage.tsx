@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
@@ -27,32 +28,34 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    if (email.toLowerCase() === 'admin@sed.com') {
+    if (email.toLowerCase().endsWith('@sed.com')) {
       try {
-        const success = await adminLogin(email, password);
-        if (success) {
-          navigate('/admin/dashboard');
+        const user = await adminLogin(email, password);
+        if (user) {
+          if (user.role === 'trainer') {
+            navigate('/trainer/dashboard');
+          } else {
+            navigate('/admin/dashboard');
+          }
         } else {
-          setError('Invalid admin credentials. Please try again.');
+          setError('Invalid credentials. Please try again.');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Admin login failed:", err);
-        setError('An unexpected error occurred during admin login.');
+        setError(err.message || 'An unexpected error occurred during admin login.');
       } finally {
         setIsLoading(false);
       }
     } else {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-          setError('Please enter a valid email address.');
-          setIsLoading(false);
-          return;
-      }
-      
-      console.log('Logging in student with:', { email, password });
-      studentLogin({ name: 'Demo User', email });
-      // No need to set loading to false, navigation is immediate
-      navigate('/');
+        try {
+            await studentLogin(email, password);
+            navigate('/');
+        } catch (err: any) {
+            console.error("Student login failed:", err);
+            setError(err.message || 'An unexpected error occurred during login.');
+        } finally {
+            setIsLoading(false);
+        }
     }
   };
 
@@ -63,8 +66,8 @@ const LoginPage: React.FC = () => {
             <Logo className="h-14 w-14 mx-auto" />
           </Link>
         </div>
-      <h2 className="text-3xl font-poppins font-bold text-dark-gray text-center">Welcome Back!</h2>
-      <p className="mt-2 text-center text-sm text-dark-gray/80">
+      <h2 className="text-3xl font-poppins font-bold text-text-primary text-center">Welcome Back!</h2>
+      <p className="mt-2 text-center text-sm text-text-muted">
         Don't have an account?{' '}
         <Link to="/register" className="font-medium text-primary hover:underline">
           Sign up
@@ -74,7 +77,7 @@ const LoginPage: React.FC = () => {
       <div className="mt-8">
         <button
           type="button"
-          className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-bold text-dark-gray bg-white hover:bg-light-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+          className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-bold text-text-primary bg-white hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
         >
           <GoogleIcon className="w-5 h-5" />
           Continue with Google
@@ -86,13 +89,13 @@ const LoginPage: React.FC = () => {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or with email</span>
+          <span className="px-2 bg-secondary text-text-muted">Or with email</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-dark-gray sr-only">
+          <label htmlFor="email" className="block text-sm font-medium text-text-primary sr-only">
             Email address
           </label>
           <div className="relative mt-1">
@@ -114,7 +117,7 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-dark-gray sr-only">
+          <label htmlFor="password" className="block text-sm font-medium text-text-primary sr-only">
             Password
           </label>
           <div className="relative mt-1">
@@ -147,7 +150,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
         
-        {error && <div className="text-sm text-red-600 text-center">{error}</div>}
+        {error && <div className="text-sm text-red-600 font-bold text-center">{error}</div>}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -157,7 +160,7 @@ const LoginPage: React.FC = () => {
               type="checkbox"
               className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-dark-gray">
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-text-primary">
               Remember me
             </label>
           </div>
@@ -173,7 +176,7 @@ const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 disabled:bg-primary/70 disabled:cursor-not-allowed"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-300 disabled:bg-accent/70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
                 <>

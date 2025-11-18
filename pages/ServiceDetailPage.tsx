@@ -4,6 +4,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { useServices } from '../contexts/ServicesContext';
 import CTA from '../components/CTA';
 import { CheckCircleIcon } from '../components/icons/detailIcons';
+import MetaTags from '../components/MetaTags';
 
 const ServiceDetailPage: React.FC = () => {
   const { serviceSlug } = useParams<{ serviceSlug: string }>();
@@ -16,6 +17,10 @@ const ServiceDetailPage: React.FC = () => {
 
   return (
     <>
+      <MetaTags
+        title={`${service.title} | SED Tech Academy Services`}
+        description={service.tagline}
+      />
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary/5 to-secondary/5 pt-32 pb-20 lg:pt-48 lg:pb-28 text-center overflow-hidden">
          <div className="absolute top-0 right-0 -z-0 transform translate-x-1/2 -translate-y-1/2">

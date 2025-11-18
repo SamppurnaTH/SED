@@ -1,44 +1,45 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { ContactSubmission } from '../types';
+import { useAdminAuth } from './AdminAuthContext';
+import { API_URL } from '../constants';
 
 interface ContactSubmissionsContextType {
   submissions: ContactSubmission[];
-  addSubmission: (submission: Omit<ContactSubmission, 'id' | 'submittedAt'>) => void;
 }
 
 const ContactSubmissionsContext = createContext<ContactSubmissionsContextType | undefined>(undefined);
 
 export const ContactSubmissionsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [submissions, setSubmissions] = useState<ContactSubmission[]>(() => {
-    try {
-      const saved = localStorage.getItem('contactSubmissions');
-      return saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error("Failed to parse submissions from localStorage", error);
-      return [];
-    }
-  });
+  const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
+  const { isAdminAuthenticated } = useAdminAuth();
 
   useEffect(() => {
-    try {
-        localStorage.setItem('contactSubmissions', JSON.stringify(submissions));
-    } catch (error) {
-        console.error("Failed to save submissions to localStorage", error);
-    }
-  }, [submissions]);
+    const fetchSubmissions = async () => {
+        const token = localStorage.getItem('adminToken');
+        if (!token || !isAdminAuthenticated) {
+            setSubmissions([]);
+            return;
+        }
 
-  const addSubmission = (submission: Omit<ContactSubmission, 'id' | 'submittedAt'>) => {
-    const newSubmission: ContactSubmission = {
-      ...submission,
-      id: new Date().getTime().toString(),
-      submittedAt: new Date().toISOString(),
+        try {
+            const response = await fetch(`${API_URL}/submissions`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Failed to fetch submissions');
+            const data = await response.json();
+            setSubmissions(data);
+        } catch (error) {
+            console.info("Backend offline: Unable to fetch submissions.");
+            setSubmissions([]);
+        }
     };
-    setSubmissions(prev => [newSubmission, ...prev]);
-  };
 
+    fetchSubmissions();
+  }, [isAdminAuthenticated]);
+  
   return (
-    <ContactSubmissionsContext.Provider value={{ submissions, addSubmission }}>
+    <ContactSubmissionsContext.Provider value={{ submissions }}>
       {children}
     </ContactSubmissionsContext.Provider>
   );

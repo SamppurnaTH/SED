@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/icons/Logo';
+// FIX: Corrected import for UserIcon. It is now imported from AuthIcons.tsx where it has been consolidated.
 import { EmailIcon, PasswordIcon, EyeIcon, EyeOffIcon, GoogleIcon, UserIcon as NameIcon } from '../components/icons/AuthIcons';
 import PasswordStrengthMeter from '../components/PasswordStrengthMeter';
 
@@ -14,10 +15,10 @@ const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -26,8 +27,8 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    if (email.toLowerCase() === 'admin@sed.com') {
-      setError('This email is reserved for administration and cannot be used for registration.');
+    if (email.toLowerCase().endsWith('@sed.com')) {
+      setError('This email domain is reserved for administration and cannot be used for registration.');
       return;
     }
 
@@ -47,9 +48,12 @@ const RegisterPage: React.FC = () => {
         return;
     }
     
-    console.log('Registering with:', { name, email, password });
-    login({ name, email });
-    navigate('/');
+    try {
+        await register({ name, email }, password);
+        navigate('/');
+    } catch (err: any) {
+        setError(err.message || 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -59,8 +63,8 @@ const RegisterPage: React.FC = () => {
             <Logo className="h-14 w-14 mx-auto" />
           </Link>
       </div>
-      <h2 className="text-3xl font-poppins font-bold text-dark-gray text-center">Create your account</h2>
-      <p className="mt-2 text-center text-sm text-dark-gray/80">
+      <h2 className="text-3xl font-poppins font-bold text-text-primary text-center">Create your account</h2>
+      <p className="mt-2 text-center text-sm text-text-muted">
         Already have an account?{' '}
         <Link to="/login" className="font-medium text-primary hover:underline">
           Sign in
@@ -70,7 +74,7 @@ const RegisterPage: React.FC = () => {
        <div className="mt-8">
         <button
           type="button"
-          className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-bold text-dark-gray bg-white hover:bg-light-gray focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+          className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-bold text-text-primary bg-white hover:bg-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
         >
           <GoogleIcon className="w-5 h-5" />
           Sign up with Google
@@ -82,7 +86,7 @@ const RegisterPage: React.FC = () => {
           <div className="w-full border-t border-gray-300" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">Or with email</span>
+          <span className="px-2 bg-secondary text-text-muted">Or with email</span>
         </div>
       </div>
 
@@ -173,12 +177,12 @@ const RegisterPage: React.FC = () => {
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+        {error && <p className="text-sm text-red-600 font-bold text-center">{error}</p>}
 
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-primary hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-300"
           >
             Create Account
           </button>

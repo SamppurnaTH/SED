@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
-import { useContactSubmissions } from '../contexts/ContactSubmissionsContext';
+import { API_URL } from '../constants';
 
 const ContactForm: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -14,7 +13,29 @@ const ContactForm: React.FC = () => {
     const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [responseMessage, setResponseMessage] = useState('');
     const [submittedName, setSubmittedName] = useState('');
-    const { addSubmission } = useContactSubmissions();
+    const [errors, setErrors] = useState({ name: '', email: '', message: '' });
+
+    const validate = () => {
+        let tempErrors = { name: '', email: '', message: '' };
+        let isValid = true;
+        if (!formData.name) {
+            tempErrors.name = 'Name is required.';
+            isValid = false;
+        }
+        if (!formData.email) {
+            tempErrors.email = 'Email is required.';
+            isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            tempErrors.email = 'Email is invalid.';
+            isValid = false;
+        }
+        if (!formData.message) {
+            tempErrors.message = 'Message is required.';
+            isValid = false;
+        }
+        setErrors(tempErrors);
+        return isValid;
+    };
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -27,8 +48,7 @@ const ContactForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!formData.name || !formData.email || !formData.message) {
-            alert('Please fill in all required fields (Name, Email, Message).');
+        if (!validate()) {
             return;
         }
 
@@ -36,35 +56,28 @@ const ContactForm: React.FC = () => {
         setSubmissionStatus('idle');
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = `
-                You are a friendly and helpful support agent for an tech training academy called "SCHOLASTIC A EDU. DEPOT".
-                A user named "${formData.name}" has sent a message through the contact form.
-                Their email is: ${formData.email}
-                The subject of their message is: "${formData.subject || 'No Subject'}"
-                Their message is: "${formData.message}"
-
-                Please provide a warm, reassuring, and helpful response. Acknowledge their message, thank them for reaching out, and let them know that a member of the support team will get back to them at their email address shortly regarding their specific query. Keep the tone professional yet approachable. Address them by their name.
-            `;
-
-            const response = await ai.models.generateContent({
-              model: 'gemini-2.5-flash',
-              contents: prompt,
+            const response = await fetch(`${API_URL}/submissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
             });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to send message.');
+            }
 
-            setResponseMessage(response.text);
-            addSubmission({
-                name: formData.name,
-                email: formData.email,
-                subject: formData.subject,
-                message: formData.message,
-            });
+            setResponseMessage(data.replyText);
             setSubmissionStatus('success');
             setSubmittedName(formData.name);
             setFormData({ name: '', email: '', subject: '', message: '' }); // Reset form
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error sending message:', error);
-            setResponseMessage('Sorry, something went wrong while sending your message. Please try again later or contact us directly via email.');
+            let errorMessage = 'Sorry, something went wrong. Please try again later.';
+            if (error.message && error.message.includes('Failed to fetch')) {
+                 errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+            }
+            setResponseMessage(error.message || errorMessage);
             setSubmissionStatus('error');
         } finally {
             setIsLoading(false);
@@ -75,8 +88,8 @@ const ContactForm: React.FC = () => {
         return (
             <div>
                 <h4 className="font-poppins font-bold text-lg">Message Sent!</h4>
-                <div className="mt-4 p-4 bg-dark-gray/50 border border-green-500 rounded-lg text-white/90">
-                    <p className="font-semibold text-primary">Thank you, {submittedName}!</p>
+                <div className="mt-4 p-4 bg-secondary/10 border border-secondary/20 rounded-lg text-secondary/90">
+                    <p className="font-semibold text-secondary">Thank you, {submittedName}!</p>
                     <p className="mt-2 whitespace-pre-wrap">{responseMessage}</p>
                 </div>
             </div>
@@ -86,67 +99,63 @@ const ContactForm: React.FC = () => {
     return (
         <div>
             <h4 className="font-poppins font-bold text-lg">Contact Us</h4>
-            <p className="mt-1 text-white/70">Have a question? Fill out the form below.</p>
+            <p className="mt-1 text-secondary/70">Have a question? Fill out the form below.</p>
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                <div>
-                    <label htmlFor="name" className="sr-only">Name</label>
+                 <div>
                     <input
                         type="text"
                         name="name"
-                        id="name"
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Your Name*"
-                        className="w-full bg-dark-gray/50 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-                        required
+                        className="w-full bg-transparent border-b-2 border-secondary/30 focus:border-secondary transition-colors py-2 text-secondary placeholder-secondary/50 focus:outline-none disabled:cursor-not-allowed"
+                        disabled={isLoading}
                     />
+                    {errors.name && <p className="text-red-300 text-xs mt-1">{errors.name}</p>}
                 </div>
                 <div>
-                    <label htmlFor="email" className="sr-only">Email</label>
                     <input
                         type="email"
                         name="email"
-                        id="email"
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="Your Email*"
-                        className="w-full bg-dark-gray/50 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-                        required
+                        className="w-full bg-transparent border-b-2 border-secondary/30 focus:border-secondary transition-colors py-2 text-secondary placeholder-secondary/50 focus:outline-none disabled:cursor-not-allowed"
+                        disabled={isLoading}
                     />
+                    {errors.email && <p className="text-red-300 text-xs mt-1">{errors.email}</p>}
                 </div>
                 <div>
-                    <label htmlFor="subject" className="sr-only">Subject</label>
                     <input
                         type="text"
                         name="subject"
-                        id="subject"
                         value={formData.subject}
                         onChange={handleChange}
                         placeholder="Subject"
-                        className="w-full bg-dark-gray/50 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                        className="w-full bg-transparent border-b-2 border-secondary/30 focus:border-secondary transition-colors py-2 text-secondary placeholder-secondary/50 focus:outline-none disabled:cursor-not-allowed"
+                        disabled={isLoading}
                     />
                 </div>
                 <div>
-                    <label htmlFor="message" className="sr-only">Message</label>
                     <textarea
                         name="message"
-                        id="message"
                         value={formData.message}
                         onChange={handleChange}
-                        rows={4}
+                        rows={3}
                         placeholder="Your Message*"
-                        className="w-full bg-dark-gray/50 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-                        required
+                        className="w-full bg-transparent border-b-2 border-secondary/30 focus:border-secondary transition-colors py-2 text-secondary placeholder-secondary/50 focus:outline-none resize-none disabled:cursor-not-allowed"
+                        disabled={isLoading}
                     ></textarea>
+                    {errors.message && <p className="text-red-300 text-xs mt-1">{errors.message}</p>}
                 </div>
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-primary text-white font-poppins font-bold py-3 px-6 rounded-lg hover:bg-accent transition-all duration-300 disabled:bg-primary/50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full bg-accent text-white font-poppins font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-all duration-300 disabled:bg-accent/50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                     {isLoading ? (
                         <>
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -157,28 +166,31 @@ const ContactForm: React.FC = () => {
                     )}
                 </button>
                 {submissionStatus === 'error' && (
-                     <div className="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-white/90 text-center">
+                     <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-center">
                         <p>{responseMessage}</p>
                     </div>
                 )}
             </form>
-             <div className="mt-6 text-white/70">
+             <div className="mt-6 text-sm text-secondary/70 space-y-1">
                 <p>You can also reach us at:</p>
-                <a 
-                  href="mailto:Info-skolar@scholastic-edu-depot.com" 
-                  className="hover:text-white transition" 
-                  aria-label="Email us at Info-skolar@scholastic-edu-depot.com"
-                >
-                  Email: Info-skolar@scholastic-edu-depot.com
-                </a>
-                <br />
-                <a 
-                  href="tel:+918179846868" 
-                  className="hover:text-white transition" 
-                  aria-label="Call us at +91 81798 46868"
-                >
-                  Phone: +91 81798 46868
-                </a>
+                <p>
+                  <a 
+                    href="mailto:Info-skolar@scholastic-edu-depot.com" 
+                    className="hover:text-secondary transition" 
+                    aria-label="Email us at Info-skolar@scholastic-edu-depot.com"
+                  >
+                    Email: Info-skolar@scholastic-edu-depot.com
+                  </a>
+                </p>
+                <p>
+                  <a 
+                    href="tel:+918179846868" 
+                    className="hover:text-secondary transition" 
+                    aria-label="Call us at +91 81798 46868"
+                  >
+                    Phone: +91 81798 46868
+                  </a>
+                </p>
             </div>
         </div>
     );

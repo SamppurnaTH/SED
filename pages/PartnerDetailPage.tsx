@@ -4,6 +4,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import CTA from '../components/CTA';
 import { CheckCircleIcon } from '../components/icons/detailIcons';
 import { usePartners } from '../contexts/PartnersContext';
+import MetaTags from '../components/MetaTags';
 
 const PartnerDetailPage: React.FC = () => {
   const { partnerSlug } = useParams<{ partnerSlug: string }>();
@@ -16,6 +17,11 @@ const PartnerDetailPage: React.FC = () => {
 
   return (
     <>
+      <MetaTags
+        title={`Partner: ${partner.name} | SED Tech Academy`}
+        description={partner.description}
+        imageUrl={partner.bannerImageUrl}
+      />
       {/* Banner Section */}
       <section 
         className="relative pt-48 pb-32 bg-cover bg-center" 
@@ -24,7 +30,7 @@ const PartnerDetailPage: React.FC = () => {
         <div className="absolute inset-0 bg-dark-gray/60"></div>
         <div className="container mx-auto px-6 relative z-10 text-center text-white">
           <div className="inline-block bg-white/90 p-4 rounded-full shadow-lg mb-6">
-            <img src={partner.logoUrl} alt={`${partner.name} Logo`} className="h-20 w-auto object-contain" />
+            <img src={partner.logoUrl} alt={`${partner.name} Logo`} className="h-20 w-auto object-contain" loading="lazy" decoding="async" />
           </div>
           <h1 className="font-poppins font-bold text-5xl md:text-6xl">{partner.name}</h1>
           <p className="mt-4 text-lg text-white/90">{partner.description}</p>

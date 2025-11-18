@@ -6,7 +6,7 @@ import { useServices } from '../contexts/ServicesContext';
 import Logo from '../components/icons/Logo';
 
 const AdminServicesPage: React.FC = () => {
-    const { logout } = useAdminAuth();
+    const { logout, adminUser } = useAdminAuth();
     const { services, deleteService } = useServices();
     const navigate = useNavigate();
 
@@ -21,6 +21,9 @@ const AdminServicesPage: React.FC = () => {
         }
     }
 
+    const dashboardName = adminUser?.role === 'marketing' ? 'Marketing Dashboard' : 'Admin Dashboard';
+
+
     return (
         <div className="min-h-screen bg-light-gray">
             <header className="bg-white shadow-sm">
@@ -29,7 +32,7 @@ const AdminServicesPage: React.FC = () => {
                         <Logo className="h-8 w-8 text-primary" />
                          <nav aria-label="breadcrumb">
                           <ol className="flex items-center space-x-2 text-sm">
-                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">Dashboard</Link></li>
+                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">{dashboardName}</Link></li>
                             <li><span className="text-dark-gray/50">/</span></li>
                             <li><span className="font-semibold text-dark-gray">Manage Services</span></li>
                           </ol>

@@ -53,7 +53,7 @@ const ParticleCanvas: React.FC = () => {
         this.speedX = (Math.random() * 1 - 0.5);
         this.speedY = (Math.random() * 1 - 0.5);
         // Using theme colors
-        const colors = ['#005DFF', '#00D4FF', '#5A2FFF'];
+        const colors = ['#0A2A66'];
         this.color = colors[Math.floor(Math.random() * colors.length)];
       }
 
@@ -123,7 +123,7 @@ const ParticleCanvas: React.FC = () => {
 
           if (distance < connectRadius) {
             opacityValue = 1 - (distance / connectRadius);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.25})`; // slightly more visible
+            ctx.strokeStyle = `rgba(10, 42, 102, ${opacityValue * 0.35})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);

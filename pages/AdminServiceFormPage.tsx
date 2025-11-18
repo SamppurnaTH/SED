@@ -10,7 +10,7 @@ const AdminServiceFormPage: React.FC = () => {
     const { serviceSlug } = useParams<{ serviceSlug: string }>();
     const isEditing = Boolean(serviceSlug);
     const navigate = useNavigate();
-    const { logout } = useAdminAuth();
+    const { logout, adminUser } = useAdminAuth();
     const { getServiceBySlug, addService, updateService, services } = useServices();
 
     const [formData, setFormData] = useState<Service>({
@@ -65,6 +65,9 @@ const AdminServiceFormPage: React.FC = () => {
         navigate('/admin/services');
     };
 
+    const dashboardName = adminUser?.role === 'marketing' ? 'Marketing Dashboard' : 'Admin Dashboard';
+
+
     return (
         <div className="min-h-screen bg-light-gray">
              <header className="bg-white shadow-sm">
@@ -73,7 +76,7 @@ const AdminServiceFormPage: React.FC = () => {
                         <Logo className="h-8 w-8 text-primary" />
                          <nav aria-label="breadcrumb">
                           <ol className="flex items-center space-x-2 text-sm">
-                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">Dashboard</Link></li>
+                            <li><Link to="/admin/dashboard" className="text-dark-gray/70 hover:text-primary">{dashboardName}</Link></li>
                             <li><span className="text-dark-gray/50">/</span></li>
                             <li><Link to="/admin/services" className="text-dark-gray/70 hover:text-primary">Manage Services</Link></li>
                              <li><span className="text-dark-gray/50">/</span></li>

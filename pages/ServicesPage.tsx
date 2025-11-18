@@ -12,6 +12,7 @@ import {
   WorkshopIcon,
   ProjectIncubationIcon,
 } from '../components/icons/serviceIcons';
+import MetaTags from '../components/MetaTags';
 
 const iconMap: { [key: string]: React.FC<{className: string}> } = {
   'Corporate Training': CorporateTrainingIcon,
@@ -63,6 +64,11 @@ const ServicesPage: React.FC = () => {
 
   return (
     <>
+      <MetaTags
+        title="Our Services | SED Tech Academy"
+        description="Comprehensive solutions designed to empower individuals and organizations in the tech landscape, from corporate training to career mentorship."
+      />
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-light-gray to-white pt-32 pb-20 lg:pt-48 lg:pb-28 text-center overflow-hidden">
         <div className="absolute top-0 right-0 -z-0 transform translate-x-1/2 -translate-y-1/2">

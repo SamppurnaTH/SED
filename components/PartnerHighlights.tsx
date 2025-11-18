@@ -8,12 +8,12 @@ const PartnerHighlights: React.FC = () => {
   // Handle empty partners list gracefully
   if (partners.length === 0) {
     return (
-        <section id="partners" className="py-20 lg:py-28 bg-white">
+        <section id="partners" className="py-20 lg:py-28 bg-secondary">
             <div className="container mx-auto px-6 text-center">
-                 <h2 className="font-poppins font-bold text-3xl md:text-4xl text-dark-gray">
+                 <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">
                     Our Hiring Partners
                 </h2>
-                <p className="mt-4 text-dark-gray/70">Partners will be listed here soon.</p>
+                <p className="mt-4 text-primary/70">Partners will be listed here soon.</p>
             </div>
         </section>
     );
@@ -22,9 +22,9 @@ const PartnerHighlights: React.FC = () => {
   const allPartners = [...partners, ...partners]; // Duplicate for seamless loop
 
   return (
-    <section id="partners" className="py-20 lg:py-28 bg-white">
+    <section id="partners" className="py-20 lg:py-28 bg-secondary">
       <div className="container mx-auto px-6 text-center">
-        <h2 className="font-poppins font-bold text-3xl md:text-4xl text-dark-gray">
+        <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">
           Our Hiring Partners
         </h2>
         <div className="relative mt-12 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_10%,white_90%,transparent)]">

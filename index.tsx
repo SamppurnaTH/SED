@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
@@ -9,6 +10,9 @@ import { PartnersProvider } from './contexts/PartnersContext';
 import { ServicesProvider } from './contexts/ServicesContext';
 import { ContactSubmissionsProvider } from './contexts/ContactSubmissionsContext';
 import { CoursesProvider } from './contexts/CoursesContext';
+import { UserProgressProvider } from './contexts/UserProgressContext';
+import { BlogProvider } from './contexts/BlogContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -21,17 +25,23 @@ root.render(
     <HashRouter>
       <AuthProvider>
         <AdminAuthProvider>
-          <PartnersProvider>
-            <ServicesProvider>
-              <ContactSubmissionsProvider>
-                <CoursesProvider>
-                  <SavedCoursesProvider>
-                    <App />
-                  </SavedCoursesProvider>
-                </CoursesProvider>
-              </ContactSubmissionsProvider>
-            </ServicesProvider>
-          </PartnersProvider>
+          <ToastProvider>
+            <PartnersProvider>
+              <ServicesProvider>
+                <ContactSubmissionsProvider>
+                  <CoursesProvider>
+                    <SavedCoursesProvider>
+                      <UserProgressProvider>
+                        <BlogProvider>
+                          <App />
+                        </BlogProvider>
+                      </UserProgressProvider>
+                    </SavedCoursesProvider>
+                  </CoursesProvider>
+                </ContactSubmissionsProvider>
+              </ServicesProvider>
+            </PartnersProvider>
+          </ToastProvider>
         </AdminAuthProvider>
       </AuthProvider>
     </HashRouter>

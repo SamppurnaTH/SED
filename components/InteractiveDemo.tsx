@@ -11,13 +11,13 @@ const demoSnippets = {
   body { 
     font-family: sans-serif; 
     padding: 1rem;
-    background-color: #f0f4f8;
+    background-color: #F9F6EE;
   }
-  h1 { color: #005DFF; }
+  h1 { color: #0A2A66; }
   p { font-size: 1rem; }
   button {
-    background-color: #005DFF;
-    color: white;
+    background-color: #0A2A66;
+    color: #F9F6EE;
     border: none;
     padding: 10px 20px;
     border-radius: 5px;
@@ -37,19 +37,19 @@ const demoSnippets = {
   .box {
     width: 150px;
     height: 150px;
-    background-color: #5A2FFF;
+    background-color: #0A2A66;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #F9F6EE;
     font-size: 1.2rem;
     font-family: sans-serif;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background-color 0.3s ease;
   }
   .box:hover {
     transform: rotate(15deg) scale(1.1);
-    background-color: #00D4FF;
+    opacity: 0.9;
   }
 </style>
 
@@ -58,6 +58,9 @@ const demoSnippets = {
 </div>`,
   JavaScript: `<h1>Check the Console!</h1>
 <p>This example demonstrates some basic JavaScript. Open your browser's developer console (F12 or Ctrl+Shift+I) to see the output.</p>
+<style>
+ body { background-color: #F9F6EE; color: #0A2A66; }
+</style>
 
 <script>
   // Edit the JavaScript!
@@ -115,22 +118,22 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
     <div 
         ref={modalRef}
         onClick={handleBackdropClick}
-        className="fixed inset-0 bg-dark-gray/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-primary/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         aria-modal="true"
         role="dialog"
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-secondary rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
+        <header className="flex items-center justify-between p-4 border-b border-primary/20 flex-shrink-0">
           <div className="flex items-center gap-4">
-             <h2 className="font-poppins font-bold text-xl text-dark-gray">Interactive Demo</h2>
+             <h2 className="font-poppins font-bold text-xl text-primary">Interactive Demo</h2>
              <div className="flex gap-2">
                  {(Object.keys(demoSnippets) as Array<keyof typeof demoSnippets>).map(name => (
                      <button
                         key={name}
                         onClick={() => selectSnippet(name)}
                         className={`font-poppins font-semibold py-1 px-3 rounded-full text-sm transition-colors duration-300 ${
-                            activeSnippet === name ? 'bg-primary text-white' : 'bg-gray-200 text-dark-gray hover:bg-gray-300'
+                            activeSnippet === name ? 'bg-primary text-secondary' : 'bg-primary/10 text-primary hover:bg-primary/20'
                         }`}
                      >
                         {name}
@@ -138,7 +141,7 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
                  ))}
              </div>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-dark-gray" aria-label="Close demo">
+          <button onClick={onClose} className="text-primary/50 hover:text-primary" aria-label="Close demo">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -146,20 +149,20 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
         </header>
 
         {/* Content */}
-        <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-px bg-gray-200 overflow-hidden">
+        <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-px bg-primary/20 overflow-hidden">
           {/* Code Editor */}
-          <div className="bg-dark-gray flex flex-col h-full overflow-hidden">
+          <div className="bg-primary flex flex-col h-full overflow-hidden">
             <textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full h-full p-4 bg-transparent text-white font-mono text-sm resize-none focus:outline-none"
+              className="w-full h-full p-4 bg-transparent text-secondary font-mono text-sm resize-none focus:outline-none"
               placeholder="Write your code here..."
               aria-label="Code editor"
             />
           </div>
 
           {/* Preview */}
-          <div className="bg-white h-full overflow-hidden">
+          <div className="bg-secondary h-full overflow-hidden">
             <iframe
               srcDoc={code}
               title="Live Preview"
