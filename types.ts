@@ -1,4 +1,3 @@
-
 // FIX: Removed incorrect import of 'FAQ' from './constants'. The 'FAQ' interface
 // is defined within this file, so the import was unnecessary and caused a
 // circular dependency.
@@ -7,7 +6,7 @@
 declare global {
   interface Window {
     Razorpay: any;
-    // aistudio: any; // Restored for Veo - Removed to fix conflict with existing declaration
+    csrfToken?: string;
   }
 }
 

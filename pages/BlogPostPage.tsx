@@ -56,8 +56,10 @@ const BlogPostPage: React.FC = () => {
 
             <div 
               className="prose prose-lg lg:prose-xl max-w-none mx-auto mt-12 bg-white p-8 md:p-12 rounded-2xl shadow-card border border-gray-200"
-              dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
-            />
+            >
+              <p className="whitespace-pre-wrap">{post.content}</p>
+            </div>
+
 
             <div className="mt-12 flex flex-wrap gap-2">
               {post.tags.map(tag => (

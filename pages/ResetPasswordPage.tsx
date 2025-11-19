@@ -35,7 +35,10 @@ const ResetPasswordPage: React.FC = () => {
     try {
         const response = await fetch(`${API_URL}/auth/reset-password/${resetToken}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.csrfToken || '',
+            },
             body: JSON.stringify({ password }),
         });
         

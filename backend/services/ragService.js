@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 // Configuration from env
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
@@ -80,4 +80,4 @@ const ragService = {
   }
 };
 
-module.exports = ragService;
+export default ragService;

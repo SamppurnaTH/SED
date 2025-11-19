@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Submission = require('../models/Submission');
-const { protectAdmin } = require('../middleware/authMiddleware');
-const { contactValidator } = require('../middleware/validators');
-const { GoogleGenAI } = require("@google/genai");
+import Submission from '../models/Submission.js';
+import { protectAdmin } from '../middleware/authMiddleware.js';
+import { contactValidator } from '../middleware/validators.js';
+import { GoogleGenAI } from '@google/genai';
 
 // @desc    Get all contact submissions
 // @route   GET /api/submissions
@@ -76,4 +76,4 @@ router.post('/', contactValidator, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

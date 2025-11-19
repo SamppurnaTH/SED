@@ -1,15 +1,16 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useCourses } from '../contexts/CoursesContext';
 import CourseCard from './CourseCard';
+import SkeletonCard from './skeletons/SkeletonCard';
 
 const ServiceHighlights: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
   
-  // Display up to 4 courses, handling potential empty state during loading
-  const highlightCourses = courses && courses.length > 0 ? courses.slice(0, 4) : [];
+  const highlightCourses = courses.slice(0, 4);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -33,7 +34,7 @@ const ServiceHighlights: React.FC = () => {
         observer.unobserve(currentRef);
       }
     };
-  }, []);
+  }, [isLoading]); // Rerun observer logic if loading state changes
 
   return (
     <section id="courses" className="py-20 lg:py-28 bg-secondary">
@@ -44,18 +45,30 @@ const ServiceHighlights: React.FC = () => {
           </h2>
         </div>
         <div ref={sectionRef} className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {highlightCourses.map((course, index) => (
-            <div
-              key={course.name}
-              className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-              style={{ transitionDelay: `${index * 100}ms` }}
-            >
-              <CourseCard course={course} />
-            </div>
-          ))}
-          {highlightCourses.length === 0 && (
+          {isLoading ? (
+             [...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                  style={{ transitionDelay: `${index * 100}ms` }}
+                >
+                  <SkeletonCard />
+                </div>
+             ))
+          ) : (
+            highlightCourses.map((course, index) => (
+              <div
+                key={course.slug}
+                className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                style={{ transitionDelay: `${index * 100}ms` }}
+              >
+                <CourseCard course={course} />
+              </div>
+            ))
+          )}
+          {!isLoading && highlightCourses.length === 0 && (
              <div className="col-span-full text-center text-gray-500">
-                 Loading featured courses...
+                 No featured courses available at the moment.
              </div>
           )}
         </div>

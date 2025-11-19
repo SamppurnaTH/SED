@@ -97,21 +97,21 @@ let blogPosts = [
     category: 'Web Development',
     tags: ['full stack', 'web development'],
     author: { name: 'Priya Sharma', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1888&auto=format&fit=crop' },
-    publishedDate: new Date().toISOString(),
-  },
-  // ...
+    publishedDate: new Date().toISOString()
+  }
 ];
 
 let submissions = [];
 let userProgress = {};
 let savedCourses = {};
 
-module.exports = {
-    courses,
-    partners,
-    services,
-    blogPosts,
-    submissions,
-    userProgress,
-    savedCourses,
+export {
+  courses,
+  partners,
+  services,
+  blogPosts,
+  submissions,
+  userProgress,
+  savedCourses,
+  toTopics
 };

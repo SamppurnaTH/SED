@@ -61,7 +61,8 @@ const AdminCourseFormPage: React.FC = () => {
             const response = await fetch(`${API_URL}/ai/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt }),
+                credentials: 'include',
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
@@ -83,11 +84,10 @@ const AdminCourseFormPage: React.FC = () => {
         formDataUpload.append('image', file);
         setUploading(true);
         try {
-            const token = localStorage.getItem('adminToken');
             const response = await fetch(`${API_URL}/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
                 body: formDataUpload,
+                credentials: 'include',
             });
             if (!response.ok) throw new Error('Upload failed');
             const data = await response.json();

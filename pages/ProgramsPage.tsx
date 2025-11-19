@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useCourses } from '../contexts/CoursesContext';
 import CourseCard from '../components/CourseCard';
 import CTA from '../components/CTA';
 import { useSavedCourses } from '../contexts/SavedCoursesContext';
 import MetaTags from '../components/MetaTags';
+import SkeletonCard from '../components/skeletons/SkeletonCard';
 
 const ProgramsPage: React.FC = () => {
-  const { courses } = useCourses();
+  const { courses, isLoading } = useCourses();
   const { savedCourses, isCourseSaved } = useSavedCourses();
   const [showSaved, setShowSaved] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -40,7 +40,7 @@ const ProgramsPage: React.FC = () => {
         observer.disconnect();
       }
     };
-  }, []);
+  }, [isLoading]); // Rerun when loading state changes
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(category);
@@ -115,7 +115,7 @@ const ProgramsPage: React.FC = () => {
                 <select
                   id="sort"
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-asc' | 'price-desc')}
                   className="w-full md:w-48 py-3 px-4 border border-primary/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-white text-text-primary shadow-sm cursor-pointer"
                 >
                   <option value="newest">Featured</option>
@@ -149,7 +149,7 @@ const ProgramsPage: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 border-t border-primary/10 pt-8">
             <h3 className="font-poppins font-semibold text-2xl text-primary text-center md:text-left mb-4 md:mb-0">
               {showSaved ? 'Your Saved Programs' : (selectedCategory === 'All' && !searchQuery ? 'All Programs' : 'Search Results')}
-              <span className="text-lg text-primary ml-2">({filteredCourses.length})</span>
+              <span className="text-lg text-primary/80 ml-2">({isLoading ? '...' : filteredCourses.length})</span>
             </h3>
             {savedCourses.length > 0 && (
               <button
@@ -165,46 +165,48 @@ const ProgramsPage: React.FC = () => {
             )}
           </div>
           
-          {filteredCourses.length > 0 ? (
-             <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {filteredCourses.map((course, index) => (
+          <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {isLoading ? (
+              [...Array(8)].map((_, index) => <SkeletonCard key={index} />)
+            ) : filteredCourses.length > 0 ? (
+              filteredCourses.map((course, index) => (
                 <div
-                  key={course.name}
+                  key={course.slug}
                   className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                  style={{ transitionDelay: `${index * 100}ms` }}
+                  style={{ transitionDelay: `${index * 50}ms` }}
                 >
                   <CourseCard course={course} />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 px-6 bg-white rounded-2xl border border-primary/10 shadow-sm">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/5 mb-4">
-                     <svg className="w-8 h-8 text-primary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <h3 className="font-poppins font-bold text-2xl text-primary">
-                  {showSaved ? 'No Saved Courses Found' : 'No Matching Courses'}
-                </h3>
-                <p className="mt-2 text-primary/80">
-                  {showSaved 
-                    ? 'Try viewing all programs or adjusting your filters.' 
-                    : `We couldn't find any courses matching "${searchQuery}" in the ${selectedCategory} category.`}
-                </p>
-                 {!showSaved && savedCourses.length === 0 && (
-                    <p className="mt-4 text-sm text-primary/60">Tip: Click the bookmark icon on any course to save it for later!</p>
-                 )}
-                 {(searchQuery || selectedCategory !== 'All') && (
-                     <button 
-                        onClick={() => { setSearchQuery(''); setSelectedCategory('All'); setShowSaved(false); }}
-                        className="mt-6 text-primary font-semibold hover:underline"
-                     >
-                         Clear all filters
-                     </button>
-                 )}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="col-span-full text-center py-16 px-6 bg-white rounded-2xl border border-primary/10 shadow-sm">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/5 mb-4">
+                       <svg className="w-8 h-8 text-primary/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                  </div>
+                  <h3 className="font-poppins font-bold text-2xl text-primary">
+                    {showSaved ? 'No Saved Courses Found' : 'No Matching Courses'}
+                  </h3>
+                  <p className="mt-2 text-primary/80">
+                    {showSaved 
+                      ? 'Try viewing all programs or adjusting your filters.' 
+                      : `We couldn't find any courses matching "${searchQuery}" in the ${selectedCategory} category.`}
+                  </p>
+                   {!showSaved && savedCourses.length === 0 && (
+                      <p className="mt-4 text-sm text-primary/60">Tip: Click the bookmark icon on any course to save it for later!</p>
+                   )}
+                   {(searchQuery || selectedCategory !== 'All') && (
+                       <button 
+                          onClick={() => { setSearchQuery(''); setSelectedCategory('All'); setShowSaved(false); }}
+                          className="mt-6 text-primary font-semibold hover:underline"
+                       >
+                           Clear all filters
+                       </button>
+                   )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

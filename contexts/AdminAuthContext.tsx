@@ -1,5 +1,4 @@
-
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../constants';
 
@@ -11,6 +10,7 @@ interface AdminUser {
 interface AdminAuthContextType {
   adminUser: AdminUser | null;
   isAdminAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, pass: string) => Promise<AdminUser | null>;
   logout: () => void;
 }
@@ -18,28 +18,50 @@ interface AdminAuthContextType {
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
-    try {
-      const userJson = localStorage.getItem('adminUser');
-      const token = localStorage.getItem('adminToken');
-      if (userJson && token) {
-        return JSON.parse(userJson);
-      }
-      return null;
-    } catch (error) {
-      console.error("Could not access localStorage:", error);
-      return null;
-    }
-  });
-
+  const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAdminSession = async () => {
+        try {
+            // FIX: Corrected typo from API__URL to API_URL to ensure the fetch request targets the correct backend endpoint.
+            const response = await fetch(`${API_URL}/auth/me/admin`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.user) {
+                    setAdminUser(data.user);
+                    localStorage.setItem('adminUser', JSON.stringify(data.user)); // Still useful for non-sensitive UI data
+                } else {
+                    localStorage.removeItem('adminUser');
+                }
+            } else {
+                console.error("Admin session check failed with status:", response.status);
+                localStorage.removeItem('adminUser');
+            }
+        } catch (error) {
+            console.error("Admin session check failed", error);
+            localStorage.removeItem('adminUser');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    checkAdminSession();
+  }, []);
+
 
   const login = async (email: string, pass: string): Promise<AdminUser | null> => {
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': window.csrfToken || '',
+            },
             body: JSON.stringify({ email, password: pass }),
+            credentials: 'include'
         });
 
         const data = await response.json();
@@ -52,7 +74,6 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
             const userToStore: AdminUser = data.user;
             try {
                 localStorage.setItem('adminUser', JSON.stringify(userToStore));
-                localStorage.setItem('adminToken', data.token);
             } catch (error) {
                 console.error("Could not write to localStorage:", error);
             }
@@ -69,10 +90,20 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': window.csrfToken || '',
+            },
+            credentials: 'include',
+        });
+    } catch (error) {
+        console.error("Logout API call failed", error);
+    }
     try {
       localStorage.removeItem('adminUser');
-      localStorage.removeItem('adminToken');
     } catch (error) {
       console.error("Could not remove from localStorage:", error);
     }
@@ -83,7 +114,7 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
   const isAdminAuthenticated = !!adminUser;
 
   return (
-    <AdminAuthContext.Provider value={{ adminUser, isAdminAuthenticated, login, logout }}>
+    <AdminAuthContext.Provider value={{ adminUser, isAdminAuthenticated, isLoading, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );

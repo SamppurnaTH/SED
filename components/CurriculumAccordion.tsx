@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Course } from '../types';
 
@@ -13,12 +14,17 @@ interface AccordionItemProps {
 }
 
 const AccordionItem: React.FC<AccordionItemProps> = ({ item, isOpen, onClick }) => {
+  const panelId = `accordion-panel-${item.week}`;
+  const buttonId = `accordion-button-${item.week}`;
+
   return (
     <div className="border-b border-gray-200">
       <button
+        id={buttonId}
         onClick={onClick}
         className="w-full flex justify-between items-center text-left py-5 px-2 gap-4"
         aria-expanded={isOpen}
+        aria-controls={panelId}
       >
         <div className="flex items-center gap-6">
             <span className="text-primary font-bold text-lg w-12 flex-shrink-0">
@@ -33,7 +39,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ item, isOpen, onClick }) 
             className={`w-6 h-6 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
-            viewBox="0 0 24 24"
+            viewBox="0 0 24"
             stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -41,6 +47,9 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ item, isOpen, onClick }) 
         </span>
       </button>
       <div
+        id={panelId}
+        role="region"
+        aria-labelledby={buttonId}
         className={`grid transition-all duration-500 ease-in-out ${
           isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         }`}

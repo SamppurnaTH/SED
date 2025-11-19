@@ -1,12 +1,16 @@
-const express = require('express');
+
+import express from 'express';
+import BlogPost from '../models/BlogPost.js';
+import { protectAdmin } from '../middleware/authMiddleware.js';
+import { blogPostValidator } from '../middleware/validators.js';
+import setCache from '../middleware/cacheMiddleware.js';
+
 const router = express.Router();
-const BlogPost = require('../models/BlogPost');
-const { protectAdmin } = require('../middleware/authMiddleware');
 
 // @desc    Fetch all blog posts
 // @route   GET /api/blog
 // @access  Public
-router.get('/', async (req, res) => {
+router.get('/', setCache(3600), async (req, res) => {
     try {
         const posts = await BlogPost.find({}).sort({ publishedDate: -1 });
         res.json(posts);
@@ -34,7 +38,7 @@ router.get('/:slug', async (req, res) => {
 // @desc    Create a blog post
 // @route   POST /api/blog
 // @access  Private/Admin
-router.post('/', protectAdmin, async (req, res) => {
+router.post('/', protectAdmin, blogPostValidator, async (req, res) => {
     try {
         const newPostData = { ...req.body, publishedDate: new Date().toISOString() };
         const existing = await BlogPost.findOne({ slug: newPostData.slug });
@@ -51,7 +55,7 @@ router.post('/', protectAdmin, async (req, res) => {
 // @desc    Update a blog post
 // @route   PUT /api/blog/:slug
 // @access  Private/Admin
-router.put('/:slug', protectAdmin, async (req, res) => {
+router.put('/:slug', protectAdmin, blogPostValidator, async (req, res) => {
     try {
         const post = await BlogPost.findOne({ slug: req.params.slug });
         if (post) {
@@ -85,4 +89,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

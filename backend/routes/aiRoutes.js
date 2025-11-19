@@ -1,10 +1,10 @@
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { GoogleGenAI, Modality } = require('@google/genai');
-const ragService = require('../services/ragService');
-const Course = require('../models/Course');
-const axios = require('axios'); // Required for the video proxy
+import { GoogleGenAI, Modality } from '@google/genai';
+import ragService from '../services/ragService.js';
+import Course from '../models/Course.js';
+import axios from 'axios'; // Required for the video proxy
 
 // Initialize Gemini
 // Ensure process.env.API_KEY is set in your backend .env file
@@ -188,4 +188,4 @@ router.get('/video-proxy', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

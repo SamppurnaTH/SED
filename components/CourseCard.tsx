@@ -1,4 +1,6 @@
 
+
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Course } from '../types';
@@ -40,7 +42,7 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
       </div>
 
       <div className="p-6 flex flex-col flex-grow">
-        <p className="font-semibold text-primary text-sm">{course.category}</p>
+        <p className="font-semibold text-accent text-sm">{course.category}</p>
         <h3 className="font-poppins font-bold text-xl mt-2 text-text-primary">{course.name}</h3>
         <ul className="mt-4 space-y-2 text-text-muted flex-grow">
           {course.points.map((point, index) => (

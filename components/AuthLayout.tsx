@@ -1,4 +1,6 @@
 
+
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './icons/Logo';
@@ -13,7 +15,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       {/* Left Branding Panel */}
       <div 
         className="hidden md:flex md:w-1/2 lg:w-[60%] bg-cover bg-center relative items-center justify-center p-12 text-secondary"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop')" }}
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=75&w=1200&auto=format&fit=crop')" }}
       >
         <div className="absolute inset-0 bg-primary/80"></div>
         <div className="relative z-10 text-center">

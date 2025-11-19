@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { usePartners } from '../contexts/PartnersContext';
 
@@ -41,7 +42,7 @@ const PartnerHighlights: React.FC = () => {
                 <img
                   src={partner.logoUrl}
                   alt={partner.name}
-                  className="max-h-14 w-auto object-contain filter grayscale hover:filter-none hover:scale-110 transform transition-all duration-300"
+                  className="max-h-14 w-auto object-contain filter grayscale hover:filter-none transform transition-all duration-300"
                   loading="lazy"
                   decoding="async"
                 />

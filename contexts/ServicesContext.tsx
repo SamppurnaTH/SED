@@ -38,11 +38,11 @@ export const ServicesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const addService = async (service: Service) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/services`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(service),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -55,11 +55,11 @@ export const ServicesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const updateService = async (slug: string, updatedService: Service) => {
      try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/services/${slug}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedService),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -72,10 +72,9 @@ export const ServicesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const deleteService = async (slug:string) => {
      try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/services/${slug}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!response.ok) {
             const data = await response.json();

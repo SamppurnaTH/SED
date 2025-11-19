@@ -1,29 +1,63 @@
 
-const express = require('express');
-const router = express.Router();
-const Order = require('../models/Order');
-const User = require('../models/User');
-const Course = require('../models/Course');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
-const { protectStudent, protectAdmin } = require('../middleware/authMiddleware');
+import express from 'express';
+import Order from '../models/Order.js';
+import User from '../models/User.js';
+import Course from '../models/Course.js';
+// Import Razorpay only if needed to prevent initialization errors
+let Razorpay;
+let razorpay = null;
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
-});
+// Check for Razorpay credentials
+const hasRazorpayConfig = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
+
+if (hasRazorpayConfig) {
+    try {
+        Razorpay = (await import('razorpay')).default;
+        razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+    } catch (error) {
+        console.error('Failed to initialize Razorpay:', error.message);
+    }
+} else {
+    console.warn('WARNING: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not defined. Payment processing will not work.');
+}
+
+import crypto from 'crypto';
+import { protectStudent, protectAdmin } from '../middleware/authMiddleware.js';
+import sendEmail from '../utils/sendEmail.js';
+
+const router = express.Router();
+
+// Middleware to check if Razorpay is configured
+const checkRazorpayConfig = (req, res, next) => {
+    if (!razorpay) {
+        return res.status(503).json({
+            success: false,
+            message: 'Payment processing is currently unavailable. Please try again later.'
+        });
+    }
+    next();
+};
 
 // @desc    Step 1: Initiate Razorpay Order
 // @route   POST /api/orders/create-order
 // @access  Private/Student
-router.post('/create-order', protectStudent, async (req, res) => {
+router.post('/create-order', protectStudent, checkRazorpayConfig, async (req, res) => {
     const { courseSlug, amount } = req.body;
 
     try {
         const course = await Course.findOne({ slug: courseSlug });
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (!razorpay) {
+            return res.status(503).json({
+                success: false,
+                message: 'Payment processing is currently unavailable. Please try again later.'
+            });
         }
 
         // Razorpay expects amount in paisa (smallest currency unit)
@@ -44,14 +78,24 @@ router.post('/create-order', protectStudent, async (req, res) => {
 
     } catch (error) {
         console.error("Razorpay Order Creation Failed:", error);
-        res.status(500).json({ message: 'Failed to initiate payment gateway', error: error.message });
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to initiate payment gateway', 
+            error: error.message 
+        });
     }
 });
 
 // @desc    Step 2: Verify Payment & Save to DB
 // @route   POST /api/orders/verify-payment
 // @access  Private/Student
-router.post('/verify-payment', protectStudent, async (req, res) => {
+router.post('/verify-payment', protectStudent, checkRazorpayConfig, async (req, res) => {
+    if (!razorpay) {
+        return res.status(503).json({
+            success: false,
+            message: 'Payment processing is currently unavailable. Please try again later.'
+        });
+    }
     const { 
         razorpay_order_id, 
         razorpay_payment_id, 
@@ -64,7 +108,7 @@ router.post('/verify-payment', protectStudent, async (req, res) => {
         // 1. Cryptographic Verification
         const body = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder')
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(body.toString())
             .digest('hex');
 
@@ -97,6 +141,36 @@ router.post('/verify-payment', protectStudent, async (req, res) => {
         if (!alreadyEnrolled) {
             user.enrolledCourses.push({ courseSlug, progress: 0 });
             await user.save();
+        }
+
+        // 5. Send Enrollment Confirmation Email
+        try {
+            const frontendBaseUrl = req.headers.origin || 'http://localhost:5173';
+            const dashboardUrl = `${frontendBaseUrl}/#/dashboard`;
+            const emailMessage = `
+                Dear ${user.name},
+
+                Congratulations! Your enrollment in the "${course.name}" program is confirmed.
+                
+                Your order ID is: ${razorpay_order_id}
+                
+                You can start your learning journey right away by visiting your dashboard:
+                ${dashboardUrl}
+                
+                We are excited to have you with us.
+                
+                Best Regards,
+                The SED Team
+            `;
+        
+            await sendEmail({
+                email: user.email,
+                subject: `Enrollment Confirmation: ${course.name}`,
+                message: emailMessage,
+            });
+        } catch (emailError) {
+            console.error("Enrollment confirmation email failed to send:", emailError);
+            // Do not fail the transaction if the email fails. Just log it.
         }
 
         res.status(201).json({
@@ -147,4 +221,4 @@ router.get('/', protectAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

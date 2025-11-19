@@ -37,11 +37,11 @@ export const BlogProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addPost = async (post: BlogPost) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/blog`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(post),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -54,11 +54,11 @@ export const BlogProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updatePost = async (slug: string, updatedPost: BlogPost) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/blog/${slug}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedPost),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -71,10 +71,9 @@ export const BlogProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deletePost = async (slug: string) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/blog/${slug}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!response.ok) {
              const data = await response.json();

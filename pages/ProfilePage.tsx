@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { EmailIcon, UserIcon as NameIcon, PasswordIcon, EyeIcon, EyeOffIcon } from '../components/icons/AuthIcons';
@@ -33,14 +32,19 @@ const ProfilePage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
       const fetchOrders = async () => {
-          const token = localStorage.getItem('studentToken');
-          if (!token) return;
+          if (!user) {
+              setLoadingOrders(false);
+              return;
+          }
           try {
               const response = await fetch(`${API_URL}/orders/my-orders`, {
-                  headers: { 'Authorization': `Bearer ${token}` }
+                  credentials: 'include'
               });
               if (response.ok) {
                   const data = await response.json();
@@ -53,7 +57,7 @@ const ProfilePage: React.FC = () => {
           }
       };
       fetchOrders();
-  }, []);
+  }, [user]);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,11 +104,13 @@ const ProfilePage: React.FC = () => {
       
       try {
           // 1. Upload Image
-          const token = localStorage.getItem('studentToken');
           const uploadRes = await fetch(`${API_URL}/upload`, {
               method: 'POST',
-              headers: { 'Authorization': `Bearer ${token}` },
-              body: formData
+              body: formData,
+              headers: {
+                  'X-CSRF-Token': window.csrfToken || '',
+              },
+              credentials: 'include'
           });
           
           if (!uploadRes.ok) throw new Error('Image upload failed');
@@ -120,6 +126,26 @@ const ProfilePage: React.FC = () => {
       } finally {
           setIsUploading(false);
       }
+  };
+  
+  const handleAccountDeletionRequest = async () => {
+    setIsDeleting(true);
+    try {
+        // This is a placeholder for a real API call.
+        // In a real app, this would trigger a backend process to delete user data.
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network request
+        
+        // For now, we'll just log it and show a success message.
+        // The backend should handle the actual logout and data deletion.
+        console.log("Account deletion requested for:", user?.email);
+        
+        addToast('Your account deletion request has been submitted. This may take up to 30 days to process.', 'success');
+    } catch (err: any) {
+         addToast(err.message || 'An unexpected error occurred.', 'error');
+    } finally {
+        setIsDeleting(false);
+        setIsDeleteModalOpen(false);
+    }
   };
   
   return (
@@ -240,7 +266,7 @@ const ProfilePage: React.FC = () => {
               <h2 className="font-poppins font-bold text-2xl text-text-primary mb-6">Change Password</h2>
               <form onSubmit={handlePasswordUpdate} className="space-y-6">
                 <div>
-                  <label htmlFor="currentPassword" className="block text-sm font-medium text-text-primary">Current Password</label>
+                  <label htmlFor="currentPassword">Current Password</label>
                   <div className="relative mt-1">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3"><PasswordIcon className="h-5 w-5 text-gray-400"/></span>
                     <input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="pl-10 pr-10 block w-full border-gray-300 rounded-lg shadow-sm p-3"/>
@@ -248,7 +274,7 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
                  <div>
-                  <label htmlFor="newPassword" className="block text-sm font-medium text-text-primary">New Password</label>
+                  <label htmlFor="newPassword">New Password</label>
                   <div className="relative mt-1">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3"><PasswordIcon className="h-5 w-5 text-gray-400"/></span>
                     <input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="pl-10 pr-10 block w-full border-gray-300 rounded-lg shadow-sm p-3"/>
@@ -257,7 +283,7 @@ const ProfilePage: React.FC = () => {
                    <PasswordStrengthMeter password={newPassword} />
                 </div>
                  <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary">Confirm New Password</label>
+                  <label htmlFor="confirmPassword">Confirm New Password</label>
                   <div className="relative mt-1">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3"><PasswordIcon className="h-5 w-5 text-gray-400"/></span>
                     <input id="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="pl-10 block w-full border-gray-300 rounded-lg shadow-sm p-3"/>
@@ -276,9 +302,48 @@ const ProfilePage: React.FC = () => {
                 </div>
               </form>
             </div>
+            
+            {/* Danger Zone */}
+            <div className="bg-white p-8 rounded-2xl shadow-card border-2 border-red-500/20">
+              <h2 className="font-poppins font-bold text-2xl text-red-700">Danger Zone</h2>
+              <div className="mt-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <p className="font-semibold text-text-primary">Delete this account</p>
+                    <p className="text-sm text-text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+                </div>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="mt-4 md:mt-0 bg-red-600 text-white font-poppins font-bold py-2 px-5 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
+                <h3 className="text-2xl font-bold text-text-primary">Are you sure?</h3>
+                <p className="mt-2 text-text-muted">This action cannot be undone. All of your data, including course progress and payment history, will be permanently deleted.</p>
+                <div className="mt-6 flex justify-end gap-4">
+                    <button onClick={() => setIsDeleteModalOpen(false)} className="bg-gray-200 text-text-primary font-bold py-2 px-4 rounded-lg hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleAccountDeletionRequest}
+                        disabled={isDeleting}
+                        className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-red-400"
+                    >
+                        {isDeleting ? 'Deleting...' : 'Yes, Delete Account'}
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </>
   );
 };

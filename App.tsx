@@ -3,19 +3,22 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
-import Chatbot from './components/Chatbot';
 import CookieConsentBanner from './components/CookieConsentBanner';
 import PageLoader from './components/PageLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import { trackPageView } from './services/analytics';
 
 // Lazy-loaded components
+const Chatbot = React.lazy(() => import('./components/Chatbot'));
 const HomePage = React.lazy(() => import('./pages/HomePage'));
 const AboutPage = React.lazy(() => import('./pages/AboutPage'));
 const ProgramsPage = React.lazy(() => import('./pages/ProgramsPage'));
 const CourseDetailPage = React.lazy(() => import('./pages/CourseDetailPage'));
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/RegisterPage'));
+const VerifyEmailNoticePage = React.lazy(() => import('./pages/VerifyEmailNoticePage'));
+const EmailConfirmationPage = React.lazy(() => import('./pages/EmailConfirmationPage'));
 const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
@@ -30,6 +33,7 @@ const OrderConfirmationPage = React.lazy(() => import('./pages/OrderConfirmation
 const CookiePolicyPage = React.lazy(() => import('./pages/CookiePolicyPage'));
 const TermsAndConditionsPage = React.lazy(() => import('./pages/TermsAndConditionsPage'));
 const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage'));
+const RefundPolicyPage = React.lazy(() => import('./pages/RefundPolicyPage'));
 const AIResumeBuilderPage = React.lazy(() => import('./pages/AIResumeBuilderPage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const LessonPage = React.lazy(() => import('./pages/LessonPage'));
@@ -57,11 +61,34 @@ const App: React.FC = () => {
   const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password'].some(path => location.pathname.startsWith(path));
+  const isAuthPage = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email-notice', '/verify-email'].some(path => location.pathname.startsWith(path));
   const isAdminPage = location.pathname.startsWith('/admin') || location.pathname.startsWith('/trainer');
   const isLessonPage = location.pathname.startsWith('/learning/');
   const showHeaderFooter = !isAuthPage && !isAdminPage && !isLessonPage;
 
+  // Fetch CSRF token on initial app load
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+        try {
+            const response = await fetch('/api/csrf-token');
+            if (response.ok) {
+                const data = await response.json();
+                window.csrfToken = data.csrfToken;
+            } else {
+                 console.error('Failed to fetch CSRF token, status:', response.status);
+            }
+        } catch (error) {
+            console.error('Network error fetching CSRF token:', error);
+        }
+    };
+    fetchCsrfToken();
+  }, []);
+
+  // Track page views on route change
+  useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
+  
   // Effect to handle scrolling when the page or hash changes
   useEffect(() => {
     const hash = location.hash;
@@ -125,11 +152,16 @@ const App: React.FC = () => {
                 <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/refund-policy" element={<RefundPolicyPage />} />
                 
+                {/* Auth Pages */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/verify-email-notice" element={<VerifyEmailNoticePage />} />
+                <Route path="/verify-email/:verificationToken" element={<EmailConfirmationPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password/:resetToken" element={<ResetPasswordPage />} />
+
                 <Route 
                   path="/dashboard" 
                   element={
@@ -183,16 +215,15 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/dashboard" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminDashboardPage />
                     </AdminProtectedRoute>
                   } 
                 />
-                {/* ... (rest of admin routes) ... */}
                 <Route 
                   path="/admin/analytics" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminAnalyticsPage />
                     </AdminProtectedRoute>
                   } 
@@ -200,7 +231,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/partners" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminPartnersPage />
                     </AdminProtectedRoute>
                   } 
@@ -208,7 +239,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/partners/new" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminPartnerFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -216,7 +247,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/partners/edit/:partnerSlug" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminPartnerFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -224,7 +255,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/services" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminServicesPage />
                     </AdminProtectedRoute>
                   } 
@@ -232,7 +263,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/services/new" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminServiceFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -240,7 +271,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/services/edit/:serviceSlug" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminServiceFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -248,7 +279,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/submissions" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminSubmissionsPage />
                     </AdminProtectedRoute>
                   } 
@@ -256,7 +287,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/courses" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminCoursesPage />
                     </AdminProtectedRoute>
                   } 
@@ -264,7 +295,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/courses/new" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminCourseFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -272,7 +303,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/courses/edit/:courseSlug" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin']}>
                       <AdminCourseFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -280,7 +311,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/videos" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminVideoGenerationPage />
                     </AdminProtectedRoute>
                   } 
@@ -288,7 +319,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/content-generator" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminContentGenerationPage />
                     </AdminProtectedRoute>
                   } 
@@ -296,7 +327,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/blog" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminBlogPage />
                     </AdminProtectedRoute>
                   } 
@@ -304,7 +335,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/blog/new" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminBlogFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -312,7 +343,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/admin/blog/edit/:slug" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['admin', 'marketing']}>
                       <AdminBlogFormPage />
                     </AdminProtectedRoute>
                   } 
@@ -320,7 +351,7 @@ const App: React.FC = () => {
                 <Route 
                   path="/trainer/dashboard" 
                   element={
-                    <AdminProtectedRoute>
+                    <AdminProtectedRoute allowedRoles={['trainer']}>
                       <TrainerDashboardPage />
                     </AdminProtectedRoute>
                   } 
@@ -333,7 +364,11 @@ const App: React.FC = () => {
         </main>
         {showHeaderFooter && <Footer />}
         
-        {!isAdminPage && !isLessonPage && <Chatbot />}
+        {!isAdminPage && !isLessonPage && (
+          <Suspense fallback={null}>
+            <Chatbot />
+          </Suspense>
+        )}
         
         <CookieConsentBanner />
 

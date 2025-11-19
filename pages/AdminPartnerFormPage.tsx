@@ -67,13 +67,10 @@ const AdminPartnerFormPage: React.FC = () => {
 
         setUploading(true);
         try {
-            const token = localStorage.getItem('adminToken');
             const response = await fetch(`${API_URL}/upload`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
                 body: formDataUpload,
+                credentials: 'include',
             });
 
             if (!response.ok) throw new Error('Upload failed');

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { testimonials } from '../constants';
 
@@ -31,6 +32,9 @@ const Testimonials: React.FC = () => {
     setCurrentIndex(slideIndex);
   };
 
+  // Calculate the transform value for the slider
+  const slideTransform = `translateX(-${currentIndex * 100}%)`;
+
   return (
     <section id="testimonials" className="py-20 lg:py-28 bg-secondary">
       <div className="container mx-auto px-6 text-center">
@@ -38,14 +42,19 @@ const Testimonials: React.FC = () => {
           What Our Students Say
         </h2>
         <div className="relative mt-12 max-w-3xl mx-auto h-96 md:h-80 overflow-hidden">
-          <div
-            className="flex transition-transform duration-700 ease-in-out h-full"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
+          <style jsx>{`
+            .slider-container {
+              transform: ${slideTransform};
+              transition: transform 700ms ease-in-out;
+              height: 100%;
+              display: flex;
+            }
+          `}</style>
+          <div className="slider-container">
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="w-full flex-shrink-0 h-full px-4"
+                className={`w-full flex-shrink-0 h-full px-4 ${index !== currentIndex ? 'sr-only' : ''}`}
                 aria-hidden={index !== currentIndex}
               >
                 <div className="flex flex-col items-center justify-center h-full">

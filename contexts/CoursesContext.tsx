@@ -1,10 +1,13 @@
 
+
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Course } from '../types';
 import { courses as staticCourses, API_URL } from '../constants';
 
 interface CoursesContextType {
   courses: Course[];
+  isLoading: boolean;
   getCourseBySlug: (slug: string) => Course | undefined;
   addCourse: (course: Course) => Promise<void>;
   updateCourse: (slug: string, updatedCourse: Course) => Promise<void>;
@@ -15,9 +18,11 @@ const CoursesContext = createContext<CoursesContextType | undefined>(undefined);
 
 export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCourses = async () => {
+        setIsLoading(true);
         try {
             const response = await fetch(`${API_URL}/courses`);
             if (!response.ok) throw new Error('Failed to fetch courses');
@@ -26,6 +31,8 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
         } catch (error) {
             console.info("Using static course data (Backend offline).");
             setCourses(staticCourses);
+        } finally {
+            setIsLoading(false);
         }
     };
     fetchCourses();
@@ -37,11 +44,11 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const addCourse = async (course: Course) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/courses`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(course),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -54,11 +61,11 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const updateCourse = async (slug: string, updatedCourse: Course) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/courses/${slug}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedCourse),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -71,10 +78,9 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const deleteCourse = async (slug: string) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/courses/${slug}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!response.ok) {
             const data = await response.json();
@@ -89,7 +95,7 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
 
 
   return (
-    <CoursesContext.Provider value={{ courses, getCourseBySlug, addCourse, updateCourse, deleteCourse }}>
+    <CoursesContext.Provider value={{ courses, isLoading, getCourseBySlug, addCourse, updateCourse, deleteCourse }}>
       {children}
     </CoursesContext.Provider>
   );

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const submissionSchema = new mongoose.Schema({
   name: String,
@@ -8,4 +8,6 @@ const submissionSchema = new mongoose.Schema({
   submittedAt: String
 }, { timestamps: true });
 
-module.exports = mongoose.model('Submission', submissionSchema);
+const Submission = mongoose.model('Submission', submissionSchema);
+
+export default Submission;

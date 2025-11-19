@@ -1,10 +1,14 @@
-const express = require('express');
+
+import express from 'express';
+import Service from '../models/Service.js';
+import { protectAdmin } from '../middleware/authMiddleware.js';
+import { serviceValidator } from '../middleware/validators.js';
+import setCache from '../middleware/cacheMiddleware.js';
+
 const router = express.Router();
-const Service = require('../models/Service');
-const { protectAdmin } = require('../middleware/authMiddleware');
 
 // GET /api/services
-router.get('/', async (req, res) => {
+router.get('/', setCache(3600), async (req, res) => {
     try {
         const services = await Service.find({});
         res.json(services);
@@ -28,7 +32,7 @@ router.get('/:slug', async (req, res) => {
 });
 
 // POST /api/services
-router.post('/', protectAdmin, async (req, res) => {
+router.post('/', protectAdmin, serviceValidator, async (req, res) => {
     try {
         const existing = await Service.findOne({ slug: req.body.slug });
         if (existing) {
@@ -42,7 +46,7 @@ router.post('/', protectAdmin, async (req, res) => {
 });
 
 // PUT /api/services/:slug
-router.put('/:slug', protectAdmin, async (req, res) => {
+router.put('/:slug', protectAdmin, serviceValidator, async (req, res) => {
     try {
         const service = await Service.findOne({ slug: req.params.slug });
         if (service) {
@@ -74,4 +78,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const sendEmail = async (options) => {
   // Create a transporter using environment variables
@@ -28,4 +28,4 @@ const sendEmail = async (options) => {
   console.log('Message sent: %s', info.messageId);
 };
 
-module.exports = sendEmail;
+export default sendEmail;

@@ -24,9 +24,8 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
             return;
         }
         try {
-            const token = localStorage.getItem('studentToken');
             const response = await fetch(`${API_URL}/user/progress`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (!response.ok) throw new Error('Failed to fetch progress');
             const data = await response.json();
@@ -43,11 +42,11 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!user) return;
     if (!enrolledCourses.some(c => c.courseSlug === courseSlug)) {
       try {
-        const token = localStorage.getItem('studentToken');
         const response = await fetch(`${API_URL}/user/progress/enroll`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ courseSlug }),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -62,11 +61,11 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
   const markLessonComplete = async (courseSlug: string, lessonId: string) => {
     if (!user) return;
     try {
-        const token = localStorage.getItem('studentToken');
         const response = await fetch(`${API_URL}/user/progress/complete-lesson`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ courseSlug, lessonId }),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);

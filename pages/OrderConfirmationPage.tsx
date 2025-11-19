@@ -15,7 +15,8 @@ const OrderConfirmationPage: React.FC = () => {
   const paymentMethodLabels: { [key: string]: string } = {
     card: 'Credit/Debit Card',
     upi: 'UPI',
-    netbanking: 'Net Banking'
+    netbanking: 'Net Banking',
+    razorpay: 'Online Payment'
   };
 
   return (
@@ -48,7 +49,7 @@ const OrderConfirmationPage: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-primary/70">Payment Method:</span>
-              <span className="font-medium text-primary">{paymentMethodLabels[order.paymentMethod]}</span>
+              <span className="font-medium text-primary">{paymentMethodLabels[order.paymentMethod.toLowerCase()] || 'Online'}</span>
             </div>
              <div className="flex justify-between font-bold text-lg text-primary border-t border-primary/20 pt-3 mt-3">
               <span>Total Paid:</span>

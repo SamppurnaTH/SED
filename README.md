@@ -1,4 +1,3 @@
-
 # 🎓 SCHOLASTIC A EDU. DEPOT (SED) - Next-Gen EdTech Platform
 
 ![SED Tech Academy Banner](https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop)
@@ -48,7 +47,7 @@ The application follows a **Decoupled Monorepo** structure (Frontend + Backend).
 ### Frontend
 *   **Framework**: React (Vite/CRA) + TypeScript
 *   **Styling**: Tailwind CSS + Custom Animations
-*   **State Management**: React Context API
+*   **State Management**: React Context API & Custom Hooks for testability.
 *   **Routing**: React Router v6
 
 ### Backend API
@@ -101,9 +100,12 @@ Create a `.env` file in `backend/` with the following secrets:
 | `AWS_REGION` | AWS Region (e.g., us-east-1) |
 | `RAZORPAY_KEY_ID` | Razorpay Public Key |
 | `RAZORPAY_KEY_SECRET` | Razorpay Secret Key |
-| `SMTP_HOST` | Email Server Host (e.g., smtp.gmail.com) |
-| `SMTP_USER` | SMTP Username |
-| `SMTP_PASS` | SMTP Password |
+| `SMTP_HOST` | Email Server Host (e.g., smtp.sendgrid.net) |
+| `SMTP_PORT` | Email Server Port (e.g., 587) |
+| `SMTP_USER` | SMTP Username (e.g., "apikey" for SendGrid) |
+| `SMTP_PASS` | SMTP Password or API Key |
+| `FROM_EMAIL` | The "from" email address for outgoing mail |
+| `FROM_NAME` | The "from" name for outgoing mail |
 | `ENABLE_AI_FEATURES` | `true` to enable RAG/Local LLM checks |
 
 Start the server:
@@ -126,7 +128,7 @@ npm start
 
 ## 🔐 Security Features
 
-*   **Authentication**: Role-based access control (Student, Admin, Marketing, Trainer).
+*   **Authentication**: Role-based access control (Student, Admin, Marketing, Trainer) with mandatory email verification.
 *   **Data Integrity**: All inputs sanitized via `express-validator`.
 *   **API Protection**:
     *   `helmet` for secure HTTP headers.
@@ -135,10 +137,216 @@ npm start
 
 ---
 
-## 🧪 Testing & AI Fallbacks
+## 🧪 Testing
 
-*   **AI Fallback**: If you do not have a local Ollama instance running, the Chatbot automatically switches to "Cloud Mode" using the Gemini API to answer questions based on database context.
-*   **Video Proxy**: The backend streams Veo video previews to the frontend, bypassing CORS and Auth restrictions on the raw Google Cloud URLs.
+*   **Strategy**: Business logic is decoupled from the UI via custom hooks (found in `/hooks`) for high testability. This separation of concerns allows for robust and isolated testing.
+*   **Frontend (Unit & Integration)**: Components and hooks are unit-tested using **Jest** and **React Testing Library**.
+*   **Backend (Integration & API)**: API endpoints are thoroughly tested using **Supertest** to ensure reliability and correctness.
+*   **End-to-End (E2E)**: Critical user flows (e.g., registration, course enrollment, payment) are validated using **Cypress**.
+
+---
+
+## 📊 Analytics & Monitoring
+
+The application is instrumented with a mock analytics service to demonstrate user behavior tracking, performance monitoring, and error reporting. This is implemented via a central abstraction layer, making it easy to integrate with any production analytics provider.
+
+### 1. Analytics Abstraction (`services/analytics.ts`)
+
+All analytics calls are routed through `services/analytics.ts`. This file exports several key functions:
+
+*   `trackPageView(path)`: Logs a page view.
+*   `trackEvent(name, params)`: Logs a custom user interaction (e.g., button click, form submission).
+*   `reportError(error, info)`: Reports a JavaScript error.
+*   `initPerformanceMonitoring()`: A placeholder to initialize Web Vitals tracking.
+
+Currently, these functions simply log to the console.
+
+### 2. Integration with a Production Service
+
+To enable production analytics, modify `services/analytics.ts` to call your chosen provider's SDK.
+
+**Example: Integrating Google Analytics (gtag.js) & Sentry**
+
+```typescript
+// services/analytics.ts
+import * as Sentry from "@sentry/react";
+
+// Initialize Sentry in index.tsx
+// Sentry.init({ dsn: "YOUR_SENTRY_DSN" });
+
+// --- Replace mock functions ---
+
+export const trackPageView = (path: string): void => {
+  window.gtag('config', 'YOUR_GA_TRACKING_ID', {
+    page_path: path,
+  });
+};
+
+export const trackEvent = (eventName: string, params?: object): void => {
+  window.gtag('event', eventName, params);
+};
+
+export const reportError = (error: Error, extraInfo?: object): void => {
+  Sentry.captureException(error, { extra: extraInfo });
+};
+```
+
+### 3. Tracked Events
+
+The following key user interactions are currently tracked:
+
+*   **Page Views**: All route changes are tracked.
+*   **Purchase**: A successful course enrollment via the checkout page.
+*   **Course Save/Unsave**: When a user bookmarks a course.
+*   **Resume Generation**: When the AI Resume Builder is successfully used.
+*   **Errors**: Uncaught React component errors are automatically reported via the `ErrorBoundary`.
+
+### 4. Performance Metrics (Web Vitals)
+
+The application includes a placeholder to report Core Web Vitals (LCP, FID, CLS). To enable this, install the `web-vitals` library and uncomment the implementation in `services/analytics.ts`.
+
+```bash
+npm install web-vitals
+```
+
+```typescript
+// services/analytics.ts
+import { onCLS, onFID, onLCP, Metric } from 'web-vitals';
+
+export const reportWebVitals = (metric: Metric): void => {
+  console.log(`[Analytics] Web Vital: ${metric.name}`, metric);
+  // Send to Google Analytics or other service
+};
+
+export const initPerformanceMonitoring = (): void => {
+    onCLS(reportWebVitals);
+    onFID(reportWebVitals);
+    onLCP(reportWebVitals);
+};
+```
+
+This strategy provides a comprehensive, production-ready framework for understanding user behavior, monitoring application health, and measuring performance.
+
+---
+
+## 🚀 Deployment & Production
+
+This section outlines the strategy for deploying, optimizing, and maintaining the SED platform in a production environment.
+
+### 1. Production Build Optimization
+
+The application is already configured with key production optimizations:
+
+*   **Code Splitting**: The frontend uses `React.lazy` to split the application into smaller chunks. This ensures users only download the code they need for a specific page, leading to faster initial load times.
+*   **Backend Compression**: The Express server uses the `compression` middleware to Gzip API responses, significantly reducing the size of data transferred over the network.
+*   **Asset Caching**: Hosting platforms like Vercel or Netlify automatically handle caching of static assets (JS, CSS, images) via `Cache-Control` headers, which should be leveraged.
+*   **Image Optimization**: Before uploading to S3, images should be compressed and converted to modern formats like WebP to reduce file size without significant quality loss. This can be automated in the upload pipeline.
+
+### 2. CI/CD Pipeline Setup (GitHub Actions)
+
+A Continuous Integration/Continuous Deployment (CI/CD) pipeline automates testing and deployment, ensuring code quality and consistency. Below is a sample workflow for GitHub Actions.
+
+Create a file at `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy SED Platform
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Backend Dependencies
+        run: npm install
+        working-directory: ./backend
+
+      # --- LINTING & TESTING (Add your test scripts here) ---
+      - name: Run Backend Tests
+        run: npm test # Assuming you have a test script
+        working-directory: ./backend
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI_TEST }} # Use a test database
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      # --- DEPLOYMENT (Example for Vercel & Render) ---
+      # In a real project, you would have separate jobs for frontend and backend deployment.
+      
+      - name: Deploy Frontend to Vercel
+        # This step is often handled automatically by Vercel's GitHub integration.
+        # You would connect your repo to Vercel, and it would build/deploy on push to main.
+        run: echo "Frontend deployment handled by Vercel integration."
+
+      - name: Deploy Backend to Render
+        # Render can use a deploy hook (a unique URL).
+        # You would add the hook URL as a secret in GitHub.
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            curl "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          else
+            echo "Not a push to main, skipping backend deploy."
+          fi
+```
+
+### 3. Database Backup Strategy
+
+Data is the most critical asset. A robust backup strategy is non-negotiable.
+
+*   **Recommendation**: Use **MongoDB Atlas's built-in backup features**.
+*   **Cloud Backup**:
+    *   Enable **Continuous Cloud Backups**. This allows for Point-in-Time Recovery (PITR), letting you restore the database to any minute within the last 24 hours (or more, depending on your plan).
+    *   Configure **Cloud Provider Snapshots**. These are less granular but provide cost-effective, long-term storage of your database at set intervals (e.g., every 6 hours, daily, weekly).
+*   **Security**: Ensure that access to backups is tightly controlled via IAM roles in your cloud provider.
+
+### 4. Monitoring & Error Tracking
+
+Proactively identifying and fixing errors is key to a stable application.
+
+*   **Recommendation**: Integrate a third-party service like **Sentry.io**, **LogRocket**, or **Datadog**.
+*   **Frontend Integration**: The existing `ErrorBoundary.tsx` is the perfect place to capture React component errors.
+
+**Example Integration with Sentry in `ErrorBoundary.tsx`:**
+
+```typescript
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from "@sentry/react"; // Example import
+import ErrorPage from '../pages/ErrorPage';
+
+// Sentry.init({ dsn: "YOUR_SENTRY_DSN" }); // Initialize in your app's entry point
+
+class ErrorBoundary extends Component<Props, State> {
+  // ... (existing code)
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error to your chosen service
+    Sentry.captureException(error, { extra: errorInfo });
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  // ... (rest of the component)
+}
+
+export default ErrorBoundary;
+```
+
+*   **Backend Monitoring**:
+    *   Use a logging service (like Winston or Pino) to structure logs.
+    *   Integrate Sentry's Node.js SDK to capture unhandled exceptions and performance data from your Express API.
+    *   Set up uptime monitoring (e.g., UptimeRobot, Checkly) to get alerted if your API goes down.
 
 ---
 

@@ -1,9 +1,10 @@
 
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const User = require('../models/User');
-const Course = require('../models/Course');
-const { protectStudent } = require('../middleware/authMiddleware');
+import User from '../models/User.js';
+import Course from '../models/Course.js';
+import { protectStudent } from '../middleware/authMiddleware.js';
+import { userProfileValidators } from '../middleware/validators.js';
 
 // --- User Progress Routes ---
 
@@ -25,12 +26,8 @@ router.get('/progress', protectStudent, async (req, res) => {
 // @desc    Enroll user in a course
 // @route   POST /api/user/progress/enroll
 // @access  Private/Student
-router.post('/progress/enroll', protectStudent, async (req, res) => {
+router.post('/progress/enroll', protectStudent, userProfileValidators.enroll, async (req, res) => {
     const { courseSlug } = req.body;
-
-    if (!courseSlug) {
-        return res.status(400).json({ message: 'Course slug is required.' });
-    }
 
     try {
         const user = await User.findOne({ email: req.user.email });
@@ -55,7 +52,7 @@ router.post('/progress/enroll', protectStudent, async (req, res) => {
 // @desc    Mark a lesson as complete
 // @route   POST /api/user/progress/complete-lesson
 // @access  Private/Student
-router.post('/progress/complete-lesson', protectStudent, async (req, res) => {
+router.post('/progress/complete-lesson', protectStudent, userProfileValidators.completeLesson, async (req, res) => {
     const { courseSlug, lessonId } = req.body;
     
     try {
@@ -73,7 +70,6 @@ router.post('/progress/complete-lesson', protectStudent, async (req, res) => {
         // Calculate progress percentage
         const course = await Course.findOne({ slug: courseSlug });
         if (course) {
-             // Count total topics across all weeks
              let totalTopics = 0;
              course.curriculum.forEach(week => {
                  totalTopics += week.topics.length;
@@ -96,7 +92,7 @@ router.post('/progress/complete-lesson', protectStudent, async (req, res) => {
 // @desc    Update profile image
 // @route   PUT /api/user/profile-image
 // @access  Private/Student
-router.put('/profile-image', protectStudent, async (req, res) => {
+router.put('/profile-image', protectStudent, userProfileValidators.avatar, async (req, res) => {
     const { avatarUrl } = req.body;
     try {
         const user = await User.findOne({ email: req.user.email });
@@ -132,12 +128,8 @@ router.get('/saved-courses', protectStudent, async (req, res) => {
 // @desc    Toggle a saved course for a user
 // @route   POST /api/user/saved-courses
 // @access  Private/Student
-router.post('/saved-courses', protectStudent, async (req, res) => {
+router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, async (req, res) => {
     const { courseName } = req.body;
-
-    if (!courseName) {
-        return res.status(400).json({ message: 'Course name is required.' });
-    }
     
     try {
         const user = await User.findOne({ email: req.user.email });
@@ -148,10 +140,8 @@ router.post('/saved-courses', protectStudent, async (req, res) => {
         const courseIndex = user.savedCourses.indexOf(courseName);
 
         if (courseIndex > -1) {
-            // Course is saved, so unsave it
             user.savedCourses.splice(courseIndex, 1);
         } else {
-            // Course is not saved, so save it
             user.savedCourses.push(courseName);
         }
         
@@ -163,4 +153,4 @@ router.post('/saved-courses', protectStudent, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

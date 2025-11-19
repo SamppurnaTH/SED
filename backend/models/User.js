@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -6,6 +7,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['student', 'admin', 'marketing', 'trainer'], default: 'student' },
   avatarUrl: String,
+  isVerified: { type: Boolean, default: false },
+  emailVerificationToken: String,
+  emailVerificationExpire: Date,
   enrolledCourses: [{
     courseSlug: String,
     progress: { type: Number, default: 0 },
@@ -16,4 +20,25 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpire: Date
 }, { timestamps: true });
 
-module.exports = mongoose.model('User', userSchema);
+
+// Method to generate and hash email verification token
+userSchema.methods.getEmailVerificationToken = function () {
+    // Generate token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set to emailVerificationToken field
+    this.emailVerificationToken = crypto
+        .createHash('sha256')
+        .update(verificationToken)
+        .digest('hex');
+
+    // Set expire time (e.g., 15 minutes)
+    this.emailVerificationExpire = Date.now() + 15 * 60 * 1000;
+
+    return verificationToken;
+};
+
+
+const User = mongoose.model('User', userSchema);
+
+export default User;

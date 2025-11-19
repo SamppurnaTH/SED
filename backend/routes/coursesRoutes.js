@@ -1,13 +1,16 @@
-const express = require('express');
+
+import express from 'express';
+import Course from '../models/Course.js';
+import { protectAdmin } from '../middleware/authMiddleware.js';
+import { courseValidator } from '../middleware/validators.js';
+import setCache from '../middleware/cacheMiddleware.js';
+
 const router = express.Router();
-const Course = require('../models/Course');
-const { protectAdmin } = require('../middleware/authMiddleware');
-const { courseValidator } = require('../middleware/validators');
 
 // @desc    Fetch all courses
 // @route   GET /api/courses
 // @access  Public
-router.get('/', async (req, res) => {
+router.get('/', setCache(3600), async (req, res) => {
     try {
         const courses = await Course.find({});
         res.json(courses);
@@ -54,14 +57,14 @@ router.post('/', protectAdmin, courseValidator, async (req, res) => {
 router.put('/:slug', protectAdmin, courseValidator, async (req, res) => {
     try {
         const course = await Course.findOne({ slug: req.params.slug });
-
+        
         if (course) {
-            // slug might be updated, check for collision
+            // Check if slug is being updated and if it already exists
             if (req.body.slug && req.body.slug !== course.slug) {
-                 const existing = await Course.findOne({ slug: req.body.slug });
-                 if (existing) {
+                const existing = await Course.findOne({ slug: req.body.slug });
+                if (existing) {
                     return res.status(400).json({ message: 'Course with this slug already exists.' });
-                 }
+                }
             }
 
             const updatedCourse = await Course.findOneAndUpdate(
@@ -94,4 +97,5 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+// Export the router as default
+export default router;

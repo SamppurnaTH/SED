@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
@@ -55,8 +56,8 @@ const CourseDetailPage: React.FC = () => {
             <div className="w-96 h-96 bg-gradient-to-br from-primary to-secondary rounded-full opacity-10 blur-3xl"></div>
         </div>
         <div className="container mx-auto px-6 z-10">
-          <p className="font-semibold text-primary uppercase tracking-widest">{course.category}</p>
-          <h1 className="font-poppins font-bold text-4xl md:text-5xl lg:text-6xl text-text-primary leading-tight mt-2">
+          <p className="font-semibold text-accent uppercase tracking-widest">{course.category}</p>
+          <h1 className="font-poppins font-bold text-4xl md:text-5xl lg:text-6xl text-text-primary mt-2">
             {course.name}
           </h1>
           <p className="mt-6 text-lg md:text-xl text-text-muted max-w-3xl mx-auto">
@@ -94,32 +95,41 @@ const CourseDetailPage: React.FC = () => {
                   <div className="bg-white p-8 rounded-2xl shadow-card border border-primary/10">
                       <h2 className="font-poppins font-bold text-3xl text-text-primary">Frequently Asked Questions</h2>
                       <div className="mt-6 border-t border-primary/10">
-                          {course.faqs.map((faq, index) => (
-                              <div key={index} className="border-b border-primary/10">
-                                  <button
-                                      onClick={() => handleFaqClick(index)}
-                                      className="w-full flex justify-between items-center text-left py-5 px-2 gap-4"
-                                      aria-expanded={openFaqIndex === index}
-                                  >
-                                      <h3 className={`font-poppins font-semibold text-lg transition-colors ${openFaqIndex === index ? 'text-primary' : 'text-text-primary'}`}>
-                                          {faq.question}
-                                      </h3>
-                                      <span className="text-primary flex-shrink-0 ml-4">
-                                          <svg
-                                              className={`w-6 h-6 transform transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180' : ''}`}
-                                              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                          </svg>
-                                      </span>
-                                  </button>
-                                  <div
-                                      className={`grid transition-all duration-500 ease-in-out ${openFaqIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                                      <div className="overflow-hidden">
-                                          <p className="pb-6 pl-2 pr-2 text-text-muted leading-relaxed">{faq.answer}</p>
-                                      </div>
-                                  </div>
-                              </div>
-                          ))}
+                          {course.faqs.map((faq, index) => {
+                              const panelId = `faq-panel-${index}`;
+                              const buttonId = `faq-button-${index}`;
+                              return (
+                                <div key={index} className="border-b border-primary/10">
+                                    <button
+                                        id={buttonId}
+                                        onClick={() => handleFaqClick(index)}
+                                        className="w-full flex justify-between items-center text-left py-5 px-2 gap-4"
+                                        aria-expanded={openFaqIndex === index}
+                                        aria-controls={panelId}
+                                    >
+                                        <h3 className={`font-poppins font-semibold text-lg transition-colors ${openFaqIndex === index ? 'text-primary' : 'text-text-primary'}`}>
+                                            {faq.question}
+                                        </h3>
+                                        <span className="text-primary flex-shrink-0 ml-4">
+                                            <svg
+                                                className={`w-6 h-6 transform transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180' : ''}`}
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                    <div
+                                        id={panelId}
+                                        role="region"
+                                        aria-labelledby={buttonId}
+                                        className={`grid transition-all duration-500 ease-in-out ${openFaqIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                        <div className="overflow-hidden">
+                                            <p className="pb-6 pl-2 pr-2 text-text-muted leading-relaxed">{faq.answer}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                              );
+                          })}
                       </div>
                   </div>
               )}
@@ -148,7 +158,7 @@ const CourseDetailPage: React.FC = () => {
                     <img src={course.instructor.imageUrl} alt={course.instructor.name} className="w-28 h-28 rounded-full object-cover flex-shrink-0" loading="lazy" decoding="async" />
                     <div className="mt-4 sm:mt-0 text-center sm:text-left">
                         <h4 className="font-poppins font-bold text-2xl text-text-primary">{course.instructor.name}</h4>
-                        <p className="text-primary font-medium text-lg">{course.instructor.title}</p>
+                        <p className="text-accent font-medium text-lg">{course.instructor.title}</p>
                          <p className="mt-2 text-text-muted">{course.instructor.bio}</p>
                     </div>
                  </div>

@@ -1,24 +1,58 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { useCourses } from '../contexts/CoursesContext';
+import { useApi, useCourses } from '../src/hooks/useApi';
+import { coursesApi } from '../services/api';
+import { Course } from '../types';
 import Logo from '../components/icons/Logo';
 
 const AdminCoursesPage: React.FC = () => {
     const { logout, adminUser } = useAdminAuth();
-    const { courses, deleteCourse } = useCourses();
     const navigate = useNavigate();
     const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+    
+    // Use our custom hook to fetch courses
+    const { 
+        data: courses = [], 
+        loading, 
+        error, 
+        execute: loadCourses 
+    } = useApi<Course[]>(async () => {
+        const response = await fetch('http://localhost:3001/api/courses');
+        if (!response.ok) throw new Error('Failed to fetch courses');
+        return response.json();
+    }, []);
+
+    const { deleteCourse: deleteCourseApi } = useCourses();
+    const { execute: deleteCourse, loading: deleting } = useApi(deleteCourseApi);
+
+    // Load courses on component mount
+    useEffect(() => {
+        loadCourses();
+    }, [loadCourses]);
 
     const handleLogout = () => {
         logout();
         navigate('/admin/login');
     };
 
-    const handleDelete = (slug: string, name: string) => {
+    const handleDelete = async (slug: string, name: string) => {
         if (window.confirm(`Are you sure you want to delete the course "${name}"? This action cannot be undone.`)) {
-            deleteCourse(slug);
+            try {
+                await deleteCourse(async () => {
+                    const response = await fetch(`http://localhost:3001/api/courses/${slug}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    if (!response.ok) throw new Error('Failed to delete course');
+                    return response.json();
+                });
+                // Refresh the courses list after deletion
+                loadCourses();
+            } catch (error) {
+                console.error('Failed to delete course:', error);
+            }
         }
     };
 
@@ -38,12 +72,22 @@ const AdminCoursesPage: React.FC = () => {
         }
     };
 
-    const handleBulkDelete = () => {
+    const handleBulkDelete = async () => {
         if (window.confirm(`Are you sure you want to delete ${selectedCourses.length} selected course(s)? This action cannot be undone.`)) {
-            selectedCourses.forEach(slug => {
-                deleteCourse(slug);
-            });
-            setSelectedCourses([]);
+            try {
+                // Delete all selected courses
+                await Promise.all(selectedCourses.map(slug => 
+                    fetch(`http://localhost:3001/api/courses/${slug}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    })
+                ));
+                // Refresh the courses list after deletion
+                loadCourses();
+                setSelectedCourses([]);
+            } catch (error) {
+                console.error('Failed to delete courses:', error);
+            }
         }
     };
 
@@ -75,6 +119,11 @@ const AdminCoursesPage: React.FC = () => {
                 </div>
             </header>
             <main className="container mx-auto px-6 py-8">
+                {loading && <div className="text-center py-8">Loading courses...</div>}
+                {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    Error loading courses: {error}
+                </div>}
+                
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-poppins font-semibold text-dark-gray">
                         Courses ({courses.length})

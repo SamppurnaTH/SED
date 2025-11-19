@@ -1,10 +1,14 @@
-const express = require('express');
+
+import express from 'express';
+import Partner from '../models/Partner.js';
+import { protectAdmin } from '../middleware/authMiddleware.js';
+import { partnerValidator } from '../middleware/validators.js';
+import setCache from '../middleware/cacheMiddleware.js';
+
 const router = express.Router();
-const Partner = require('../models/Partner');
-const { protectAdmin } = require('../middleware/authMiddleware');
 
 // GET /api/partners
-router.get('/', async (req, res) => {
+router.get('/', setCache(3600), async (req, res) => {
     try {
         const partners = await Partner.find({});
         res.json(partners);
@@ -28,7 +32,7 @@ router.get('/:slug', async (req, res) => {
 });
 
 // POST /api/partners
-router.post('/', protectAdmin, async (req, res) => {
+router.post('/', protectAdmin, partnerValidator, async (req, res) => {
     try {
         const existing = await Partner.findOne({ slug: req.body.slug });
         if (existing) {
@@ -42,7 +46,7 @@ router.post('/', protectAdmin, async (req, res) => {
 });
 
 // PUT /api/partners/:slug
-router.put('/:slug', protectAdmin, async (req, res) => {
+router.put('/:slug', protectAdmin, partnerValidator, async (req, res) => {
     try {
         const partner = await Partner.findOne({ slug: req.params.slug });
         if (partner) {
@@ -74,4 +78,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -16,15 +16,14 @@ export const ContactSubmissionsProvider: React.FC<{ children: ReactNode }> = ({ 
 
   useEffect(() => {
     const fetchSubmissions = async () => {
-        const token = localStorage.getItem('adminToken');
-        if (!token || !isAdminAuthenticated) {
+        if (!isAdminAuthenticated) {
             setSubmissions([]);
             return;
         }
 
         try {
             const response = await fetch(`${API_URL}/submissions`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (!response.ok) throw new Error('Failed to fetch submissions');
             const data = await response.json();

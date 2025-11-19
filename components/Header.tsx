@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { navLinks } from '../constants';
@@ -10,6 +11,7 @@ import { UserIcon } from './icons/AuthIcons';
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuAriaExpanded = isMenuOpen ? 'true' : 'false';
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,15 +35,13 @@ const Header: React.FC = () => {
   // --- DYNAMIC COLOR LOGIC ---
   const onHomePage = location.pathname === '/';
   
-  const isHeaderBgDark = isScrolled || isMenuOpen;
+  const isHeaderSolid = isScrolled || isMenuOpen;
   
-  // The transparent header on the homepage sits on a dark hero image.
-  const isEffectivelyDark = isHeaderBgDark || (!isHeaderBgDark && onHomePage);
+  // When the header has a solid dark background (scrolled/menu open) or is on the homepage (over the dark hero), the text should be white.
+  const useWhiteText = isHeaderSolid || onHomePage;
 
-  // Determine text and button colors based on the effective background
-  const textColorClass = isEffectivelyDark ? 'text-secondary' : 'text-text-primary';
-  const buttonTextColorClass = isEffectivelyDark ? 'text-primary' : 'text-secondary';
-  const loginLinkColorClass = isEffectivelyDark ? 'text-secondary' : 'text-text-primary';
+  // For a transparent header on other pages, the text color must adapt to the light mode of the page background.
+  const navLinkColor = useWhiteText ? 'text-secondary' : 'text-text-primary';
 
 
   return (
@@ -57,7 +57,7 @@ const Header: React.FC = () => {
 
         <nav className="hidden lg:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <Link key={link.name} to={link.href} className={`font-poppins font-medium hover:opacity-75 transition-opacity ${textColorClass}`} aria-label={`Go to ${link.name} section`}>
+            <Link key={link.name} to={link.href} className={`font-poppins font-medium hover:opacity-75 transition-opacity ${navLinkColor}`} aria-label={`Go to ${link.name} section`}>
               {link.name}
             </Link>
           ))}
@@ -66,7 +66,7 @@ const Header: React.FC = () => {
         <div className="hidden lg:flex items-center space-x-6">
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" className={`flex items-center gap-2 font-poppins font-medium hover:opacity-75 transition-opacity ${textColorClass}`}>
+                <Link to="/dashboard" className={`flex items-center gap-2 font-poppins font-medium hover:opacity-75 transition-opacity ${navLinkColor}`}>
                     {user?.avatarUrl ? (
                         <img src={user.avatarUrl} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-white/30" />
                     ) : (
@@ -80,7 +80,7 @@ const Header: React.FC = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className={`font-poppins font-medium hover:opacity-75 transition-opacity ${loginLinkColorClass}`} aria-label="Login to your account">
+                <Link to="/login" className={`font-poppins font-medium hover:opacity-75 transition-opacity ${navLinkColor}`} aria-label="Login to your account">
                     Login
                 </Link>
                 <Link to="/register" className={`font-poppins font-bold py-2 px-6 rounded-lg hover:scale-105 active:scale-95 hover:shadow-lg transition-all duration-300 bg-accent text-white`} aria-label="Create an account">
@@ -92,7 +92,7 @@ const Header: React.FC = () => {
 
 
         <button
-          className={`lg:hidden ${textColorClass}`}
+          className={`lg:hidden ${navLinkColor}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}

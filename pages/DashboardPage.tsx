@@ -10,6 +10,7 @@ import UpcomingDeadlines from '../components/UpcomingDeadlines';
 import InstructorMessages from '../components/InstructorMessages';
 import { MyCoursesIcon, ResumeIcon, SettingsIcon } from '../components/icons/DashboardIcons';
 import { BriefcaseIcon } from '../components/icons/detailIcons';
+import WidgetErrorBoundary from '../components/WidgetErrorBoundary';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -53,7 +54,9 @@ const DashboardPage: React.FC = () => {
               {enrolledCoursesDetails.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {enrolledCoursesDetails.map(course => (
-                    <EnrolledCourseCard key={course.slug} course={course} progress={course.progress} />
+                    <WidgetErrorBoundary key={course.slug}>
+                      <EnrolledCourseCard course={course} progress={course.progress} />
+                    </WidgetErrorBoundary>
                   ))}
                 </div>
               ) : (
@@ -107,8 +110,12 @@ const DashboardPage: React.FC = () => {
                       </div>
                   </Link>
               </div>
-              <UpcomingDeadlines enrolledCourses={enrolledCoursesDetails} />
-              <InstructorMessages />
+              <WidgetErrorBoundary>
+                <UpcomingDeadlines enrolledCourses={enrolledCoursesDetails} />
+              </WidgetErrorBoundary>
+              <WidgetErrorBoundary>
+                <InstructorMessages />
+              </WidgetErrorBoundary>
             </div>
 
           </div>

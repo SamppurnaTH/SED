@@ -37,11 +37,11 @@ export const PartnersProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const addPartner = async (partner: Partner) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/partners`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(partner),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -54,11 +54,11 @@ export const PartnersProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const updatePartner = async (slug: string, updatedPartner: Partner) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/partners/${slug}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedPartner),
+            credentials: 'include',
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
@@ -71,10 +71,9 @@ export const PartnersProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const deletePartner = async (slug: string) => {
     try {
-        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_URL}/partners/${slug}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!response.ok) {
             const data = await response.json();

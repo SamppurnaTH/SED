@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { features } from '../constants';
 import { Feature } from '../types';
@@ -60,7 +61,7 @@ const WhyChooseUs: React.FC = () => {
       <div className="container mx-auto px-6">
         <div className="text-center">
           <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">
-            Why Choose <span className="text-primary">SED Tech Academy</span>?
+            Why Choose <span className="text-accent">SED Tech Academy</span>?
           </h2>
            <p className="mt-4 text-lg text-primary/80 max-w-3xl mx-auto">
             We are committed to providing a transformative learning experience that equips you with the skills, confidence, and connections to succeed in the tech industry.

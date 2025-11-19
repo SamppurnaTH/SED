@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { API_URL } from '../constants';
 
@@ -58,7 +57,10 @@ const ContactForm: React.FC = () => {
         try {
             const response = await fetch(`${API_URL}/submissions`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': window.csrfToken || '',
+                },
                 body: JSON.stringify(formData),
             });
             

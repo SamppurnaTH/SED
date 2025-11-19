@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatIcon } from './icons/ChatIcon';
 import Logo from './icons/Logo';
@@ -81,7 +82,7 @@ const Chatbot: React.FC = () => {
         </header>
 
         {/* Messages */}
-        <div ref={chatBodyRef} className="flex-grow p-4 overflow-y-auto bg-light-gray">
+        <div ref={chatBodyRef} className="flex-grow p-4 overflow-y-auto bg-light-gray" role="log" aria-live="polite">
           <div className="space-y-4">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -92,7 +93,7 @@ const Chatbot: React.FC = () => {
                       : 'bg-white text-dark-gray shadow-sm rounded-bl-lg'
                   }`}
                 >
-                  <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br />') }} />
+                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ))}

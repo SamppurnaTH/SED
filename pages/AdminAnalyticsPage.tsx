@@ -17,7 +17,12 @@ interface BackendOrder {
         name: string;
         slug: string;
     };
+    user: {
+        name: string;
+        email: string;
+    };
     createdAt: string;
+    orderId: string;
 }
 
 const StatCard: React.FC<{ title: string; value: string; subtext?: string; icon: React.ReactNode; }> = ({ title, value, subtext, icon }) => (
@@ -44,12 +49,9 @@ const AdminAnalyticsPage: React.FC = () => {
 
     useEffect(() => {
         const fetchOrders = async () => {
-            const token = localStorage.getItem('adminToken');
-            if (!token) return;
-            
             try {
                 const response = await fetch(`${API_URL}/orders`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
                 if (response.ok) {
                     const data = await response.json();
@@ -86,7 +88,7 @@ const AdminAnalyticsPage: React.FC = () => {
         submissionsByDay[dateString] = 0;
     }
     submissions.forEach(sub => {
-        const dateString = sub.submittedAt.split('T')[0];
+        const dateString = new Date(sub.submittedAt).toISOString().split('T')[0];
         if (submissionsByDay[dateString] !== undefined) {
             submissionsByDay[dateString]++;
         }
@@ -174,9 +176,9 @@ const AdminAnalyticsPage: React.FC = () => {
                             <tbody>
                                 {orders.slice(0, 5).map(order => (
                                     <tr key={order._id} className="bg-white border-b hover:bg-gray-50">
-                                        <td className="px-6 py-4 font-mono text-xs">{(order as any).orderId}</td>
-                                        <td className="px-6 py-4">{(order as any).user?.name || 'Unknown'}</td>
-                                        <td className="px-6 py-4">{(order as any).course?.name || 'Unknown'}</td>
+                                        <td className="px-6 py-4 font-mono text-xs">{order.orderId}</td>
+                                        <td className="px-6 py-4">{order.user?.name || 'Unknown'}</td>
+                                        <td className="px-6 py-4">{order.course?.name || 'Unknown'}</td>
                                         <td className="px-6 py-4">₹{order.amount.toLocaleString()}</td>
                                         <td className="px-6 py-4">
                                             <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">{order.status}</span>

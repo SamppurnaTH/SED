@@ -15,20 +15,24 @@ const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     if (!name || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
+      setIsLoading(false);
       return;
     }
 
     if (email.toLowerCase().endsWith('@sed.com')) {
       setError('This email domain is reserved for administration and cannot be used for registration.');
+      setIsLoading(false);
       return;
     }
 
@@ -36,23 +40,28 @@ const RegisterPage: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         setError('Please enter a valid email address.');
+        setIsLoading(false);
         return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      setIsLoading(false);
       return;
     }
     if (password.length < 6) {
         setError('Password must be at least 6 characters long.');
+        setIsLoading(false);
         return;
     }
     
     try {
         await register({ name, email }, password);
-        navigate('/');
+        navigate('/verify-email-notice', { state: { email } });
     } catch (err: any) {
         setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -182,9 +191,10 @@ const RegisterPage: React.FC = () => {
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-300"
+            disabled={isLoading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-accent hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-300 disabled:bg-accent/70 disabled:cursor-not-allowed"
           >
-            Create Account
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </div>
       </form>

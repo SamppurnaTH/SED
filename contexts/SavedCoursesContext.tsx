@@ -1,8 +1,8 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { API_URL } from '../constants';
+import { trackEvent } from '../services/analytics';
 
 interface SavedCoursesContextType {
   savedCourses: string[];
@@ -24,9 +24,8 @@ export const SavedCoursesProvider: React.FC<{ children: ReactNode }> = ({ childr
         return;
       }
       try {
-        const token = localStorage.getItem('studentToken');
         const response = await fetch(`${API_URL}/user/saved-courses`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
         if (!response.ok) throw new Error('Failed to fetch saved courses');
         const data = await response.json();
@@ -43,6 +42,7 @@ export const SavedCoursesProvider: React.FC<{ children: ReactNode }> = ({ childr
   const toggleSaveCourse = async (courseName: string) => {
     if (!user) {
       addToast('Please log in to save courses.', 'info');
+      trackEvent('save_attempt_logged_out', { courseName });
       return;
     }
     const isCurrentlySaved = savedCourses.includes(courseName);
@@ -55,11 +55,11 @@ export const SavedCoursesProvider: React.FC<{ children: ReactNode }> = ({ childr
     );
 
     try {
-      const token = localStorage.getItem('studentToken');
       const response = await fetch(`${API_URL}/user/saved-courses`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ courseName }),
+          credentials: 'include',
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
@@ -69,8 +69,10 @@ export const SavedCoursesProvider: React.FC<{ children: ReactNode }> = ({ childr
       
       if (isCurrentlySaved) {
           addToast(`Removed ${courseName} from saved courses.`, 'info');
+          trackEvent('course_unsaved', { courseName });
       } else {
           addToast(`${courseName} saved successfully!`, 'success');
+          trackEvent('course_saved', { courseName });
       }
       
     } catch (error) {

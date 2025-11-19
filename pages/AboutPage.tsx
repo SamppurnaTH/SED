@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import CTA from '../components/CTA';
 import { teamMembers, coreValues } from '../constants';
@@ -93,7 +94,7 @@ const AboutPage: React.FC = () => {
         </div>
         <div className="container mx-auto px-6 z-10">
           <h1 className="font-poppins font-bold text-4xl md:text-5xl lg:text-6xl text-primary leading-tight">
-            About <span className="text-primary">SED Tech Academy</span>
+            About <span className="text-accent">SED Tech Academy</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-primary/80 max-w-3xl mx-auto">
             We are on a mission to bridge the gap between academic learning and industry demands, empowering the next generation of tech leaders.
@@ -102,11 +103,11 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* Our Story Section */}
-      <section className="py-20 lg:py-28">
+      <section className="py-20 lg:py-28 bg-background">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-                <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="A mentor guiding a student at a tech academy" className="rounded-2xl shadow-2xl w-full h-auto object-cover" loading="lazy" decoding="async"/>
+                <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=75&w=1024&auto=format&fit=crop" alt="A mentor guiding a student at a tech academy" className="rounded-2xl shadow-2xl w-full h-auto object-cover" loading="lazy" decoding="async"/>
             </div>
             <div className="text-left">
               <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">Our Story</h2>
@@ -145,7 +146,7 @@ const AboutPage: React.FC = () => {
       </section>
       
       {/* Core Values Section */}
-      <section className="py-20 lg:py-28 bg-secondary">
+      <section className="py-20 lg:py-28 bg-background">
         <div className="container mx-auto px-6">
             <div className="text-center">
             <h2 className="font-poppins font-bold text-3xl md:text-4xl text-primary">

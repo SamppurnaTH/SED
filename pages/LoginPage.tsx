@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
@@ -6,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAdminAuth } from '../contexts/AdminAuthContext';
 import Logo from '../components/icons/Logo';
 import { EmailIcon, PasswordIcon, EyeIcon, EyeOffIcon, GoogleIcon } from '../components/icons/AuthIcons';
+import { API_URL } from '../constants';
+import { useToast } from '../contexts/ToastContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -13,9 +14,30 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | React.ReactNode>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const { login: studentLogin } = useAuth();
   const { login: adminLogin } = useAdminAuth();
   const navigate = useNavigate();
+  const { addToast } = useToast();
+  
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    try {
+        const response = await fetch(`${API_URL}/auth/resend-verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        addToast('A new verification email has been sent to your address.', 'success');
+    } catch (err: any) {
+        addToast(err.message || 'Failed to resend email.', 'error');
+    } finally {
+        setIsResending(false);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +74,23 @@ const LoginPage: React.FC = () => {
             navigate('/');
         } catch (err: any) {
             console.error("Student login failed:", err);
-            setError(err.message || 'An unexpected error occurred during login.');
+             if (err.message && err.message.includes('verify your email')) {
+                setError(
+                    <span>
+                        Please verify your email. Didn't get an email?{' '}
+                        <button 
+                            type="button"
+                            onClick={handleResendVerification}
+                            disabled={isResending}
+                            className="font-bold text-primary hover:underline disabled:text-gray-500"
+                        >
+                            {isResending ? 'Sending...' : 'Resend it.'}
+                        </button>
+                    </span>
+                );
+            } else {
+                setError(err.message || 'An unexpected error occurred during login.');
+            }
         } finally {
             setIsLoading(false);
         }

@@ -2,7 +2,7 @@
 // FIX: Import the BlogPost type to be used for the new blogPosts constant.
 import { Course, Partner, NavLink, Feature, TeamMember, CoreValue, Testimonial, FAQ, Service, BlogPost } from './types';
 
-export const API_URL = 'http://localhost:3001/api';
+export const API_URL = '/api';
 
 // Helper to convert string array to Topic array matching the Course interface
 // Updated to include videoUrl and content for rich LMS experience in static/demo mode

@@ -82,6 +82,7 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
   const [code, setCode] = useState(demoSnippets.HTML);
   const [activeSnippet, setActiveSnippet] = useState('HTML');
   const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -89,16 +90,48 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
         onClose();
       }
     };
+    
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = 'auto';
+
+      // Focus trap logic
+      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements || focusableElements.length === 0) return;
+      
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      // Focus the close button on open
+      closeButtonRef.current?.focus();
+
+      const handleTabKeyPress = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          if (e.shiftKey) { // Shift + Tab (backwards)
+            if (document.activeElement === firstElement) {
+              lastElement.focus();
+              e.preventDefault();
+            }
+          } else { // Tab (forwards)
+            if (document.activeElement === lastElement) {
+              firstElement.focus();
+              e.preventDefault();
+            }
+          }
+        }
+      };
+
+      const currentModal = modalRef.current;
+      currentModal?.addEventListener('keydown', handleTabKeyPress);
+      
+      return () => {
+        document.body.style.overflow = 'auto';
+        window.removeEventListener('keydown', handleKeyDown);
+        currentModal?.removeEventListener('keydown', handleTabKeyPress);
+      };
     }
-    return () => {
-      document.body.style.overflow = 'auto';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
   }, [isOpen, onClose]);
   
   const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -141,7 +174,7 @@ const InteractiveDemo: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ i
                  ))}
              </div>
           </div>
-          <button onClick={onClose} className="text-primary/50 hover:text-primary" aria-label="Close demo">
+          <button ref={closeButtonRef} onClick={onClose} className="text-primary/50 hover:text-primary" aria-label="Close demo">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>

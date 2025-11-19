@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useCourses } from '../contexts/CoursesContext';
@@ -8,6 +7,7 @@ import { Order } from '../types';
 import { API_URL } from '../constants';
 import { useToast } from '../contexts/ToastContext';
 import Logo from '../components/icons/Logo';
+import { trackEvent } from '../services/analytics';
 
 const CheckoutPage: React.FC = () => {
   const { courseSlug } = useParams<{ courseSlug: string }>();
@@ -50,20 +50,19 @@ const CheckoutPage: React.FC = () => {
             setIsProcessing(false);
             return;
         }
-
-        const token = localStorage.getItem('studentToken');
         
         // 1. Create Order on Backend
         const orderResponse = await fetch(`${API_URL}/orders/create-order`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'X-CSRF-Token': window.csrfToken || '',
             },
             body: JSON.stringify({
                 courseSlug: course.slug,
                 amount: totalAmount,
             }),
+            credentials: 'include',
         });
 
         const orderData = await orderResponse.json();
@@ -79,7 +78,7 @@ const CheckoutPage: React.FC = () => {
             currency: orderData.currency,
             name: "SCHOLASTIC A EDU. DEPOT",
             description: `Enrollment for ${course.name}`,
-            image: "https://your-logo-url.com/logo.png", // Replace with actual logo URL
+            image: "/logo.png",
             order_id: orderData.id,
             handler: async function (response: any) {
                 // 3. Verify Payment on Backend
@@ -88,7 +87,7 @@ const CheckoutPage: React.FC = () => {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
+                            'X-CSRF-Token': window.csrfToken || '',
                         },
                         body: JSON.stringify({
                             razorpay_order_id: response.razorpay_order_id,
@@ -96,7 +95,8 @@ const CheckoutPage: React.FC = () => {
                             razorpay_signature: response.razorpay_signature,
                             courseSlug: course.slug,
                             amount: totalAmount
-                        })
+                        }),
+                        credentials: 'include',
                     });
 
                     const verifyData = await verifyResponse.json();
@@ -108,6 +108,18 @@ const CheckoutPage: React.FC = () => {
                             transactionDate: verifyData.transactionDate,
                             paymentMethod: 'Razorpay',
                         };
+                        // Track successful purchase event
+                        trackEvent('purchase', {
+                            currency: 'INR',
+                            value: totalAmount,
+                            transaction_id: verifyData.orderId,
+                            items: [{
+                                item_id: course.slug,
+                                item_name: course.name,
+                                price: course.pricing.amount,
+                                quantity: 1
+                            }]
+                        });
                         navigate('/order-confirmation', { state: { order: orderDetails }, replace: true });
                     } else {
                         addToast(verifyData.message || 'Payment verification failed', 'error');
@@ -119,20 +131,18 @@ const CheckoutPage: React.FC = () => {
             prefill: {
                 name: user?.name,
                 email: user?.email,
-                contact: "9999999999" // In a real app, ask user for phone or fetch from profile
             },
             notes: {
                 address: "SED Corporate Office"
             },
             theme: {
-                color: "#1E3A8A" // Primary color
+                color: "#010133" // Primary color
             }
         };
 
         const paymentObject = new (window as any).Razorpay(options);
         paymentObject.open();
         
-        // Stop processing spinner when modal opens (handling close is tricker, usually handled by modal events)
         paymentObject.on('payment.failed', function (response: any){
             addToast(response.error.description, 'error');
             setIsProcessing(false);

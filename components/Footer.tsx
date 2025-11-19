@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './icons/Logo';
@@ -53,6 +52,7 @@ const Footer: React.FC = () => {
              <Link to="/privacy-policy" className="text-sm hover:text-secondary transition">Privacy Policy</Link>
              <Link to="/terms-and-conditions" className="text-sm hover:text-secondary transition">Terms & Conditions</Link>
              <Link to="/cookie-policy" className="text-sm hover:text-secondary transition">Cookie Policy</Link>
+             <Link to="/refund-policy" className="text-sm hover:text-secondary transition">Refund Policy</Link>
           </div>
           <p>&copy; {new Date().getFullYear()} SCHOLASTIC A EDU. DEPOT. All Rights Reserved.</p>
         </div>

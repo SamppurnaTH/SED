@@ -1,41 +1,84 @@
 
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const { S3Client } = require('@aws-sdk/client-s3');
-const multerS3 = require('multer-s3');
-const router = express.Router();
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import { S3Client } from '@aws-sdk/client-s3';
+import multerS3 from 'multer-s3';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Initialize S3 Client
-// Ensure these variables are set in your .env file
-const s3 = new S3Client({
+const router = express.Router();
+import { protectAdmin, protectStudent } from '../middleware/authMiddleware.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// A middleware to check if user is either student or admin
+const protectAnyUser = (req, res, next) => {
+    // We check for admin token first
+    const adminToken = req.cookies.admin_session_token;
+    if (adminToken) {
+        return protectAdmin(req, res, next);
+    }
+    // If no admin token, check for student token
+    const studentToken = req.cookies.student_session_token;
+    if (studentToken) {
+        return protectStudent(req, res, next);
+    }
+    // If neither, user is not authenticated
+    return res.status(401).json({ message: 'Not authorized, no token' });
+};
+
+// Check for required AWS environment variables
+const requiredEnvVars = ['AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_BUCKET_NAME'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+    console.warn(`WARNING: The following required AWS environment variables are missing: ${missingVars.join(', ')}`);
+    console.warn('File uploads will be disabled. Please set these variables in your .env file to enable file uploads.');
+}
+
+// Initialize S3 Client only if all required variables are present
+const s3 = missingVars.length === 0 ? new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
-});
+}) : null;
 
-// Configure Multer to use S3
-const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        bucket: process.env.AWS_BUCKET_NAME,
-        contentType: multerS3.AUTO_CONTENT_TYPE, // Automatically set the Content-Type header
-        metadata: function (req, file, cb) {
-            cb(null, { fieldName: file.fieldname });
+// Configure Multer based on whether S3 is available
+let upload;
+if (s3) {
+    // Use S3 storage if configured
+    upload = multer({
+        storage: multerS3({
+            s3: s3,
+            bucket: process.env.AWS_BUCKET_NAME,
+            contentType: multerS3.AUTO_CONTENT_TYPE,
+            metadata: function (req, file, cb) {
+                cb(null, { fieldName: file.fieldname });
+            },
+            key: function (req, file, cb) {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                cb(null, `uploads/${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+            }
+        }),
+        fileFilter: function (req, file, cb) {
+            checkFileType(file, cb);
         },
-        key: function (req, file, cb) {
-            // Generate a unique filename
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, `uploads/${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
-        }
-    }),
-    fileFilter: function (req, file, cb) {
-        checkFileType(file, cb);
-    },
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-});
+        limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    });
+} else {
+    // Fall back to memory storage if S3 is not configured
+    upload = multer({
+        storage: multer.memoryStorage(),
+        fileFilter: function (req, file, cb) {
+            checkFileType(file, cb);
+        },
+        limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+    });
+}
 
 // File Filter to allow only images
 function checkFileType(file, cb) {
@@ -52,17 +95,26 @@ function checkFileType(file, cb) {
 
 // @desc    Upload an image to S3
 // @route   POST /api/upload
-// @access  Private (Admin)
-router.post('/', upload.single('image'), (req, res) => {
+// @access  Private (Admin or Student)
+router.post('/', protectAnyUser, upload.single('image'), (req, res) => {
     if (!req.file) {
-         return res.status(400).send({ message: 'No file uploaded' });
+        return res.status(400).send({ message: 'No file uploaded' });
+    }
+    
+    // If S3 is not configured, we're using memory storage
+    if (!s3) {
+        return res.status(200).json({
+            message: 'File uploads are not properly configured. Running in development mode.',
+            url: null,
+            warning: 'AWS S3 is not configured. File was not saved to persistent storage.'
+        });
     }
     
     // req.file.location contains the public URL of the file in S3
-    res.send({ 
+    res.status(200).json({ 
         message: 'Image uploaded successfully',
         url: req.file.location 
     });
 });
 
-module.exports = router;
+export default router;

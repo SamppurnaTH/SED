@@ -1,3 +1,5 @@
+
+
 import React, { useState } from 'react';
 import { faqs } from '../constants';
 
@@ -8,15 +10,21 @@ interface FaqItemProps {
   };
   isOpen: boolean;
   onClick: () => void;
+  id: string;
 }
 
-const FaqItem: React.FC<FaqItemProps> = ({ faq, isOpen, onClick }) => {
+const FaqItem: React.FC<FaqItemProps> = ({ faq, isOpen, onClick, id }) => {
+  const panelId = `faq-panel-${id}`;
+  const buttonId = `faq-button-${id}`;
+
   return (
     <div className="border-b border-gray-200 py-6">
       <button
+        id={buttonId}
         onClick={onClick}
         className="w-full flex justify-between items-center text-left gap-4"
         aria-expanded={isOpen}
+        aria-controls={panelId}
       >
         <h3 className={`font-poppins font-semibold text-lg transition-colors ${isOpen ? 'text-primary' : 'text-dark-gray'}`}>
           {faq.question}
@@ -26,7 +34,7 @@ const FaqItem: React.FC<FaqItemProps> = ({ faq, isOpen, onClick }) => {
             className={`w-6 h-6 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
-            viewBox="0 0 24 24"
+            viewBox="0 0 24"
             stroke="currentColor"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -34,6 +42,9 @@ const FaqItem: React.FC<FaqItemProps> = ({ faq, isOpen, onClick }) => {
         </span>
       </button>
       <div
+        id={panelId}
+        role="region"
+        aria-labelledby={buttonId}
         className={`grid transition-all duration-500 ease-in-out ${
           isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         }`}
@@ -68,6 +79,7 @@ const FAQ: React.FC = () => {
           {faqs.map((faq, index) => (
             <FaqItem
               key={index}
+              id={`faq-${index}`}
               faq={faq}
               isOpen={openIndex === index}
               onClick={() => handleClick(index)}
