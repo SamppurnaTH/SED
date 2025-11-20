@@ -1,5 +1,4 @@
-
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -45,4 +44,4 @@ const protectStudent = (req, res, next) => {
     }
 };
 
-export { protectAdmin, protectStudent };
+module.exports = { protectAdmin, protectStudent };

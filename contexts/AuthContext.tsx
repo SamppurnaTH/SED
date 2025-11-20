@@ -1,184 +1,211 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { API_URL } from '../constants';
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authApi, api } from '../services/api';
 
 interface User {
+  _id: string;
   name: string;
   email: string;
+  role: string;
   avatarUrl?: string;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, pass: string) => Promise<User | null>;
-  register: (userData: Omit<User, 'password'>, pass: string) => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  updateProfileImage: (url: string) => Promise<void>;
+  error: string | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: {
+    name: string;
+    email: string;
+    password: string;
+    acceptTerms: boolean;
+  }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (token: string, password: string) => Promise<{ success: boolean; message: string }>;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
+  // Check if user is logged in on mount
   useEffect(() => {
-    const checkUserSession = async () => {
-        try {
-            const response = await fetch(`${API_URL}/auth/me/student`, {
-                credentials: 'include'
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.user) {
-                    setUser(data.user);
-                }
-            } else {
-                console.error("Session check failed with status:", response.status);
-            }
-        } catch (error) {
-            console.error("Session check failed", error);
-        } finally {
-            setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('student_session_token');
+        if (token) {
+          const userData = await authApi.getCurrentUser();
+          if (userData) {
+            setUser(userData);
+          }
         }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Clear invalid token
+        localStorage.removeItem('student_session_token');
+      } finally {
+        setIsLoading(false);
+      }
     };
-    checkUserSession();
+
+    checkAuth();
   }, []);
 
-
-  const login = async (email: string, pass: string): Promise<User | null> => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': window.csrfToken || '',
-          },
-          body: JSON.stringify({ email, password: pass }),
-          credentials: 'include',
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      setError(null);
+      setIsLoading(true);
       
-      if (data.user.role !== 'student') {
-          throw new Error('Invalid credentials for student login.');
+      const response = await authApi.login({ email, password });
+      
+      if (response.user) {
+        setUser(response.user);
+        return true;
       }
       
-      const loggedInUser = { 
-          name: data.user.name, 
-          email: data.user.email,
-          avatarUrl: data.user.avatarUrl 
-      };
-      
-      setUser(loggedInUser);
-      localStorage.setItem('studentUser', JSON.stringify(loggedInUser));
-      return loggedInUser;
+      return false;
     } catch (error: any) {
-      if (error.message && error.message.includes('Failed to fetch')) {
-         throw new Error('Unable to connect to the server. Please ensure the backend is running.');
-      }
-      throw error;
-    }
-  };
-  
-  const register = async (userData: Omit<User, 'password'>, pass: string) => {
-    try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': window.csrfToken || '',
-          },
-          body: JSON.stringify({ ...userData, password: pass }),
-          credentials: 'include',
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-      
-      const newUser = { 
-          name: data.user.name, 
-          email: data.user.email,
-          avatarUrl: data.user.avatarUrl 
-      };
-      setUser(newUser);
-      localStorage.setItem('studentUser', JSON.stringify(newUser));
-    } catch (error: any) {
-      if (error.message && error.message.includes('Failed to fetch')) {
-         throw new Error('Unable to connect to the server. Please ensure the backend is running.');
-      }
-      throw error;
+      console.error('Login failed:', error);
+      setError(error.message || 'Login failed. Please check your credentials.');
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-      try {
-        const response = await fetch(`${API_URL}/auth/update-password`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': window.csrfToken || '',
-            },
-            body: JSON.stringify({ currentPassword, newPassword }),
-            credentials: 'include',
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
-      } catch (error: any) {
-        if (error.message && error.message.includes('Failed to fetch')) {
-           throw new Error('Unable to connect to the server.');
-        }
-        throw error;
+  const register = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    acceptTerms: boolean;
+  }) => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      
+      const response = await authApi.register(userData);
+      
+      if (response.user) {
+        setUser(response.user);
+        return { success: true };
       }
-  };
-
-  const updateProfileImage = async (url: string) => {
-      if (!user) return;
-      try {
-          const response = await fetch(`${API_URL}/user/profile-image`, {
-              method: 'PUT',
-              headers: { 
-                  'Content-Type': 'application/json',
-                  'X-CSRF-Token': window.csrfToken || '',
-              },
-              body: JSON.stringify({ avatarUrl: url }),
-              credentials: 'include',
-          });
-          if (!response.ok) throw new Error('Failed to update profile image');
-          
-          const updatedUser = { ...user, avatarUrl: url };
-          setUser(updatedUser);
-          localStorage.setItem('studentUser', JSON.stringify(updatedUser));
-      } catch (error) {
-          console.error(error);
-          throw error;
-      }
+      
+      return { 
+        success: false, 
+        error: response.message || 'Registration failed. Please try again.' 
+      };
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      setError(error.message || 'Registration failed. Please try again.');
+      return { 
+        success: false, 
+        error: error.message || 'Registration failed. Please try again.' 
+      };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
     try {
-        await fetch(`${API_URL}/auth/logout`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': window.csrfToken || '',
-            },
-            credentials: 'include',
-        });
+      await authApi.logout();
     } catch (error) {
-        console.error("Logout API call failed", error);
+      console.error('Logout failed:', error);
+    } finally {
+      setUser(null);
+      navigate('/login');
     }
-    localStorage.removeItem('studentUser');
-    setUser(null);
   };
 
-  const isAuthenticated = !!user;
+  const updateProfile = async (updates: Partial<User>) => {
+    try {
+      if (!user) throw new Error('Not authenticated');
+      
+      // Optimistic update
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      
+      // API call
+      const response = await api.courses.update(user._id, updates);
+      
+      return response;
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      // Revert optimistic update on error
+      if (user) {
+        const freshData = await authApi.getCurrentUser();
+        setUser(freshData);
+      }
+      throw error;
+    }
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, register, updatePassword, updateProfileImage, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const requestPasswordReset = async (email: string) => {
+    try {
+      setError(null);
+      await authApi.requestPasswordReset(email);
+      return { 
+        success: true, 
+        message: 'Password reset link has been sent to your email.' 
+      };
+    } catch (error: any) {
+      console.error('Password reset request failed:', error);
+      setError(error.message || 'Failed to send password reset email.');
+      return { 
+        success: false, 
+        message: error.message || 'Failed to send password reset email.' 
+      };
+    }
+  };
+
+  const resetPassword = async (token: string, password: string) => {
+    try {
+      setError(null);
+      await authApi.resetPassword(token, password);
+      return { 
+        success: true, 
+        message: 'Password has been reset successfully.' 
+      };
+    } catch (error: any) {
+      console.error('Password reset failed:', error);
+      setError(error.message || 'Failed to reset password.');
+      return { 
+        success: false, 
+        message: error.message || 'Failed to reset password.' 
+      };
+    }
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    error,
+    login,
+    register,
+    logout,
+    updateProfile,
+    requestPasswordReset,
+    resetPassword,
+    clearError,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

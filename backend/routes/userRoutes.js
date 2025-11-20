@@ -1,10 +1,10 @@
 
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import User from '../models/User.js';
-import Course from '../models/Course.js';
-import { protectStudent } from '../middleware/authMiddleware.js';
-import { userProfileValidators } from '../middleware/validators.js';
+const User = require('../models/User');
+const Course = require('../models/Course');
+const { protectStudent } = require('../middleware/authMiddleware');
+const { userProfileValidators } = require('../middleware/validators');
 
 // --- User Progress Routes ---
 
@@ -153,4 +153,4 @@ router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, 
     }
 });
 
-export default router;
+module.exports = router;

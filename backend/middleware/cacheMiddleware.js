@@ -10,4 +10,4 @@ const setCache = (durationInSeconds) => (req, res, next) => {
     next();
 };
 
-export default setCache;
+module.exports = setCache;

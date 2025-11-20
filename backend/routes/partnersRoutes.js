@@ -1,9 +1,9 @@
 
-import express from 'express';
-import Partner from '../models/Partner.js';
-import { protectAdmin } from '../middleware/authMiddleware.js';
-import { partnerValidator } from '../middleware/validators.js';
-import setCache from '../middleware/cacheMiddleware.js';
+const express = require('express');
+const Partner = require('../models/Partner');
+const { protectAdmin } = require('../middleware/authMiddleware');
+const { partnerValidator } = require('../middleware/validators');
+const setCache = require('../middleware/cacheMiddleware');
 
 const router = express.Router();
 
@@ -78,4 +78,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

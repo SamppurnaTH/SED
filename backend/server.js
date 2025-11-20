@@ -1,62 +1,55 @@
 // Load environment variables first
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, resolve, join } from 'path';
-import path from 'path';
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
+const path = require('path');
+const resolve = path.resolve;
+const join = path.join;
 
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables before any other imports
-dotenv.config({ path: resolve(__dirname, '.env') });
-
-// Now import other dependencies after environment variables are loaded
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import compression from 'compression';
-import cookieParser from 'cookie-parser';
-import { doubleCsrf } from 'csrf-csrf';
-import bcrypt from 'bcryptjs';
-
-// Import routes
-import authRoutes from './routes/authRoutes.js';
-import coursesRoutes from './routes/coursesRoutes.js';
-import partnersRoutes from './routes/partnersRoutes.js';
-import servicesRoutes from './routes/servicesRoutes.js';
-import blogRoutes from './routes/blogRoutes.js';
-import submissionsRoutes from './routes/submissionsRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
-import orderRoutes from './routes/orderRoutes.js';
-import aiRoutes from './routes/aiRoutes.js';
-
-// Import models for seeding
-import Course from './models/Course.js';
-import Partner from './models/Partner.js';
-import Service from './models/Service.js';
-import BlogPost from './models/BlogPost.js';
-import User from './models/User.js';
-import { 
-  courses as initialCourses, 
-  partners as initialPartners, 
-  services as initialServices, 
-  blogPosts as initialBlogPosts 
-} from './data.js';
-
-const app = express();
-const port = 3001;
-// Enforce the use of environment variables for the database connection string.
+// Get MongoDB URI from environment variables
 const MONGO_URI = process.env.MONGO_URI;
+
 if (!MONGO_URI) {
-    console.error('FATAL ERROR: MONGO_URI is not defined in the environment variables.');
-    process.exit(1);
+  console.error('MongoDB connection string is not defined in .env file');
+  process.exit(1);
 }
 
+// Import dependencies
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const cookieParser = require('cookie-parser');
+const csrf = require('csurf');
+const bcrypt = require('bcryptjs');
+
+// Import routes
+const authRoutes = require('./routes/authRoutes.js');
+const coursesRoutes = require('./routes/coursesRoutes.js');
+const partnersRoutes = require('./routes/partnersRoutes.js');
+const servicesRoutes = require('./routes/servicesRoutes.js');
+const blogRoutes = require('./routes/blogRoutes.js');
+const submissionsRoutes = require('./routes/submissionsRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
+const uploadRoutes = require('./routes/uploadRoutes.js');
+const orderRoutes = require('./routes/orderRoutes.js');
+const aiRoutes = require('./routes/aiRoutes.js');
+
+// Import models for seeding
+const Course = require('./models/Course.js');
+const Partner = require('./models/Partner.js');
+const Service = require('./models/Service.js');
+const BlogPost = require('./models/BlogPost.js');
+const User = require('./models/User.js');
+const data = require('./data.js');
+const initialCourses = data.courses;
+const initialPartners = data.partners;
+const initialServices = data.services;
+const initialBlogPosts = data.blogPosts;
+
+const app = express();
+const port = process.env.PORT || 3001;
 
 // --- SECURITY & PERFORMANCE MIDDLEWARE ---
 
@@ -76,7 +69,6 @@ app.use(helmet({
   },
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
 
 // 2. Compression: Gzip compress responses for performance
 app.use(compression());
@@ -103,33 +95,37 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 // 5. Cookie Parser
 app.use(cookieParser());
 
-// 6. CSRF Protection
-const { doubleCsrfProtection, generateToken } = doubleCsrf({
-    getSecret: () => process.env.SESSION_SECRET || 'your-32-character-secret-key',
-    cookieName: 'x-csrf-token',
-    cookieOptions: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    },
-    size: 64,
-    ignoredMethods: ['GET', 'HEAD', 'OPTIONS']
+// 6. CSRF Protection - Only apply to non-API routes
+const csrfProtection = csrf({
+  cookie: {
+    key: '_csrf',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  },
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'DELETE'] // Disable CSRF for all API methods
 });
 
-// Generate CSRF token for forms
+// Apply CSRF protection only to non-API routes
 app.use((req, res, next) => {
-    res.locals.csrfToken = generateToken(res, req);
-    next();
+  if (!req.path.startsWith('/api/')) {
+    return csrfProtection(req, res, next);
+  }
+  next();
 });
 
-const csrfProtection = (req, res, next) => {
-    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
-        return next();
-    }
-    return doubleCsrfProtection(req, res, next);
-};
-
+// Add CSRF token to all responses for non-API routes
+app.use((req, res, next) => {
+  if (req.csrfToken && !req.path.startsWith('/api/')) {
+    res.cookie('XSRF-TOKEN', req.csrfToken(), {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: false,
+      sameSite: 'strict'
+    });
+  }
+  next();
+});
 
 // 7. Request Logging Middleware
 app.use((req, res, next) => {
@@ -160,7 +156,6 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
-// Make the uploads folder static
 // Make the uploads folder static
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
@@ -251,8 +246,26 @@ app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
 
-// Apply routers with CSRF protection. This will protect all routes within these routers.
-app.use('/api/auth', csrfProtection, authRoutes);
+// Apply CSRF protection to all routes except specific ones
+const csrfExcludedPaths = [
+    '/api/auth/register/student',
+    '/api/auth/login',
+    '/api/auth/delete-account',
+    '/api/csrf-token'
+];
+
+// Middleware to apply CSRF protection conditionally
+const csrfUnless = (paths, middleware) => {
+    return (req, res, next) => {
+        if (paths.some(path => req.path.startsWith(path))) {
+            return next();
+        }
+        return middleware(req, res, next);
+    };
+};
+
+// Apply routers with conditional CSRF protection
+app.use('/api/auth', csrfUnless(csrfExcludedPaths, csrfProtection), authRoutes);
 app.use('/api/courses', csrfProtection, coursesRoutes);
 app.use('/api/partners', csrfProtection, partnersRoutes);
 app.use('/api/services', csrfProtection, servicesRoutes);
@@ -262,7 +275,6 @@ app.use('/api/user', csrfProtection, userRoutes);
 app.use('/api/upload', csrfProtection, uploadRoutes);
 app.use('/api/orders', csrfProtection, orderRoutes);
 app.use('/api/ai', csrfProtection, aiRoutes);
-
 
 app.get('/', (req, res) => {
   res.send('SED Backend is running with MongoDB, File Storage, Compression, Security Headers, and AI Proxy!');
@@ -325,4 +337,4 @@ process.on('uncaughtException', (err) => {
   server.close(() => process.exit(1));
 });
 
-export default app;
+module.exports = app;

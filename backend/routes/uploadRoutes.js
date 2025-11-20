@@ -1,17 +1,12 @@
 
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import { S3Client } from '@aws-sdk/client-s3';
-import multerS3 from 'multer-s3';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const { S3Client } = require('@aws-sdk/client-s3');
+const multerS3 = require('multer-s3');
 
 const router = express.Router();
-import { protectAdmin, protectStudent } from '../middleware/authMiddleware.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const { protectAdmin, protectStudent } = require('../middleware/authMiddleware');
 
 // A middleware to check if user is either student or admin
 const protectAnyUser = (req, res, next) => {
@@ -117,4 +112,4 @@ router.post('/', protectAnyUser, upload.single('image'), (req, res) => {
     });
 });
 
-export default router;
+module.exports = router;

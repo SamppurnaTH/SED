@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+const { body, validationResult } = require('express-validator');
 
 // Helper middleware to check validation result
 const validate = (req, res, next) => {
@@ -17,6 +17,13 @@ const registerValidator = [
     body('name').trim().notEmpty().escape().withMessage('Name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Please include a valid email'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    body('confirmpassword').custom((value, { req }) => {
+        if (value !== req.body.password) {
+            throw new Error('Passwords do not match');
+        }
+        return true;
+    }),
+    body('acceptTerms').isBoolean().withMessage('You must accept the terms and conditions'),
     validate
 ];
 
@@ -29,6 +36,11 @@ const loginValidator = [
 const updatePasswordValidator = [
     body('currentPassword').notEmpty().withMessage('Current password is required'),
     body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+    validate
+];
+
+const deleteUserValidator = [
+    body('password').notEmpty().withMessage('Password is required to confirm account deletion'),
     validate
 ];
 
@@ -97,10 +109,11 @@ const userProfileValidators = {
 };
 
 
-export {
+module.exports = {
     registerValidator,
     loginValidator,
     updatePasswordValidator,
+    deleteUserValidator,
     courseValidator,
     partnerValidator,
     serviceValidator,

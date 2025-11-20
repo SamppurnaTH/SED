@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const submissionSchema = new mongoose.Schema({
   name: String,
@@ -10,4 +10,4 @@ const submissionSchema = new mongoose.Schema({
 
 const Submission = mongoose.model('Submission', submissionSchema);
 
-export default Submission;
+module.exports = Submission;

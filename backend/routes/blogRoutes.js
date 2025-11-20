@@ -1,9 +1,9 @@
 
-import express from 'express';
-import BlogPost from '../models/BlogPost.js';
-import { protectAdmin } from '../middleware/authMiddleware.js';
-import { blogPostValidator } from '../middleware/validators.js';
-import setCache from '../middleware/cacheMiddleware.js';
+const express = require('express');
+const BlogPost = require('../models/BlogPost');
+const { protectAdmin } = require('../middleware/authMiddleware');
+const { blogPostValidator } = require('../middleware/validators');
+const setCache = require('../middleware/cacheMiddleware');
 
 const router = express.Router();
 
@@ -89,4 +89,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

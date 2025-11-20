@@ -1,9 +1,17 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import Submission from '../models/Submission.js';
-import { protectAdmin } from '../middleware/authMiddleware.js';
-import { contactValidator } from '../middleware/validators.js';
-import { GoogleGenAI } from '@google/genai';
+const Submission = require('../models/Submission');
+const { protectAdmin } = require('../middleware/authMiddleware');
+const { contactValidator } = require('../middleware/validators');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Initialize Google Generative AI
+let genAI;
+if (process.env.GOOGLE_API_KEY) {
+  genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+} else {
+  console.warn('WARNING: GOOGLE_API_KEY is not defined. AI responses will be generic.');
+}
 
 // @desc    Get all contact submissions
 // @route   GET /api/submissions
@@ -35,34 +43,31 @@ router.post('/', contactValidator, async (req, res) => {
             message,
         });
 
-        // Initialize AI only if we have a key, but don't fail the whole request if AI fails
+        // Generate AI response if configured, otherwise use a default message
         let replyText = `Thank you for contacting us, ${name}! We have received your message and a member of our team will get back to you shortly.`;
         
-        if (process.env.API_KEY) {
-             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        if (genAI) {
+            try {
                 const prompt = `
                     You are a friendly and helpful support agent for a tech training academy called "SCHOLASTIC A EDU. DEPOT".
                     A user named "${name}" has sent a message through the contact form.
-                    Their email is: ${email}
                     The subject of their message is: "${subject || 'No Subject'}"
                     Their message is: "${message}"
         
                     Please provide a warm, reassuring, and helpful response. Acknowledge their message, thank them for reaching out, and let them know that a member of the support team will get back to them at their email address shortly regarding their specific query. Keep the tone professional yet approachable. Address them by their name.
                 `;
         
-                const response = await ai.models.generateContent({
-                  model: 'gemini-2.5-flash',
-                  contents: prompt,
-                });
+                // Get the generative model
+                const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
                 
-                if (response.text) {
-                    replyText = response.text;
-                }
-             } catch (aiError) {
-                 console.error("AI Reply Generation Failed:", aiError);
-                 // Fallback to default message
-             }
+                // Generate content
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                replyText = response.text();
+            } catch (aiError) {
+                console.error("AI Reply Generation Failed:", aiError);
+                // Fallback to default message
+            }
         }
 
         res.status(201).json({ 
@@ -76,4 +81,4 @@ router.post('/', contactValidator, async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

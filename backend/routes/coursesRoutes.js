@@ -1,9 +1,9 @@
 
-import express from 'express';
-import Course from '../models/Course.js';
-import { protectAdmin } from '../middleware/authMiddleware.js';
-import { courseValidator } from '../middleware/validators.js';
-import setCache from '../middleware/cacheMiddleware.js';
+const express = require('express');
+const Course = require('../models/Course');
+const { protectAdmin } = require('../middleware/authMiddleware');
+const { courseValidator } = require('../middleware/validators');
+const setCache = require('../middleware/cacheMiddleware');
 
 const router = express.Router();
 
@@ -97,5 +97,4 @@ router.delete('/:slug', protectAdmin, async (req, res) => {
     }
 });
 
-// Export the router as default
-export default router;
+module.exports = router;

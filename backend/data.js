@@ -105,7 +105,7 @@ let submissions = [];
 let userProgress = {};
 let savedCourses = {};
 
-export {
+module.exports = {
   courses,
   partners,
   services,

@@ -1,34 +1,27 @@
+const express = require('express');
+const Order = require('../models/Order');
+const User = require('../models/User');
+const Course = require('../models/Course');
+const crypto = require('crypto');
+const { protectStudent, protectAdmin } = require('../middleware/authMiddleware');
+const sendEmail = require('../utils/sendEmail');
 
-import express from 'express';
-import Order from '../models/Order.js';
-import User from '../models/User.js';
-import Course from '../models/Course.js';
+const router = express.Router();
+
 // Import Razorpay only if needed to prevent initialization errors
 let Razorpay;
 let razorpay = null;
 
-// Check for Razorpay credentials
-const hasRazorpayConfig = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET;
-
-if (hasRazorpayConfig) {
-    try {
-        Razorpay = (await import('razorpay')).default;
-        razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID,
-            key_secret: process.env.RAZORPAY_KEY_SECRET,
-        });
-    } catch (error) {
-        console.error('Failed to initialize Razorpay:', error.message);
-    }
+// Only initialize Razorpay if the required environment variables are set
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    Razorpay = require('razorpay');
+    razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
 } else {
     console.warn('WARNING: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not defined. Payment processing will not work.');
 }
-
-import crypto from 'crypto';
-import { protectStudent, protectAdmin } from '../middleware/authMiddleware.js';
-import sendEmail from '../utils/sendEmail.js';
-
-const router = express.Router();
 
 // Middleware to check if Razorpay is configured
 const checkRazorpayConfig = (req, res, next) => {
@@ -221,4 +214,4 @@ router.get('/', protectAdmin, async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

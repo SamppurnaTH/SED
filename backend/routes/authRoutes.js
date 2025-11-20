@@ -1,11 +1,11 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import User from '../models/User.js';
-import { protectStudent } from '../middleware/authMiddleware.js';
-import { registerValidator, loginValidator, updatePasswordValidator } from '../middleware/validators.js';
-import sendEmail from '../utils/sendEmail.js';
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const User = require('../models/User');
+const { protectStudent } = require('../middleware/authMiddleware');
+const { registerValidator, loginValidator, updatePasswordValidator, deleteUserValidator } = require('../middleware/validators');
+const sendEmail = require('../utils/sendEmail');
 
 const router = express.Router();
 
@@ -58,22 +58,14 @@ const sendVerificationEmail = async (user, req) => {
     });
 };
 
-// POST /api/auth/register
-router.post('/register', registerValidator, async (req, res) => {
-    const { name, email, password } = req.body;
+// POST /api/auth/register/student
+router.post('/register/student', registerValidator, async (req, res) => {
+    const { name, email, password, acceptTerms } = req.body;
 
     try {
         let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
         if (user) {
-            // If user exists but is not verified, allow re-registration to send new email
-            if (!user.isVerified) {
-                // Update password and name, then resend verification
-                user.name = name;
-                user.password = await bcrypt.hash(password, 10);
-                await sendVerificationEmail(user, req);
-                return res.status(200).json({ message: 'Verification email resent. Please check your inbox.' });
-            }
-            return res.status(400).json({ message: 'User with this email already exists and is verified.' });
+            return res.status(400).json({ message: 'User with this email already exists.' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -81,17 +73,50 @@ router.post('/register', registerValidator, async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role: 'student'
+            role: 'student',
+            acceptedTerms: acceptTerms,
+            isVerified: true // Auto-verify for now until email is set up
         });
 
-        await sendVerificationEmail(newUser, req);
+        // Save the user first
+        await newUser.save();
+
+        // Try to send verification email, but don't fail if it doesn't work
+        try {
+            await sendVerificationEmail(newUser, req);
+            console.log('Verification email sent to', email);
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+            // Continue with registration even if email fails
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: newUser._id, role: newUser.role },
+            getJwtSecret(),
+            { expiresIn: '30d' }
+        );
+
+        // Set the token in cookie
+        setTokenCookie(res, token, 'student');
 
         res.status(201).json({
-            message: 'Registration successful. Please check your email to verify your account.'
+            message: 'Registration successful!',
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                isVerified: newUser.isVerified
+            },
+            token
         });
     } catch (error) {
         console.error("Registration Error:", error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ 
+            message: 'Registration failed', 
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 });
 
@@ -333,4 +358,47 @@ router.post('/reset-password/:resetToken', async (req, res) => {
     }
 });
 
-export default router;
+// DELETE /api/auth/delete-account
+router.delete('/delete-account', protectStudent, deleteUserValidator, async (req, res) => {
+    const { password } = req.body;
+    const { email } = req.user;
+
+    try {
+        // Find the user
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect password' });
+        }
+
+        // Delete the user
+        await User.findByIdAndDelete(user._id);
+
+        // Clear the session cookie
+        res.cookie('student_session_token', '', {
+            httpOnly: true,
+            expires: new Date(0),
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Your account has been successfully deleted.' 
+        });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ 
+            message: 'Error deleting account', 
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+});
+
+module.exports = router;

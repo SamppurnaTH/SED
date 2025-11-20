@@ -1,14 +1,17 @@
 
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import { GoogleGenAI, Modality } from '@google/genai';
-import ragService from '../services/ragService.js';
-import Course from '../models/Course.js';
-import axios from 'axios'; // Required for the video proxy
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const ragService = require('../services/ragService');
+const Course = require('../models/Course');
+const axios = require('axios'); // Required for the video proxy
 
-// Initialize Gemini
-// Ensure process.env.API_KEY is set in your backend .env file
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize Google Generative AI
+// Ensure GOOGLE_API_KEY is set in your .env file
+if (!process.env.GOOGLE_API_KEY) {
+  console.warn('WARNING: GOOGLE_API_KEY is not defined. AI features will not work.');
+}
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
 // @route   POST /api/ai/chat
 // @desc    Hybrid RAG Chatbot
@@ -188,4 +191,4 @@ router.get('/video-proxy', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

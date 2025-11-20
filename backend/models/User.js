@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import crypto from 'crypto';
+const mongoose = require('mongoose');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -41,4 +41,4 @@ userSchema.methods.getEmailVerificationToken = function () {
 
 const User = mongoose.model('User', userSchema);
 
-export default User;
+module.exports = User;
