@@ -262,6 +262,16 @@ async function seedData() {
 }
 
 // ---------------- ROUTES ----------------
+// Test route
+app.get('/api/test', (req, res) => {
+  console.log('Test endpoint hit!');
+  res.json({ 
+    status: 'success',
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", coursesRoutes);
 app.use("/api/partners", partnerRoutes);
