@@ -5,7 +5,11 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'admin', 'marketing', 'trainer'], default: 'student' },
+  role: { 
+    type: String, 
+    enum: ["Admin", "MarketingAgent", "Student", "Instructor"], 
+    default: "Student" 
+  },
   avatarUrl: String,
   isVerified: { type: Boolean, default: false },
   emailVerificationToken: String,
@@ -15,10 +19,24 @@ const userSchema = new mongoose.Schema({
     progress: { type: Number, default: 0 },
     completedLessons: [String] // Array of topic strings or IDs that are completed
   }],
+  certificates: [{
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+    issueDate: Date,
+    certificateUrl: String
+  }],
   savedCourses: [String],
   resetPasswordToken: String,
-  resetPasswordExpire: Date
-}, { timestamps: true });
+  resetPasswordExpire: Date,
+  lastLogin: { type: Date },
+  permissions: {
+    type: [String],
+    default: []
+  }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
 
 
 // Method to generate and hash email verification token

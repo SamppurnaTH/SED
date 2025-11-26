@@ -44,7 +44,8 @@ const courseSchema = new mongoose.Schema({
   deadlines: [{
     date: String,
     task: String
-  }]
+  }],
+  assignments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Assignment' }]
 }, { timestamps: true });
 
 const Course = mongoose.model('Course', courseSchema);

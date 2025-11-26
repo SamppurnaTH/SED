@@ -1,0 +1,238 @@
+
+import React, { useState } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { FAQ_ITEMS } from '../constants';
+
+export const ContactPage: React.FC = () => {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [formState, setFormState] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormState({
+      ...formState,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would send data to backend
+    alert('Thank you! Your message has been sent. We will get back to you shortly.');
+    setFormState({ name: '', email: '', subject: '', message: '' });
+  };
+
+  return (
+    <div className="pt-24 min-h-screen bg-white flex flex-col">
+      
+      {/* Header */}
+      <div className="bg-slate-900 text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-3xl md:text-5xl font-display font-bold mb-4">Get in Touch</h1>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Have a question about our courses, pricing, or just want to say hello? We'd love to hear from you.
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          
+          {/* Contact Info Column */}
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-6">Contact Information</h3>
+              <p className="text-slate-600 mb-8">
+                Our team is available to assist you with any inquiries. Reach out to us via any of the following channels.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-brand-50 rounded-lg text-brand-600 flex items-center justify-center flex-shrink-0">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Visit Us</h4>
+                    <p className="text-slate-600 text-sm">
+                      123 Tech Park, Innovation Blvd,<br />
+                      Silicon Valley, CA 94043
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-brand-50 rounded-lg text-brand-600 flex items-center justify-center flex-shrink-0">
+                    <Mail size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Email Us</h4>
+                    <p className="text-slate-600 text-sm">admissions@sed-edu.com</p>
+                    <p className="text-slate-600 text-sm">support@sed-edu.com</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-brand-50 rounded-lg text-brand-600 flex items-center justify-center flex-shrink-0">
+                    <Phone size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Call Us</h4>
+                    <p className="text-slate-600 text-sm">+1 (555) 123-4567</p>
+                    <p className="text-slate-600 text-sm">Mon-Fri from 9am to 6pm</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-brand-50 rounded-lg text-brand-600 flex items-center justify-center flex-shrink-0">
+                    <Clock size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 mb-1">Office Hours</h4>
+                    <p className="text-slate-600 text-sm">Monday - Friday: 9:00 AM - 6:00 PM</p>
+                    <p className="text-slate-600 text-sm">Saturday: 10:00 AM - 2:00 PM</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Placeholder Map */}
+            <div className="w-full h-64 bg-slate-200 rounded-xl overflow-hidden relative">
+              <img 
+                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                alt="Office Map" 
+                className="w-full h-full object-cover opacity-60"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Button variant="secondary" className="shadow-lg">View on Google Maps</Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Form Column */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+                  <input 
+                    type="text" 
+                    id="name" 
+                    name="name"
+                    value={formState.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
+                  <input 
+                    type="email" 
+                    id="email" 
+                    name="email"
+                    value={formState.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
+                    placeholder="john@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
+                <select 
+                  id="subject" 
+                  name="subject"
+                  value={formState.subject}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-white"
+                >
+                  <option value="">Select a topic</option>
+                  <option value="course_inquiry">Course Inquiry</option>
+                  <option value="admissions">Admissions & Fees</option>
+                  <option value="partnership">Partnership Opportunities</option>
+                  <option value="support">Technical Support</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-2">Message</label>
+                <textarea 
+                  id="message" 
+                  name="message"
+                  value={formState.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all resize-none"
+                  placeholder="How can we help you today?"
+                ></textarea>
+              </div>
+
+              <Button type="submit" size="lg" className="w-full md:w-auto">
+                <Send size={18} className="mr-2" />
+                Send Message
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <section className="bg-slate-50 py-20 border-t border-slate-200">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-slate-600">Find quick answers to common questions about our platform and courses.</p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item, index) => (
+              <div 
+                key={index} 
+                className="bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-200"
+              >
+                <button
+                  className="w-full flex items-center justify-between p-5 text-left focus:outline-none"
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                >
+                  <span className="font-bold text-slate-900">{item.question}</span>
+                  {openFaq === index ? (
+                    <ChevronUp className="text-brand-600" size={20} />
+                  ) : (
+                    <ChevronDown className="text-slate-400" size={20} />
+                  )}
+                </button>
+                <div 
+                  className={`px-5 pb-5 text-slate-600 text-sm leading-relaxed transition-all duration-300 ${
+                    openFaq === index ? 'block opacity-100' : 'hidden opacity-0'
+                  }`}
+                >
+                  {item.answer}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-slate-600 mb-4">Still have questions?</p>
+            <Button variant="outline" className="bg-white">
+              <MessageSquare size={18} className="mr-2 text-brand-600" />
+              Chat with Support
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+

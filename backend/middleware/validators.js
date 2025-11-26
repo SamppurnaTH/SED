@@ -2,14 +2,14 @@ const { body, validationResult } = require('express-validator');
 
 // Helper middleware to check validation result
 const validate = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-        message: 'Validation Error', 
-        errors: errors.array().map(err => err.msg) 
-    });
-  }
-  next();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            message: 'Validation Error',
+            errors: errors.array().map(err => err.msg)
+        });
+    }
+    next();
 };
 
 // --- AUTH VALIDATORS ---
@@ -98,9 +98,9 @@ const contactValidator = [
 ];
 
 const userProfileValidators = {
-    avatar: [ body('avatarUrl').isURL().withMessage('A valid URL for the avatar is required'), validate ],
-    saveCourse: [ body('courseName').trim().notEmpty().escape().withMessage('Course name is required'), validate ],
-    enroll: [ body('courseSlug').trim().notEmpty().matches(/^[a-z0-9-]+$/).withMessage('A valid course slug is required'), validate ],
+    avatar: [body('avatarUrl').isURL().withMessage('A valid URL for the avatar is required'), validate],
+    saveCourse: [body('courseName').trim().notEmpty().escape().withMessage('Course name is required'), validate],
+    enroll: [body('courseSlug').trim().notEmpty().matches(/^[a-z0-9-]+$/).withMessage('A valid course slug is required'), validate],
     completeLesson: [
         body('courseSlug').trim().notEmpty().matches(/^[a-z0-9-]+$/).withMessage('A valid course slug is required'),
         body('lessonId').trim().notEmpty().escape().withMessage('A lesson ID is required'),
@@ -108,6 +108,40 @@ const userProfileValidators = {
     ]
 };
 
+
+const assignmentValidator = [
+    body('title').trim().notEmpty().escape().withMessage('Title is required'),
+    body('description').trim().notEmpty().withMessage('Description is required'),
+    body('courseId').isMongoId().withMessage('Valid Course ID is required'),
+    body('deadline').isISO8601().toDate().withMessage('Valid deadline date is required'),
+    body('maxScore').isInt({ min: 1 }).withMessage('Max score must be a positive integer'),
+    validate
+];
+
+const submissionValidator = [
+    body('fileUrl').optional().isURL().withMessage('File URL must be valid'),
+    body('textSubmission').optional().trim().escape(),
+    body().custom((value, { req }) => {
+        if (!req.body.fileUrl && !req.body.textSubmission) {
+            throw new Error('Either file URL or text submission is required');
+        }
+        return true;
+    }),
+    validate
+];
+
+const gradeValidator = [
+    body('grade').isFloat({ min: 0 }).withMessage('Grade must be a positive number'),
+    body('feedback').optional().trim().escape(),
+    validate
+];
+
+const certificateValidator = [
+    body('userId').isMongoId().withMessage('Valid User ID is required'),
+    body('courseId').isMongoId().withMessage('Valid Course ID is required'),
+    body('certificateUrl').isURL().withMessage('Certificate URL must be valid'),
+    validate
+];
 
 module.exports = {
     registerValidator,
@@ -119,5 +153,9 @@ module.exports = {
     serviceValidator,
     blogPostValidator,
     contactValidator,
-    userProfileValidators
+    userProfileValidators,
+    assignmentValidator,
+    submissionValidator,
+    gradeValidator,
+    certificateValidator
 };

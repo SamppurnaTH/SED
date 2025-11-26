@@ -1,5 +1,6 @@
 
 const express = require('express');
+const mongoose = require('mongoose');
 const BlogPost = require('../models/BlogPost');
 const { protectAdmin } = require('../middleware/authMiddleware');
 const { blogPostValidator } = require('../middleware/validators');
@@ -12,10 +13,27 @@ const router = express.Router();
 // @access  Public
 router.get('/', setCache(3600), async (req, res) => {
     try {
+        console.log('Fetching blog posts...');
+        // Check if BlogPost model is defined
+        if (!BlogPost || !BlogPost.find) {
+            console.error('BlogPost model is not properly defined');
+            return res.status(500).json({ message: 'BlogPost model not properly initialized' });
+        }
+        
+        // List all collections to debug
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        console.log('Available collections:', collections.map(c => c.name));
+        
         const posts = await BlogPost.find({}).sort({ publishedDate: -1 });
+        console.log(`Found ${posts.length} blog posts`);
         res.json(posts);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Error fetching blog posts:', error);
+        res.status(500).json({ 
+            message: 'Server Error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -31,7 +49,12 @@ router.get('/:slug', async (req, res) => {
             res.status(404).json({ message: 'Blog post not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error('Error fetching blog post:', error);
+        res.status(500).json({ 
+            message: 'Server Error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

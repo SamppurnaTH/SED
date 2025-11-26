@@ -119,13 +119,14 @@ router.get('/saved-courses', protectStudent, async (req, res) => {
         if (!user) {
              return res.status(404).json({ message: 'User not found' });
         }
-        res.json(user.savedCourses || []);
+        
+        res.status(200).json(user.savedCourses || []);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
 
-// @desc    Toggle a saved course for a user
+// @desc    Save/unsave a course for later
 // @route   POST /api/user/saved-courses
 // @access  Private/Student
 router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, async (req, res) => {

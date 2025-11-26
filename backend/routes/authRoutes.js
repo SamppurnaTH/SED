@@ -3,11 +3,33 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
-const { protectStudent } = require('../middleware/authMiddleware');
+const { protect, protectAdmin, authorizeRoles } = require('../middleware/authMiddleware');
 const { registerValidator, loginValidator, updatePasswordValidator, deleteUserValidator } = require('../middleware/validators');
 const sendEmail = require('../utils/sendEmail');
 
 const router = express.Router();
+
+// CSRF token endpoint
+router.get('/csrf-token', (req, res) => {
+    try {
+        console.log('CSRF token endpoint hit in auth routes');
+        
+        // The CSRF token is already set in the response cookie by the doubleCsrfProtection middleware
+        // We just need to return a success response
+        res.json({ 
+            success: true, 
+            message: 'CSRF token generated successfully',
+            csrfToken: res.locals.csrfToken || ''
+        });
+    } catch (error) {
+        console.error('Error in CSRF token endpoint:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error generating CSRF token',
+            error: error.message 
+        });
+    }
+});
 
 const getJwtSecret = () => {
     const secret = process.env.JWT_SECRET;
@@ -17,23 +39,12 @@ const getJwtSecret = () => {
     return secret;
 };
 
-const setTokenCookie = (res, token, role) => {
-    const cookieName = (role === 'student') ? 'student_session_token' : 'admin_session_token';
-    const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-    };
-    res.cookie(cookieName, token, cookieOptions);
-};
-
 const sendVerificationEmail = async (user, req) => {
     const verificationToken = user.getEmailVerificationToken();
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     const frontendBaseUrl = req.headers.origin || 'http://localhost:5173';
-    const verificationUrl = `${frontendBaseUrl}/#/verify-email/${verificationToken}`;
+    const verificationUrl = `${frontendBaseUrl}/verify-email/${verificationToken}`;
     
     const message = `
         Hi ${user.name},
@@ -63,59 +74,73 @@ router.post('/register/student', registerValidator, async (req, res) => {
     const { name, email, password, acceptTerms } = req.body;
 
     try {
+        // Check if user already exists
         let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        
         if (user) {
-            return res.status(400).json({ message: 'User with this email already exists.' });
+            return res.status(400).json({ message: 'User already exists' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
+        // Create new user with Student role
+        user = new User({
             name,
             email,
-            password: hashedPassword,
-            role: 'student',
-            acceptedTerms: acceptTerms,
-            isVerified: true // Auto-verify for now until email is set up
+            password,
+            role: 'Student', // Ensure role is set to Student
+            acceptTerms,
+            isVerified: false // Email verification will be required
         });
 
-        // Save the user first
-        await newUser.save();
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
 
-        // Try to send verification email, but don't fail if it doesn't work
-        try {
-            await sendVerificationEmail(newUser, req);
-            console.log('Verification email sent to', email);
-        } catch (emailError) {
-            console.error('Failed to send verification email:', emailError);
-            // Continue with registration even if email fails
-        }
+        // Generate email verification token
+        const verificationToken = user.getEmailVerificationToken();
+        await user.save();
 
-        // Generate JWT token
+        // Send verification email
+        await sendVerificationEmail(user, req);
+
+        // Create token (user won't be fully logged in until email is verified)
         const token = jwt.sign(
-            { userId: newUser._id, role: newUser.role },
+            { 
+                userId: user._id, 
+                email: user.email, 
+                role: user.role,
+                name: user.name
+            },
             getJwtSecret(),
-            { expiresIn: '30d' }
+            { expiresIn: '1d' } // Shorter expiry for unverified accounts
         );
 
-        // Set the token in cookie
-        setTokenCookie(res, token, 'student');
+        // Set cookie
+        res.cookie('session_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
+        });
 
         res.status(201).json({
-            message: 'Registration successful!',
+            success: true,
+            message: 'Registration successful. Please check your email to verify your account.',
+            token,
+            role: user.role,
             user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                isVerified: newUser.isVerified
-            },
-            token
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isVerified
+            }
         });
+
     } catch (error) {
-        console.error("Registration Error:", error);
+        console.error('Registration error:', error);
         res.status(500).json({ 
-            message: 'Registration failed', 
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            success: false,
+            message: error.message || 'Server error during registration' 
         });
     }
 });
@@ -174,84 +199,459 @@ router.post('/login', loginValidator, async (req, res) => {
     const { email, password } = req.body;
     
     try {
-        const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
-
+        console.log(`Login attempt for email: ${email}`);
+        
+        // Find user by email (case-insensitive)
+        const user = await User.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') }
+        });
+        
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
+            console.log(`No user found with email: ${email}`);
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid email or password.' 
+            });
         }
         
-        // Admins/Trainers don't need email verification to log in
-        if (user.role === 'student' && !user.isVerified) {
-            return res.status(403).json({ message: 'Please verify your email address before logging in.', needsVerification: true });
+        console.log(`User found: ${user.email}, Role: ${user.role}, Verified: ${user.isVerified}`);
+        
+        // Check if user is verified (only for Students)
+        if (user.role === 'Student' && !user.isVerified) {
+            console.log(`Unverified student account: ${user.email}`);
+            return res.status(403).json({ 
+                success: false,
+                message: 'Please verify your email address before logging in.', 
+                needsVerification: true 
+            });
         }
 
+        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
-
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid email or password.' 
+            });
         }
 
+        // Create token with user data
+        const tokenPayload = { 
+            userId: user._id, 
+            email: user.email, 
+            role: user.role,
+            name: user.name
+        };
+        
+        console.log('Creating JWT token with payload:', tokenPayload);
+        
         const token = jwt.sign(
-            { userId: user._id, email: user.email, role: user.role },
+            tokenPayload,
             getJwtSecret(),
             { expiresIn: '30d' }
         );
         
-        setTokenCookie(res, token, user.role);
+        // Set HTTP-only cookie
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined
+        };
+        
+        console.log('Setting session cookie with options:', cookieOptions);
+        res.cookie('session_token', token, cookieOptions);
+
+        // Return user data (without password)
+        const { password: _, ...userData } = user.toObject();
+        
+        console.log(`Login successful for user: ${user.email}, role: ${user.role}`);
+        
+        // Determine redirect path based on role
+        let redirectTo = '/dashboard';
+        if (user.role === 'Admin') {
+            redirectTo = '/admin/dashboard';
+        } else if (user.role === 'MarketingAgent') {
+            redirectTo = '/marketing/dashboard';
+        }
         
         res.status(200).json({
+            success: true,
             message: 'Login successful',
-            user: { name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl }
+            token,
+            role: user.role,
+            user: userData,
+            redirectTo: redirectTo
         });
+
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Login error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'An error occurred during login. Please try again.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// POST /api/auth/admin/login
+router.post('/admin/login', async (req, res) => {
+    const { email, password } = req.body;
+    
+    try {
+        // Find admin/agent user by email (case-insensitive) and role
+        const user = await User.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') },
+            role: { $in: ['Admin', 'MarketingAgent'] } // Only allow admin and marketing agent roles
+        });
+
+        if (!user) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid email or password.' 
+            });
+        }
+
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid email or password.' 
+            });
+        }
+
+        // Create token with user data
+        const token = jwt.sign(
+            { 
+                userId: user._id, 
+                email: user.email, 
+                role: user.role,
+                name: user.name
+            },
+            getJwtSecret(),
+            { expiresIn: '8h' } // Shorter session for admin
+        );
+        
+        // Set HTTP-only cookie with proper CORS settings
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 8 * 60 * 60 * 1000, // 8 hours
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? 'your-production-domain.com' : 'localhost'
+        };
+        
+        // In development, we need to set secure to false for localhost
+        if (process.env.NODE_ENV !== 'production') {
+            cookieOptions.secure = false;
+            cookieOptions.sameSite = 'lax';
+            delete cookieOptions.domain; // Don't set domain in development
+        }
+        
+        res.cookie('admin_session_token', token, cookieOptions);
+
+        // Return user data (without password)
+        const { password: _, ...userData } = user.toObject();
+        
+        // Determine redirect path based on role
+        let redirectTo = '/admin/dashboard';
+        if (user.role === 'MarketingAgent') {
+            redirectTo = '/marketing/dashboard';
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: user.role === 'Admin' ? 'Admin login successful' : 'Agent login successful',
+            token,
+            role: user.role,
+            user: userData,
+            redirectTo: redirectTo
+        });
+
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'An error occurred during login. Please try again.' 
+        });
     }
 });
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-    res.cookie('student_session_token', '', {
+    // Cookie options for clearing cookies
+    const cookieOptions = {
         httpOnly: true,
         expires: new Date(0),
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/'
+    };
+
+    // Clear both session tokens
+    res.cookie('session_token', '', cookieOptions);
+    res.cookie('admin_session_token', '', cookieOptions);
+    
+    res.status(200).json({ 
+        success: true, 
+        message: 'Logged out successfully' 
     });
-    res.cookie('admin_session_token', '', {
-        httpOnly: true,
-        expires: new Date(0),
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    });
-    res.status(200).json({ message: 'Logged out successfully' });
 });
 
-const meHandler = async (req, res, cookieName) => {
-    const token = req.cookies[cookieName];
-    if (!token) {
-        return res.json({ user: null });
-    }
-
+// GET /api/auth/me - Get current user's profile
+router.get('/me', protect, async (req, res) => {
     try {
-        const decoded = jwt.verify(token, getJwtSecret());
-        const user = await User.findOne({ email: decoded.email }).select('-password');
+        const user = await User.findById(req.user.userId).select('-password -__v');
         
-        if (!user || !user.isVerified && user.role === 'student') {
-            return res.json({ user: null });
+        if (!user) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'User not found' 
+            });
         }
 
-        res.json({ user: { name: user.name, email: user.email, role: user.role, avatarUrl: user.avatarUrl } });
-    } catch (e) {
-        // If token is invalid or expired
-        res.json({ user: null });
+        res.status(200).json({
+            success: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isVerified: user.isVerified,
+                avatarUrl: user.avatarUrl,
+                enrolledCourses: user.enrolledCourses,
+                savedCourses: user.savedCourses,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+            }
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error while fetching user profile' 
+        });
     }
-};
+});
 
-router.get('/me/student', (req, res) => meHandler(req, res, 'student_session_token'));
-router.get('/me/admin', (req, res) => meHandler(req, res, 'admin_session_token'));
+// Get current student profile
+router.get('/me/student', protect, authorizeRoles('Student'), (req, res) => {
+    // Remove sensitive data before sending the user data
+    const user = req.user.toObject();
+    delete user.password;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpire;
+    res.json({ user });
+});
 
+// Get current admin/agent profile
+router.get('/me/admin', protectAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password -__v -resetPasswordToken -resetPasswordExpire');
+        
+        if (!user) {
+            console.warn(`Admin/Agent not found for ID: ${req.user.userId}`);
+            return res.status(404).json({ 
+                success: false,
+                message: 'Admin/Agent not found',
+                code: 'ADMIN_NOT_FOUND'
+            });
+        }
+
+        // Verify the user has the correct role
+        if (!['Admin', 'MarketingAgent'].includes(user.role)) {
+            console.warn(`Unauthorized role access: ${user.role} for user: ${user.email}`);
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Admin/Agent privileges required.',
+                code: 'INSUFFICIENT_PRIVILEGES'
+            });
+        }
+        
+        // Prepare user data for response
+        const userData = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            avatarUrl: user.avatarUrl,
+            isVerified: user.isVerified,
+            lastLogin: user.lastLogin,
+            permissions: user.permissions || []
+        };
+        
+        // Update last login time
+        user.lastLogin = new Date();
+        await user.save({ validateBeforeSave: false });
+        
+        res.status(200).json({ 
+            success: true,
+            user: userData,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Get admin profile error:', error);
+        
+        // Handle specific errors
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID format',
+                code: 'INVALID_ID_FORMAT'
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false,
+            message: 'An error occurred while fetching admin profile',
+            code: 'SERVER_ERROR',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Get current marketing agent profile
+router.get('/me/marketingagent', protectAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password -__v -resetPasswordToken -resetPasswordExpire');
+        
+        if (!user) {
+            console.warn(`Marketing agent not found for ID: ${req.user.userId}`);
+            return res.status(404).json({ 
+                success: false,
+                message: 'Marketing agent not found',
+                code: 'MARKETING_AGENT_NOT_FOUND'
+            });
+        }
+
+        // Verify the user has the MarketingAgent role
+        if (user.role !== 'MarketingAgent') {
+            console.warn(`Unauthorized role access: ${user.role} for user: ${user.email}`);
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Marketing Agent privileges required.',
+                code: 'INSUFFICIENT_PRIVILEGES'
+            });
+        }
+        
+        // Prepare user data for response
+        const userData = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            avatarUrl: user.avatarUrl,
+            isVerified: user.isVerified,
+            lastLogin: user.lastLogin,
+            permissions: user.permissions || []
+        };
+        
+        // Update last login time
+        user.lastLogin = new Date();
+        await user.save({ validateBeforeSave: false });
+        
+        res.status(200).json({ 
+            success: true,
+            user: userData,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Get marketing agent profile error:', error);
+        
+        // Handle specific errors
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid user ID format',
+                code: 'INVALID_ID_FORMAT'
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false,
+            message: 'An error occurred while fetching marketing agent profile',
+            code: 'SERVER_ERROR',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Temporary route to create an admin user (for testing only)
+router.post('/create-admin', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        
+        // Check if user already exists
+        let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+        
+        if (user) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists with this email'
+            });
+        }
+
+        // Create new admin user
+        user = new User({
+            name,
+            email,
+            password,
+            role: 'Admin',
+            isVerified: true // Skip email verification for testing
+        });
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        await user.save();
+
+        // Return user data (without password)
+        const { password: _, ...userData } = user.toObject();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Admin user created successfully',
+            user: userData
+        });
+
+    } catch (error) {
+        console.error('Create admin error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating admin user',
+            error: error.message
+        });
+    }
+});
+
+// Temporary route to list admin users (for debugging only)
+router.get('/admin-users', async (req, res) => {
+    try {
+        const adminUsers = await User.find({ role: { $in: ['Admin', 'MarketingAgent'] } }).select('-password');
+        res.status(200).json({
+            success: true,
+            count: adminUsers.length,
+            users: adminUsers
+        });
+    } catch (error) {
+        console.error('Error fetching admin users:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching admin users',
+            error: error.message
+        });
+    }
+});
 
 // POST /api/auth/update-password (Authenticated)
-router.post('/update-password', protectStudent, updatePasswordValidator, async (req, res) => {
+router.post('/update-password', protect, authorizeRoles('Student'), updatePasswordValidator, async (req, res) => {
     const { email } = req.user;
     const { currentPassword, newPassword } = req.body;
     
@@ -359,7 +759,7 @@ router.post('/reset-password/:resetToken', async (req, res) => {
 });
 
 // DELETE /api/auth/delete-account
-router.delete('/delete-account', protectStudent, deleteUserValidator, async (req, res) => {
+router.delete('/delete-account', protect, authorizeRoles('Student'), deleteUserValidator, async (req, res) => {
     const { password } = req.body;
     const { email } = req.user;
 
@@ -397,6 +797,47 @@ router.delete('/delete-account', protectStudent, deleteUserValidator, async (req
         res.status(500).json({ 
             message: 'Error deleting account', 
             error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+});
+
+// Temporary route to list admin users (for debugging only)
+router.get('/list-admins', async (req, res) => {
+    try {
+        const admins = await User.find({ 
+            role: { $in: ['Admin', 'MarketingAgent'] } 
+        }).select('-password -__v');
+        
+        res.status(200).json({
+            success: true,
+            count: admins.length,
+            data: admins
+        });
+    } catch (error) {
+        console.error('Error listing admins:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error retrieving admin users',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Check if admin user exists
+router.get('/check-admin', async (req, res) => {
+    try {
+        const admin = await User.findOne({ role: 'Admin' });
+        res.status(200).json({
+            success: true,
+            exists: !!admin,
+            admin: admin ? { email: admin.email, name: admin.name } : null
+        });
+    } catch (error) {
+        console.error('Error checking admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error checking admin user',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
