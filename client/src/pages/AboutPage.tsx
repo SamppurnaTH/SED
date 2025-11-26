@@ -1,9 +1,78 @@
-
 import React from 'react';
-import { CORE_VALUES, TEAM_MEMBERS } from '../constants';
 import { Users, Target, Award, Globe } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { ViewState } from '../App';
+
+// Define types for CORE_VALUES and TEAM_MEMBERS since they're not in the constants file
+type CoreValue = {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ size: number }>;
+};
+
+type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio: string;
+};
+
+// Mock data for CORE_VALUES
+const CORE_VALUES: CoreValue[] = [
+  {
+    title: 'Student-Centric',
+    description: 'We put our students at the heart of everything we do, ensuring their success is our top priority.',
+    icon: Users
+  },
+  {
+    title: 'Excellence',
+    description: 'We strive for excellence in education, continuously improving our curriculum and teaching methods.',
+    icon: Award
+  },
+  {
+    title: 'Innovation',
+    description: 'We embrace innovative teaching approaches and cutting-edge technologies to enhance learning.',
+    icon: Globe
+  },
+  {
+    title: 'Accessibility',
+    description: 'We believe quality education should be accessible to everyone, regardless of their background.',
+    icon: Target
+  }
+];
+
+// Mock data for TEAM_MEMBERS
+const TEAM_MEMBERS: TeamMember[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    role: 'Founder & CEO',
+    image: '/team/john-smith.jpg',
+    bio: 'Education technology expert with 15+ years of experience in the industry.'
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    role: 'Head of Education',
+    image: '/team/sarah-johnson.jpg',
+    bio: 'Passionate educator with a background in curriculum development and instructional design.'
+  },
+  {
+    id: '3',
+    name: 'Michael Chen',
+    role: 'CTO',
+    image: '/team/michael-chen.jpg',
+    bio: 'Technology leader with expertise in building scalable learning platforms.'
+  },
+  {
+    id: '4',
+    name: 'Emily Davis',
+    role: 'Student Success',
+    image: '/team/emily-davis.jpg',
+    bio: 'Dedicated to ensuring every student achieves their learning goals and career aspirations.'
+  }
+];
 
 interface AboutPageProps {
   onNavigate: (view: ViewState) => void;
@@ -26,7 +95,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <span className="text-brand-500">Tech Leaders</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            At SED, we believe that quality education is the bridge between talent and opportunity. We are on a mission to transform aspiring learners into industry-ready professionals.
+            At <span className="font-semibold">Scholastic Edu. Depot</span>, we believe that quality education is the bridge between talent and opportunity. We are on a mission to transform aspiring learners into industry-ready professionals.
           </p>
         </div>
       </section>

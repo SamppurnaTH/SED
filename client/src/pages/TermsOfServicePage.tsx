@@ -28,8 +28,8 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onNaviga
     <div className="pt-24 min-h-screen bg-slate-50">
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-center w-16 h-16 bg-brand-50 rounded-2xl mb-6 mx-auto text-brand-600">
-            <Scale size={32} />
+          <div className="flex items-center justify-center mb-6 mx-auto">
+            <img src="/logo.png" alt="SED Logo" className="h-16 w-auto" />
           </div>
           <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 text-center mb-6">
             Terms of Service
@@ -45,12 +45,12 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onNaviga
           
           <div className="prose prose-slate max-w-none">
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              Welcome to Scholastic A Edu. Depot (SED). By accessing or using our website and services, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.
+              Welcome to <span className="font-semibold">Scholastic A Edu. Depot</span>. By accessing or using our website and services, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the service.
             </p>
 
             <Section title="1. Educational Services" icon={Book}>
               <p>
-                SED provides online educational courses, mentorship programs, and career placement services. We reserve the right to modify, suspend, or discontinue any part of our services at any time.
+                <div className="flex items-center gap-2 mb-2"><img src="/logo.png" alt="Scholastic Edu. Depot" className="h-6 w-auto" /><span className="font-semibold">Scholastic Edu. Depot</span></div> provides online educational courses, mentorship programs, and career placement services. We reserve the right to modify, suspend, or discontinue any part of our services at any time.
               </p>
               <p>
                 We do not guarantee that completing a course will result in employment. Our placement services are on a "best effort" basis and depend on market conditions and your performance.
@@ -79,7 +79,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onNaviga
 
             <Section title="4. Intellectual Property" icon={Scale}>
               <p>
-                The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of SED and its licensors. The service is protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of SED.
+                The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of <span className="font-semibold">Scholastic Edu. Depot</span> and its licensors. The service is protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of <span className="font-semibold">Scholastic Edu. Depot</span>.
               </p>
               <p>
                 You are granted a limited license to access and use the course materials for your personal, non-commercial education. You may not share, sell, or distribute our content.
@@ -103,7 +103,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onNaviga
 
             <Section title="6. Limitation of Liability">
               <p>
-                In no event shall SED, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                In no event shall <span className="font-semibold">Scholastic Edu. Depot</span>, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
               </p>
             </Section>
 

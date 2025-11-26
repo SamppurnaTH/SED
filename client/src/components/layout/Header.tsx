@@ -46,8 +46,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView }) => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-gradient-to-r from-blue-50 to-blue-100 shadow-md py-3`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
@@ -56,26 +55,36 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView }) => {
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); onNavigate('home'); }}
-              className="text-2xl font-display font-bold text-brand-600 tracking-tight"
+              className="flex items-center space-x-4 group"
             >
-              SED<span className="text-slate-800">.</span>
+              <div className="flex items-center space-x-3">
+                <div className="p-1.5 rounded-lg transition-all duration-300 group-hover:bg-blue-50">
+                  <img src="/logo.png" alt="SED Logo" className="h-12 w-auto" />
+                </div>
+                <span className="hidden sm:block text-lg font-display font-bold text-gray-900">
+                  SCHOLASTIC EDU. DEPOT
+                </span>
+                <span className="sm:hidden text-xl font-display font-bold text-gray-900">
+                  SED
+                </span>
+              </div>
             </a>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-10">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
                 onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
-                className={`text-sm font-medium transition-colors ${((link.href === '#courses' && currentView === 'courses') ||
+                className={`text-sm font-medium transition-colors px-3 py-2 rounded-lg ${((link.href === '#courses' && currentView === 'courses') ||
                   (link.href === '#services' && currentView === 'services') ||
                   (link.href === '#about' && currentView === 'about') ||
                   (link.href === '#contact' && currentView === 'contact') ||
-                  (link.href === '#home' && currentView === 'home' && window.scrollY < 100))
-                  ? 'text-brand-600'
-                  : 'text-slate-600 hover:text-brand-600'
+                  (link.href === '#home' && currentView === 'home'))
+                  ? 'bg-white text-blue-700 font-semibold shadow-sm'
+                  : 'text-blue-800 hover:bg-blue-50 hover:text-blue-900'
                   }`}
               >
                 {link.name}
@@ -87,18 +96,24 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView }) => {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={() => onNavigate('login')}
-              className="text-slate-600 font-medium hover:text-brand-600 transition-colors"
+              className="text-blue-800 font-medium hover:text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors"
             >
               Log in
             </button>
-            <Button size="sm" onClick={() => onNavigate('get-started')}>Get Started</Button>
+            <Button 
+              size="sm" 
+              onClick={() => onNavigate('get-started')}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all"
+            >
+              Get Started
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-slate-600 hover:text-slate-900 focus:outline-none"
+              className="text-blue-800 hover:text-blue-700 focus:outline-none p-2 hover:bg-blue-100 rounded-lg transition-colors"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -114,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate, currentView }) => {
               <a
                 key={link.name}
                 href={link.href}
-                className="block px-3 py-3 text-base font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-50 rounded-md"
+                className="block px-3 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-md"
                 onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
               >
                 {link.name}

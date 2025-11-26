@@ -44,7 +44,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
           
           <div className="prose prose-slate max-w-none">
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              At Scholastic A Edu. Depot (SED), we value your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website or use our services.
+              At <span className="font-semibold">Scholastic Edu. Depot</span>, we value your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website or use our services.
             </p>
 
             <Section title="1. Information We Collect" icon={FileText}>
@@ -102,7 +102,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
                   }} 
                   className="text-brand-600 hover:text-brand-700 font-semibold"
                 >
-                  privacy@sed-edu.com
+                  privacy@scholasticedudepot.com
                 </a>
               </p>
             </Section>

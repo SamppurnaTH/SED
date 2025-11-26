@@ -36,18 +36,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center font-bold">S</div>
-            <span className="text-xl font-display font-bold">SED<span className="text-brand-500">.</span></span>
+        <div className="relative z-10 w-full">
+          <div className="flex flex-col items-center mb-12 w-full">
+            <img 
+              src="/logo.png" 
+              alt="Scholastic Edu. Depot" 
+              className="h-24 w-auto mb-4"
+            />
+            <h2 className="text-2xl font-display font-bold text-white">SCHOLASTIC EDU. DEPOT</h2>
           </div>
-          <h1 className="text-4xl font-display font-bold mb-6 leading-tight">
-            Welcome back, <br />
-            <span className="text-brand-400">Future Leader.</span>
-          </h1>
-          <p className="text-slate-300 text-lg max-w-md leading-relaxed">
-            Continue your learning journey where you left off.
-          </p>
+          
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-4xl font-display font-bold mb-6 leading-tight">
+              Welcome back, <br />
+              <span className="text-brand-400">Future Leader.</span>
+            </h1>
+            <p className="text-slate-300 text-lg max-w-md leading-relaxed">
+              Continue your learning journey where you left off.
+            </p>
+          </div>
         </div>
 
         {/* Quote */}

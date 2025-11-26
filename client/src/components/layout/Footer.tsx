@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import { ViewState } from '../../App';
@@ -22,6 +20,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
     }
   };
 
+  const handlePolicyNavigation = (e: React.MouseEvent, view: 'privacy' | 'terms') => {
+    e.preventDefault();
+    if (onNavigate) {
+      onNavigate(view);
+      // Scroll to top when navigating to policy pages
+      window.scrollTo(0, 0);
+    }
+  };
+
   return (
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,24 +36,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           
           {/* Brand Column */}
           <div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col space-y-2">
               <a 
                 href="#" 
                 onClick={(e) => handleNav(e, 'home')}
-                className="text-2xl font-display font-bold text-white tracking-tight mb-6 block"
+                className="flex items-center space-x-2"
               >
-                SED<span className="text-brand-600">.</span>
+                <img src="/logo.png" alt="SED Logo" className="h-14 w-auto" />
+                <span className="text-xl font-display font-bold text-white tracking-tight ml-2">
+                  SCHOLASTIC EDU. DEPOT
+                </span>
               </a>
-              {import.meta.env.DEV && (
-                <a 
-                  href="#" 
-                  onClick={(e) => handleNav(e, 'connection-test')}
-                  className="text-xs bg-yellow-500 text-black px-2 py-1 rounded hover:bg-yellow-400 transition-colors"
-                  title="Connection Test (Dev Only)"
-                >
-                  Test Connection
-                </a>
-              )}
             </div>
             <p className="text-slate-400 mb-6 text-sm leading-relaxed">
               Scholastic A Edu. Depot is a premier EdTech platform dedicated to bridging the gap between academic learning and industry requirements.
@@ -136,18 +136,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             &copy; {new Date().getFullYear()} Scholastic A Edu. Depot. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-10">
-            <span 
-              onClick={(e) => handleNav(e, 'privacy')} 
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
+            <a 
+              href="#"
+              onClick={(e) => handlePolicyNavigation(e, 'privacy')}
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4"
             >
               Privacy Policy
-            </span>
-            <span 
-              onClick={(e) => handleNav(e, 'terms')} 
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
+            </a>
+            <a 
+              href="#"
+              onClick={(e) => handlePolicyNavigation(e, 'terms')}
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4"
             >
               Terms of Service
-            </span>
+            </a>
           </div>
         </div>
       </div>
