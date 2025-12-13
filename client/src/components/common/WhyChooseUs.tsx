@@ -55,7 +55,7 @@ const FEATURES = [
 
 const getIconComponent = (iconName: string, size: number) => {
   const iconProps = { size };
-  switch(iconName) {
+  switch (iconName) {
     case 'book-open': return <BookOpen {...iconProps} />;
     case 'users': return <Users {...iconProps} />;
     case 'code': return <Code {...iconProps} />;
@@ -71,8 +71,8 @@ export const WhyChooseUs: React.FC = () => {
     <section id="services" className="py-24 bg-white relative overflow-hidden">
       {/* Subtle decorative background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-40 pointer-events-none">
-          <div className="absolute top-[20%] right-[-5%] w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl"></div>
-          <div className="absolute bottom-[10%] left-[-10%] w-72 h-72 bg-orange-50 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        <div className="absolute top-[20%] right-[-5%] w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply filter blur-3xl"></div>
+        <div className="absolute bottom-[10%] left-[-10%] w-72 h-72 bg-orange-50 rounded-full mix-blend-multiply filter blur-3xl"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -88,9 +88,9 @@ export const WhyChooseUs: React.FC = () => {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {FEATURES.map((feature, idx) => (
-            <div 
-              key={idx} 
+          {FEATURES.slice(0, 4).map((feature, idx) => (
+            <div
+              key={idx}
               className="group bg-white rounded-2xl p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
               <div className="h-14 w-14 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-6 group-hover:bg-brand-600 group-hover:text-white transition-colors duration-300">
