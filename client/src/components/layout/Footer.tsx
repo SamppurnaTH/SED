@@ -122,20 +122,44 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Contact Info */}
           <div>
             <h3 className="text-white font-bold mb-6">Contact Us</h3>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="text-brand-500 mt-0.5 flex-shrink-0" />
-                <span>123 Tech Park, Innovation Blvd, Silicon Valley, CA 94043</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="text-brand-500 flex-shrink-0" />
-                <span>+1 (555) 123-4567</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="text-brand-500 flex-shrink-0" />
-                <span>admissions@sed-edu.com</span>
-              </li>
-            </ul>
+
+            {/* Visakhapatnam */}
+            <div className="mb-6">
+              <p className="text-brand-400 font-semibold mb-3">VISAKHAPATNAM</p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <MapPin size={18} className="text-brand-500 mt-0.5 flex-shrink-0" />
+                  <span>#50-50-33/2/1, Shop No.1, 2nd Floor, Priyadarshini Complex, Gurudwara Jn., VISAKHAPATNAM - 530 013, A.P. India</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone size={18} className="text-brand-500 flex-shrink-0" />
+                  <span>+91 81798 46868 / +91 89144 33003</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail size={18} className="text-brand-500 flex-shrink-0" />
+                  <span>vizag@ctcglobal.co.uk</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Vijayawada */}
+            <div>
+              <p className="text-brand-400 font-semibold mb-3">VIJAYAWADA</p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <MapPin size={18} className="text-brand-500 mt-0.5 flex-shrink-0" />
+                  <span>C/o Modern Public School, Above SBI, Madhu Gardens, Moghalrajpuram, VIJAYAWADA - 520 010, A.P. India</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone size={18} className="text-brand-500 flex-shrink-0" />
+                  <span>+91 737 737 1237 / +91 737 737 1238</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail size={18} className="text-brand-500 flex-shrink-0" />
+                  <span>vijayawada@ctcglobal.co.uk</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 

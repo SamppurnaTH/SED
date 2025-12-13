@@ -29,7 +29,7 @@ export const ContactPage: React.FC = () => {
 
   return (
     <div className="pt-24 min-h-screen bg-white flex flex-col">
-      
+
       {/* Header */}
       <div className="bg-slate-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -42,7 +42,7 @@ export const ContactPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          
+
           {/* Contact Info Column */}
           <div className="space-y-8">
             <div>
@@ -50,18 +50,32 @@ export const ContactPage: React.FC = () => {
               <p className="text-slate-600 mb-8">
                 Our team is available to assist you with any inquiries. Reach out to us via any of the following channels.
               </p>
-              
+
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-brand-50 rounded-lg text-brand-600 flex items-center justify-center flex-shrink-0">
                     <MapPin size={20} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-1">Visit Us</h4>
-                    <p className="text-slate-600 text-sm">
-                      123 Tech Park, Innovation Blvd,<br />
-                      Silicon Valley, CA 94043
-                    </p>
+                    <h4 className="font-bold text-slate-900 mb-2">Visit Us</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VISAKHAPATNAM</p>
+                        <p className="text-slate-600 text-sm">
+                          #50-50-33/2/1, Shop No.1, 2nd Floor,<br />
+                          Priyadarshini Complex, Gurudwara Jn.,<br />
+                          VISAKHAPATNAM - 530 013, A.P. India
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VIJAYAWADA</p>
+                        <p className="text-slate-600 text-sm">
+                          C/o Modern Public School, Above SBI,<br />
+                          Madhu Gardens, Moghalrajpuram,<br />
+                          VIJAYAWADA - 520 010, A.P. India
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -70,9 +84,17 @@ export const ContactPage: React.FC = () => {
                     <Mail size={20} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-1">Email Us</h4>
-                    <p className="text-slate-600 text-sm">admissions@scholasticedudepot.com</p>
-                    <p className="text-slate-600 text-sm">support@scholasticedudepot.com</p>
+                    <h4 className="font-bold text-slate-900 mb-2">Email Us</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VISAKHAPATNAM</p>
+                        <p className="text-slate-600 text-sm">vizag@ctcglobal.co.uk</p>
+                      </div>
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VIJAYAWADA</p>
+                        <p className="text-slate-600 text-sm">vijayawada@ctcglobal.co.uk</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -81,9 +103,19 @@ export const ContactPage: React.FC = () => {
                     <Phone size={20} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-1">Call Us</h4>
-                    <p className="text-slate-600 text-sm">+1 (555) 123-4567</p>
-                    <p className="text-slate-600 text-sm">Mon-Fri from 9am to 6pm</p>
+                    <h4 className="font-bold text-slate-900 mb-2">Call Us</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VISAKHAPATNAM</p>
+                        <p className="text-slate-600 text-sm">+91 81798 46868</p>
+                        <p className="text-slate-600 text-sm">+91 89144 33003</p>
+                      </div>
+                      <div>
+                        <p className="text-brand-600 font-semibold text-xs mb-1">VIJAYAWADA</p>
+                        <p className="text-slate-600 text-sm">+91 737 737 1237</p>
+                        <p className="text-slate-600 text-sm">+91 737 737 1238</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -102,9 +134,9 @@ export const ContactPage: React.FC = () => {
 
             {/* Placeholder Map */}
             <div className="w-full h-64 bg-slate-200 rounded-xl overflow-hidden relative">
-              <img 
-                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="Office Map" 
+              <img
+                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Office Map"
                 className="w-full h-full object-cover opacity-60"
               />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -120,9 +152,9 @@ export const ContactPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-                  <input 
-                    type="text" 
-                    id="name" 
+                  <input
+                    type="text"
+                    id="name"
                     name="name"
                     value={formState.name}
                     onChange={handleChange}
@@ -133,9 +165,9 @@ export const ContactPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
-                  <input 
-                    type="email" 
-                    id="email" 
+                  <input
+                    type="email"
+                    id="email"
                     name="email"
                     value={formState.email}
                     onChange={handleChange}
@@ -148,8 +180,8 @@ export const ContactPage: React.FC = () => {
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
-                <select 
-                  id="subject" 
+                <select
+                  id="subject"
                   name="subject"
                   value={formState.subject}
                   onChange={handleChange}
@@ -166,8 +198,8 @@ export const ContactPage: React.FC = () => {
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-2">Message</label>
-                <textarea 
-                  id="message" 
+                <textarea
+                  id="message"
                   name="message"
                   value={formState.message}
                   onChange={handleChange}
@@ -197,8 +229,8 @@ export const ContactPage: React.FC = () => {
 
           <div className="space-y-4">
             {FAQ_ITEMS.map((item, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-200"
               >
                 <button
@@ -212,10 +244,9 @@ export const ContactPage: React.FC = () => {
                     <ChevronDown className="text-slate-400" size={20} />
                   )}
                 </button>
-                <div 
-                  className={`px-5 pb-5 text-slate-600 text-sm leading-relaxed transition-all duration-300 ${
-                    openFaq === index ? 'block opacity-100' : 'hidden opacity-0'
-                  }`}
+                <div
+                  className={`px-5 pb-5 text-slate-600 text-sm leading-relaxed transition-all duration-300 ${openFaq === index ? 'block opacity-100' : 'hidden opacity-0'
+                    }`}
                 >
                   {item.answer}
                 </div>
