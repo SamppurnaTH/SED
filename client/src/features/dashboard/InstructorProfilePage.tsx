@@ -4,6 +4,7 @@ import { ViewState } from '../../App';
 import { Star, Users, BookOpen, MessageSquare, Linkedin, Twitter, Globe, Mail, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { CourseDetailModal } from '../courses/CourseDetailModal';
+import { CourseSummary } from '../../services/courseService';
 
 interface InstructorProfilePageProps {
    instructorName: string;
@@ -11,7 +12,28 @@ interface InstructorProfilePageProps {
 }
 
 export const InstructorProfilePage: React.FC<InstructorProfilePageProps> = ({ instructorName, onNavigate }) => {
-   const [selectedCourse, setSelectedCourse] = useState<typeof COURSES[0] | null>(null);
+   const [selectedCourse, setSelectedCourse] = useState<CourseSummary | null>(null);
+
+   // Convert Course from constants to CourseSummary for modal
+   const mapCourseToCourseSummary = (course: typeof COURSES[0]): CourseSummary => ({
+      id: course.id,
+      _id: String(course.id),
+      name: course.title,
+      slug: course.title.toLowerCase().replace(/\s+/g, '-'),
+      title: course.title,
+      description: course.description,
+      price: `$${course.price}`,
+      image: course.image,
+      level: course.level,
+      rating: course.rating,
+      students: course.students,
+      duration: course.duration,
+      lessons: course.lessons,
+      instructor: course.instructor,
+      category: course.category,
+      whatYouWillLearn: course.whatYouWillLearn,
+      requirements: course.requirements
+   });
 
    // Find the instructor data
    const instructor = INSTRUCTORS.find(i => i.name === instructorName) || {
@@ -152,7 +174,7 @@ export const InstructorProfilePage: React.FC<InstructorProfilePageProps> = ({ in
                         <div
                            key={course.id}
                            className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col sm:flex-row h-auto sm:h-48"
-                           onClick={() => setSelectedCourse(course)}
+                           onClick={() => setSelectedCourse(mapCourseToCourseSummary(course))}
                         >
                            <div className="w-full sm:w-64 h-48 sm:h-full flex-shrink-0 relative">
                               <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
