@@ -458,11 +458,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   };
 
   // Bulk Selection & Filtering - Students
-  const filteredStudents = studentsList.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      student.email.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      student.course.toLowerCase().includes(studentSearch.toLowerCase());
-    const matchesStatus = studentStatusFilter === 'All' || student.status === studentStatusFilter;
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = student.name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      student.email?.toLowerCase().includes(studentSearch.toLowerCase());
+    const matchesStatus = studentStatusFilter === 'All';
 
     return matchesSearch && matchesStatus;
   });
