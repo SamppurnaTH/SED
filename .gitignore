@@ -96,3 +96,8 @@ build/
 # Misc
 .DS_Store
 *.pem
+
+# Seed scripts with sensitive data
+backend/seedUsers.js
+backend/updateAdminRole.js
+backend/checkUsers.js
