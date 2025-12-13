@@ -7,15 +7,17 @@ const User = require('./models/User');
 // Load environment variables from the root .env file
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Connect to MongoDB with explicit database name
-const mongoUri = new URL(process.env.MONGO_URI);
-const dbName = 'sedtech' || mongoUri.pathname.replace('/', '');
+// MongoDB Atlas connection string from environment variable
+const MONGO_URI = process.env.MONGO_URI;
 
-// Connect with the database name
-mongoose.connect(process.env.MONGO_URI, {
-    dbName: dbName
-}).then(() => {
-    console.log('Connected to MongoDB');
+if (!MONGO_URI) {
+    console.error('Error: MONGO_URI environment variable is not set');
+    process.exit(1);
+}
+
+// Connect to MongoDB
+mongoose.connect(MONGO_URI).then(() => {
+    console.log('Connected to MongoDB Atlas');
     seedUsers();
 }).catch(err => {
     console.error('MongoDB connection error:', err);
@@ -24,69 +26,41 @@ mongoose.connect(process.env.MONGO_URI, {
 
 async function seedUsers() {
     try {
-        // Delete existing test users if they exist
+        // Delete existing admin user if exists
         await User.deleteMany({
-            email: { 
-                $in: [
-                    'admin@sedtech.com',
-                    'marketing@sedtech.com',
-                    'student@sedtech.com'
-                ] 
-            }
+            email: 'venuthota722@gmail.com'
         });
-        console.log('Cleaned up existing test users');
+        console.log('Cleaned up existing admin user');
 
-        // Hash passwords
+        // Hash password
         const salt = await bcrypt.genSalt(10);
-        const adminPassword = await bcrypt.hash('Admin@1234', salt);
-        const marketingPassword = await bcrypt.hash('Marketing@1234', salt);
-        const studentPassword = await bcrypt.hash('Student@1234', salt);
+        const adminPassword = await bcrypt.hash('Venuthota@1342$_03', salt);
 
-        // Create test users
-        const users = [
-            {
-                name: 'Admin User',
-                email: 'admin@sedtech.com',
-                password: adminPassword,
-                role: 'Admin',
-                isVerified: true
-            },
-            {
-                name: 'Marketing Agent',
-                email: 'marketing@sedtech.com',
-                password: marketingPassword,
-                role: 'MarketingAgent',
-                isVerified: true
-            },
-            {
-                name: 'Test Student',
-                email: 'student@sedtech.com',
-                password: studentPassword,
-                role: 'Student',
-                isVerified: true
-            }
-        ];
+        // Create admin user only
+        const admin = {
+            name: 'Venu Thota',
+            email: 'venuthota722@gmail.com',
+            password: adminPassword,
+            role: 'Admin',
+            isVerified: true
+        };
 
-        // Save users to database
-        await User.insertMany(users);
-        console.log('Test users created successfully!');
-        console.log('\nTest Accounts:');
-        console.log('--------------');
-        console.log('Admin:');
-        console.log('  Email: admin@sedtech.com');
-        console.log('  Password: Admin@1234\n');
-        
-        console.log('Marketing Agent:');
-        console.log('  Email: marketing@sedtech.com');
-        console.log('  Password: Marketing@1234\n');
-        
-        console.log('Student:');
-        console.log('  Email: student@sedtech.com');
-        console.log('  Password: Student@1234\n');
+        // Save admin to database
+        await User.create(admin);
+        console.log('Admin user created successfully!');
+        console.log('\n=== ADMIN ACCOUNT CREATED ===');
+        console.log('-----------------------------');
+        console.log('Name: Venu Thota');
+        console.log('Email: venuthota722@gmail.com');
+        console.log('Password: Venuthota@1342$_03');
+        console.log('Role: Admin\n');
+
+        console.log('Note: Instructors, Support staff, and other users will be added by Admin.');
+        console.log('Students can self-register through the signup form.');
 
         process.exit(0);
     } catch (error) {
-        console.error('Error seeding users:', error);
+        console.error('Error seeding admin user:', error);
         process.exit(1);
     }
 }
