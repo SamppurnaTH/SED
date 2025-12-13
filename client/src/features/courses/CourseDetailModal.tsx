@@ -1,13 +1,12 @@
 
-
 import React, { useEffect } from 'react';
 import { X, Clock, BookOpen, Star, Users, Shield, Award, CheckCircle, PlayCircle, Download } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
-import { Course } from '../../constants';
+import { CourseSummary } from '../../services/courseService';
 
 interface CourseDetailModalProps {
-  course: Course;
+  course: CourseSummary;
   onClose: () => void;
   onEnroll?: () => void;
   onViewInstructor?: (name: string) => void;
@@ -72,7 +71,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({ course, on
                 <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
                 <div className="flex items-center gap-1">
                   <Users size={18} />
-                  <span>{course.students.toLocaleString()} Students Enrolled</span>
+                  <span>{course.students?.toLocaleString() || 0} Students Enrolled</span>
                 </div>
               </div>
             </div>
@@ -85,13 +84,13 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({ course, on
               {/* Instructor Profile */}
               <div className="flex items-center gap-4 mb-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor)}&background=EBF4FF&color=2563EB&bold=true`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor || 'Instructor')}&background=EBF4FF&color=2563EB&bold=true`}
                   alt={course.instructor}
                   className="w-12 h-12 rounded-full border-2 border-white shadow-md ring-2 ring-slate-50"
                 />
                 <div>
                   <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Instructor</p>
-                  <p className="text-lg font-bold text-slate-900">{course.instructor}</p>
+                  <p className="text-lg font-bold text-slate-900">{course.instructor || 'SED Instructor'}</p>
                 </div>
                 <div className="ml-auto">
                   <Button
@@ -99,7 +98,7 @@ export const CourseDetailModal: React.FC<CourseDetailModalProps> = ({ course, on
                     size="sm"
                     onClick={() => {
                       onClose();
-                      if (onViewInstructor) onViewInstructor(course.instructor);
+                      if (onViewInstructor && course.instructor) onViewInstructor(course.instructor);
                     }}
                   >
                     View Profile
