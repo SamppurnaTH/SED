@@ -40,17 +40,17 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Full name is required';
     }
-    
+
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -61,11 +61,11 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
     } else if (formData.password !== formData.confirmpassword) {
       newErrors.confirmpassword = 'Passwords do not match';
     }
-    
+
     if (!formData.terms) {
       newErrors.terms = 'You must accept the terms and conditions';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -76,7 +76,7 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
       setErrors(prev => ({
@@ -88,14 +88,14 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsLoading(true);
     setErrors(prev => ({ ...prev, general: undefined }));
-    
+
     try {
       const response: AuthResponse = await registerService({
         name: formData.name,
@@ -150,25 +150,25 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 text-white relative overflow-hidden flex-col justify-between p-16">
         {/* Background Elements */}
         <div className="absolute inset-0 z-0">
-           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-600/40 via-slate-900 to-slate-900"></div>
-           <img 
-             src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-             alt="Students collaborating" 
-             className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay"
-           />
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-600/40 via-slate-900 to-slate-900"></div>
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+            alt="Students collaborating"
+            className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay"
+          />
         </div>
 
         <div className="relative z-10 w-full">
           <div className="flex flex-col items-center mb-12 w-full">
-            <img 
-              src="/logo.png" 
-              alt="Scholastic Edu. Depot" 
+            <img
+              src="/logo.png"
+              alt="Scholastic Edu. Depot"
               className="h-24 w-auto mb-4"
             />
             <h2 className="text-2xl font-display font-bold text-white">SCHOLASTIC EDU. DEPOT</h2>
           </div>
           <h1 className="text-4xl font-display font-bold mb-6 leading-tight">
-            Start your journey to a <br/>
+            Start your journey to a <br />
             <span className="text-brand-400">successful IT career</span> today.
           </h1>
           <p className="text-slate-300 text-lg max-w-md leading-relaxed">
@@ -195,19 +195,19 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
 
           <div className="p-6 bg-slate-800/50 backdrop-blur-md rounded-xl border border-slate-700 mt-8">
             <div className="flex text-yellow-400 mb-3">
-               {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
+              {[1, 2, 3, 4, 5].map(i => <span key={i}>★</span>)}
             </div>
             <p className="text-slate-300 italic mb-4">
               "The best decision I made for my career. The hands-on projects gave me the confidence to ace my interviews."
             </p>
             <div className="flex items-center gap-3">
-               <div className="w-10 h-10 rounded-full bg-slate-600">
-                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="User" className="w-full h-full rounded-full object-cover" />
-               </div>
-               <div>
-                  <p className="font-bold text-white text-sm">Sarah Jenkins</p>
-                  <p className="text-xs text-slate-400">Software Engineer at TechNova</p>
-               </div>
+              <div className="w-10 h-10 rounded-full bg-slate-600">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="User" className="w-full h-full rounded-full object-cover" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">Sarah Jenkins</p>
+                <p className="text-xs text-slate-400">Software Engineer at TechNova</p>
+              </div>
             </div>
           </div>
         </div>
@@ -215,15 +215,15 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
 
       {/* Right Panel - Registration Form */}
       <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center px-4 sm:px-12 md:px-24 py-12 pt-24 lg:pt-12 overflow-y-auto relative">
-        
+
         {/* Desktop Back Button */}
-        <button 
-           onClick={() => onNavigate('home')}
-           className="hidden lg:flex absolute top-8 right-8 items-center gap-2 text-slate-500 hover:text-brand-600 transition-colors font-medium"
-         >
-           <ArrowLeft size={18} />
-           Back to Home
-         </button>
+        <button
+          onClick={() => onNavigate('home')}
+          className="hidden lg:flex absolute top-8 right-8 items-center gap-2 text-slate-500 hover:text-brand-600 transition-colors font-medium"
+        >
+          <ArrowLeft size={18} />
+          Back to Home
+        </button>
 
         <div className="max-w-md mx-auto w-full">
           <div className="text-center lg:text-left mb-10">
@@ -239,7 +239,7 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-4">
-              <button 
+              <button
                 type="button"
                 onClick={() => googleSignup()}
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -268,11 +268,9 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-2.5 border ${
-                      errors.name ? 'border-red-500' : 'border-slate-300'
-                    } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
-                      errors.name ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
-                    } transition-all`}
+                    className={`block w-full pl-10 pr-3 py-2.5 border ${errors.name ? 'border-red-500' : 'border-slate-300'
+                      } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${errors.name ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
+                      } transition-all`}
                     placeholder="John Doe"
                   />
                 </div>
@@ -294,11 +292,9 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-2.5 border ${
-                      errors.email ? 'border-red-500' : 'border-slate-300'
-                    } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
-                      errors.email ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
-                    } transition-all`}
+                    className={`block w-full pl-10 pr-3 py-2.5 border ${errors.email ? 'border-red-500' : 'border-slate-300'
+                      } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${errors.email ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
+                      } transition-all`}
                     placeholder="john@example.com"
                   />
                 </div>
@@ -320,11 +316,9 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-2.5 border ${
-                      errors.password ? 'border-red-500' : 'border-slate-300'
-                    } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
-                      errors.password ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
-                    } transition-all`}
+                    className={`block w-full pl-10 pr-3 py-2.5 border ${errors.password ? 'border-red-500' : 'border-slate-300'
+                      } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${errors.password ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
+                      } transition-all`}
                     placeholder="••••••••"
                   />
                 </div>
@@ -348,11 +342,9 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                     name="confirmpassword"
                     value={formData.confirmpassword}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-2.5 border ${
-                      errors.confirmpassword ? 'border-red-500' : 'border-slate-300'
-                    } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
-                      errors.confirmpassword ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
-                    } transition-all`}
+                    className={`block w-full pl-10 pr-3 py-2.5 border ${errors.confirmpassword ? 'border-red-500' : 'border-slate-300'
+                      } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${errors.confirmpassword ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
+                      } transition-all`}
                     placeholder="••••••••"
                   />
                 </div>
@@ -371,14 +363,27 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                 type="checkbox"
                 checked={formData.terms}
                 onChange={handleChange}
-                className={`h-4 w-4 ${
-                  errors.terms ? 'text-red-600 focus:ring-red-500' : 'text-brand-600 focus:ring-brand-500'
-                } border-${
-                  errors.terms ? 'red-300' : 'slate-300'
-                } rounded mt-1 cursor-pointer`}
+                className={`h-4 w-4 ${errors.terms ? 'text-red-600 focus:ring-red-500' : 'text-brand-600 focus:ring-brand-500'
+                  } border-${errors.terms ? 'red-300' : 'slate-300'
+                  } rounded mt-1 cursor-pointer`}
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-slate-600 cursor-pointer">
-                I agree to the <a href="#" className="text-brand-600 hover:underline">Terms of Service</a> and <a href="#" className="text-brand-600 hover:underline">Privacy Policy</a>.
+                I agree to the{' '}
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); onNavigate('terms'); }}
+                  className="text-brand-600 hover:underline"
+                >
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); onNavigate('privacy'); }}
+                  className="text-brand-600 hover:underline"
+                >
+                  Privacy Policy
+                </a>.
               </label>
               {errors.terms && (
                 <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -393,9 +398,9 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                 {errors.general}
               </div>
             )}
-            <Button 
-              type="submit" 
-              size="lg" 
+            <Button
+              type="submit"
+              size="lg"
               className="w-full text-base py-3 mt-2"
               disabled={isLoading}
             >
