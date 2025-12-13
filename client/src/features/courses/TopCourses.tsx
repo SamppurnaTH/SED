@@ -42,8 +42,8 @@ export const TopCourses: React.FC<TopCoursesProps> = ({ onNavigate, onViewInstru
 
   // Filter courses based on active category
   const filteredCourses = activeCategory === 'All'
-    ? courses.slice(0, 6)
-    : courses.filter(course => course.category === activeCategory).slice(0, 6);
+    ? courses.slice(0, 3)
+    : courses.filter(course => course.category === activeCategory).slice(0, 3);
 
   return (
     <section id="courses" className="py-24 bg-slate-50">
