@@ -144,20 +144,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             &copy; {new Date().getFullYear()} Scholastic A Edu. Depot. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-[60]">
-            <a
-              href="#"
-              onClick={(e) => handlePolicyNavigation(e, 'privacy')}
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="#"
-              onClick={(e) => handlePolicyNavigation(e, 'terms')}
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
-            >
-              Terms of Service
-            </a>
           </div>
         </div>
       </div>

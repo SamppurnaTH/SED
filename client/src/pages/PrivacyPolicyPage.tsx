@@ -27,8 +27,8 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
     <div className="pt-24 min-h-screen bg-slate-50">
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-center w-16 h-16 bg-brand-50 rounded-2xl mb-6 mx-auto text-brand-600">
-            <Shield size={32} />
+          <div className="flex items-center justify-center mb-6 mx-auto">
+            <img src="/logo.png" alt="SED Logo" className="h-16 w-auto" />
           </div>
           <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 text-center mb-6">
             Privacy Policy
@@ -41,7 +41,7 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
-          
+
           <div className="prose prose-slate max-w-none">
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
               At <span className="font-semibold">Scholastic Edu. Depot</span>, we value your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website or use our services.
@@ -93,13 +93,13 @@ export const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onNavigate
 
             <Section title="Contact Us">
               <p>
-                If you have any questions about this Privacy Policy, please contact us at: <br/>
-                <a 
-                  href="#" 
+                If you have any questions about this Privacy Policy, please contact us at: <br />
+                <a
+                  href="#"
                   onClick={(e) => {
                     e.preventDefault();
                     window.location.href = 'mailto:privacy@sed-edu.com';
-                  }} 
+                  }}
                   className="text-brand-600 hover:text-brand-700 font-semibold"
                 >
                   privacy@scholasticedudepot.com
