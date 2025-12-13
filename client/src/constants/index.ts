@@ -1,4 +1,4 @@
-import { Building, GraduationCap, Users } from 'lucide-react';
+import { Building, GraduationCap, Users, Code } from 'lucide-react';
 
 // Notification related types and data
 export interface Notification {
@@ -251,6 +251,29 @@ export const ALL_SERVICES = [
     ],
     image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=2069&auto=format&fit=crop',
     longDescription: 'Get personalized career guidance from industry experts to accelerate your tech career.'
+  },
+  {
+    id: 'industry-workshops',
+    title: 'Industry Workshops & Bootcamps',
+    description: 'Intensive hands-on workshops on cutting-edge technologies.',
+    icon: Code,
+    features: ['Latest Tech Stack', 'Real-world Projects', 'Expert Instructors'],
+    caseStudies: [
+      {
+        title: 'AI/ML Bootcamp Success',
+        desc: 'Conducted 3-day intensive bootcamp on Machine Learning for 80+ participants.',
+        client: 'Tech Enthusiasts',
+        outcome: '85% project completion'
+      }
+    ],
+    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=2070&auto=format&fit=crop',
+    longDescription: 'Our intensive workshops and bootcamps provide hands-on experience with the latest technologies, helping you stay ahead in the rapidly evolving tech landscape.',
+    process: [
+      { title: 'Topic Selection', desc: 'Choose from trending technologies and frameworks.' },
+      { title: 'Hands-on Sessions', desc: 'Build real projects with expert guidance.' },
+      { title: 'Peer Learning', desc: 'Collaborate with fellow learners and share knowledge.' },
+      { title: 'Certification', desc: 'Receive completion certificate and project portfolio.' }
+    ]
   }
 ];
 
