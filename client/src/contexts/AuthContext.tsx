@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string, role: 'student' | 'mentor') => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { user, token } = await loginService({ email, password });
       localStorage.setItem('token', token);
       setUser(user);
-      // Navigation is handled by the calling component
+      return user; // Return user data for role-based navigation
     } catch (error) {
       throw error;
     }

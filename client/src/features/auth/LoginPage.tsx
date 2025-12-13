@@ -23,9 +23,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     setIsLoading(true);
     setError('');
     try {
-      await login(email, password);
-      // Navigate to dashboard after successful login
-      onNavigate('student');
+      // Login returns user data with role information
+      const userData = await login(email, password);
+      // Navigate to appropriate dashboard based on user role
+      if (userData.role === 'admin') {
+        onNavigate('admin');
+      } else if (userData.role === 'mentor') {
+        onNavigate('instructor-dashboard');
+      } else {
+        onNavigate('student');
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Login failed');
     } finally {
