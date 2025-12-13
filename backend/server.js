@@ -39,6 +39,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
+const adminRoutes = require('./routes/admin');
 
 // Models for seeding
 const Course = require('./models/Course.js');
@@ -268,7 +269,7 @@ async function seedData() {
 // Test route
 app.get('/api/test', (req, res) => {
   console.log('Test endpoint hit!');
-  res.json({ 
+  res.json({
     status: 'success',
     message: 'Backend is working!',
     timestamp: new Date().toISOString()
@@ -286,6 +287,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminUserRoutes);
+app.use("/api/admin/dashboard", adminRoutes);
 app.use("/api/assignments", require('./routes/assignmentRoutes'));
 app.use("/api/certificates", require('./routes/certificateRoutes'));
 app.use("/api/submissions", require('./routes/submissionsRoutes'));
