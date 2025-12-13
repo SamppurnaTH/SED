@@ -33,12 +33,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          
+
           {/* Brand Column */}
           <div>
             <div className="flex flex-col space-y-2">
-              <a 
-                href="#" 
+              <a
+                href="#"
                 onClick={(e) => handleNav(e, 'home')}
                 className="flex items-center space-x-2"
               >
@@ -52,32 +52,32 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               Scholastic A Edu. Depot is a premier EdTech platform dedicated to bridging the gap between academic learning and industry requirements.
             </p>
             <div className="flex space-x-4">
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-brand-500 transition-colors"
                 aria-label="Facebook"
                 title="Visit our Facebook page"
               >
                 <Facebook size={20} />
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-brand-500 transition-colors"
                 aria-label="Twitter"
                 title="Visit our Twitter profile"
               >
                 <Twitter size={20} />
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-brand-500 transition-colors"
                 aria-label="Instagram"
                 title="Visit our Instagram profile"
               >
                 <Instagram size={20} />
               </a>
-              <a 
-                href="#" 
+              <a
+                href="#"
                 className="hover:text-brand-500 transition-colors"
                 aria-label="LinkedIn"
                 title="Visit our LinkedIn page"
@@ -135,18 +135,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <p className="text-sm text-slate-500">
             &copy; {new Date().getFullYear()} Scholastic A Edu. Depot. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-10">
-            <a 
+          <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-50">
+            <a
               href="#"
               onClick={(e) => handlePolicyNavigation(e, 'privacy')}
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4"
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
             >
               Privacy Policy
             </a>
-            <a 
+            <a
               href="#"
               onClick={(e) => handlePolicyNavigation(e, 'terms')}
-              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4"
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
             >
               Terms of Service
             </a>
