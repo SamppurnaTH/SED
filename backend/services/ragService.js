@@ -8,8 +8,7 @@ try {
 	QdrantClient = require('qdrant-client').QdrantClient;
 	console.log('✅ Qdrant client module loaded');
 } catch (e) {
-	console.warn('⚠️ Qdrant client not installed. Vector search will use MongoDB fallback only.');
-	console.warn('   To enable Qdrant, run: npm install qdrant-client');
+	// Silently fall back to MongoDB - Qdrant is optional
 }
 
 // ============================================
@@ -33,8 +32,6 @@ if (QdrantClient && QDRANT_URL) {
 		console.warn('⚠️ Failed to initialize Qdrant client:', e.message);
 		qdrantClient = null;
 	}
-} else if (!QDRANT_URL) {
-	console.log('ℹ️ Qdrant URL not configured. Using MongoDB vector search only.');
 }
 
 // Validate OpenRouter API Key exists (warn but don't exit)
