@@ -84,7 +84,7 @@ const COURSE_PROGRESS_DETAILS: Record<number, any> = {
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }) => {
    const [activeTab, setActiveTab] = useState<StudentTab>('dashboard');
    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-   const [viewingCourseId, setViewingCourseId] = useState<number | null>(null);
+   const [viewingCourseId, setViewingCourseId] = useState<string | number | null>(null);
    const [selectedScheduleItem, setSelectedScheduleItem] = useState<any>(null);
 
    const SidebarItem = ({ id, icon: Icon, label }: { id: StudentTab, icon: any, label: string }) => (
@@ -364,7 +364,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                              className="font-medium text-brand-600 cursor-pointer hover:underline"
                                              onClick={() => {
                                                 setActiveTab('my-courses');
-                                                setViewingCourseId(course.id);
+                                                setViewingCourseId(String(course.id));
                                              }}
                                           >
                                              Resume
@@ -464,7 +464,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                  <div
                                     key={course.id}
                                     className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition-shadow"
-                                    onClick={() => setViewingCourseId(course.id)}
+                                    onClick={() => setViewingCourseId(String(course.id))}
                                  >
                                     <div className="h-40 relative">
                                        <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
@@ -526,8 +526,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                            </button>
 
                            {(() => {
-                              const course = STUDENT_PROFILE.enrolledCourses.find(c => c.id === viewingCourseId);
-                              const details = COURSE_PROGRESS_DETAILS[viewingCourseId || 0] || {
+                              const course = STUDENT_PROFILE.enrolledCourses.find(c => String(c.id) === String(viewingCourseId));
+                              const details = COURSE_PROGRESS_DETAILS[Number(viewingCourseId) || 0] || {
                                  totalTimeSpent: '2h 15m',
                                  quizAverage: '0%',
                                  modules: [

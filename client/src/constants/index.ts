@@ -112,20 +112,21 @@ export const INSTRUCTORS: Instructor[] = [
 
 // Course related types and data
 export interface Course {
-  id: string;
+  id: string | number;
   title: string;
   instructor: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  level: 'Beginner' | 'Intermediate' | 'Advanced' | string;
   duration: string;
   students: number;
   rating: number;
   image: string;
   description: string;
-  whatYouWillLearn: string[];
-  requirements: string[];
+  whatYouWillLearn?: string[];
+  requirements?: string[];
   category: string;
-  price: number;
+  price: number | string;
   lessons: number;
+  icon?: string;
 }
 
 export const COURSES: Course[] = [
@@ -207,6 +208,14 @@ export const ALL_SERVICES = [
         client: 'Tech Corp',
         outcome: '30% productivity boost'
       }
+    ],
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
+    longDescription: 'Our corporate training programs are designed to upskill your entire workforce with the latest technologies and best practices.',
+    process: [
+      { title: 'Assessment', desc: 'We assess your team\'s current skills and identify gaps.' },
+      { title: 'Custom Curriculum', desc: 'We design a tailored training program for your needs.' },
+      { title: 'Delivery', desc: 'Expert trainers deliver engaging sessions on-site or remotely.' },
+      { title: 'Evaluation', desc: 'We track progress and provide detailed reports.' }
     ]
   },
   {
@@ -222,7 +231,9 @@ export const ALL_SERVICES = [
         client: 'City University',
         outcome: '90% placement rate'
       }
-    ]
+    ],
+    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070&auto=format&fit=crop',
+    longDescription: 'Partner with us to modernize your university curriculum and provide students with industry-relevant skills.'
   },
   {
     id: 'career-mentorship',
@@ -237,7 +248,9 @@ export const ALL_SERVICES = [
         client: 'John D.',
         outcome: 'Hired at top tech firm'
       }
-    ]
+    ],
+    image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?q=80&w=2069&auto=format&fit=crop',
+    longDescription: 'Get personalized career guidance from industry experts to accelerate your tech career.'
   }
 ];
 

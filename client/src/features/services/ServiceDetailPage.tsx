@@ -104,13 +104,13 @@ export const ServiceDetailPage: React.FC<ServiceDetailPageProps> = ({ serviceId,
                         <div className="mb-16">
                            <h2 className="text-2xl font-bold text-slate-900 mb-8">Our Process</h2>
                            <div className="space-y-8">
-                              {service.process.map((step, idx) => (
+                              {service.process.map((step: any, idx: number) => (
                                  <div key={idx} className="flex gap-6">
                                     <div className="flex flex-col items-center">
                                        <div className="w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold shadow-lg z-10 relative">
                                           {idx + 1}
                                        </div>
-                                       {idx < service.process!.length - 1 && (
+                                       {idx < service.process.length - 1 && (
                                           <div className="w-0.5 bg-slate-200 h-full min-h-[60px] mt-2"></div>
                                        )}
                                     </div>
