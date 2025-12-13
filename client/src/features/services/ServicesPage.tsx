@@ -42,7 +42,18 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate, onViewSe
                      <Button size="lg" onClick={() => document.getElementById('service-list')?.scrollIntoView({ behavior: 'smooth' })}>
                         Explore Services
                      </Button>
-                     <Button variant="outline" size="lg">
+                     <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                           const link = document.createElement('a');
+                           link.href = '/brochure.png';
+                           link.download = 'SED_Brochure.png';
+                           document.body.appendChild(link);
+                           link.click();
+                           document.body.removeChild(link);
+                        }}
+                     >
                         Download Brochure
                      </Button>
                   </div>
