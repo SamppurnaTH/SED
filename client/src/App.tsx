@@ -21,7 +21,7 @@ export type ViewState = 'home' | 'courses' | 'services' | 'service-detail' | 'ab
 const HomePage = ({ onNavigate }: { onNavigate: (view: ViewState) => void }) => (
   <>
     <Hero onNavigate={onNavigate} />
-    <TopCourses onNavigate={onNavigate} onViewInstructor={(name) => {}} />
+    <TopCourses onNavigate={onNavigate} onViewInstructor={(name) => { }} />
     <WhyChooseUs />
     <Partners />
     <CTASection onNavigate={onNavigate} />
@@ -30,6 +30,7 @@ const HomePage = ({ onNavigate }: { onNavigate: (view: ViewState) => void }) => 
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('home');
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
 
   // Scroll to top when view changes
   useEffect(() => {
@@ -40,24 +41,24 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       <Routes>
         {/* Verify Email Route - Must be before other routes to match :token parameter */}
-        <Route 
-          path="/verify-email/:token" 
+        <Route
+          path="/verify-email/:token"
           element={
             <>
               <VerifyEmailPage />
             </>
-          } 
+          }
         />
-        
+
         {/* All other routes can use the legacy View state system */}
-        <Route 
-          path="/*" 
+        <Route
+          path="/*"
           element={
             <>
-              {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) && 
-               !['admin', 'student', 'instructor-dashboard'].includes(currentView) && 
-               <Header onNavigate={setCurrentView} currentView={currentView} />}
-              
+              {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) &&
+                !['admin', 'student', 'instructor-dashboard'].includes(currentView) &&
+                <Header onNavigate={setCurrentView} currentView={currentView} />}
+
               {['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) && (
                 <div className="absolute top-0 left-0 w-full p-6 z-50 lg:hidden">
                   <div className="flex items-center justify-between">
@@ -71,8 +72,9 @@ const App: React.FC = () => {
 
               <main className="flex-grow">
                 {currentView === 'home' && <HomePage onNavigate={setCurrentView} />}
-                {currentView === 'courses' && <CoursesPage onNavigate={setCurrentView} onViewInstructor={() => {}} />}
-                {currentView === 'services' && <ServicesPage onNavigate={setCurrentView} onViewService={() => {}} />}
+                {currentView === 'courses' && <CoursesPage onNavigate={setCurrentView} onViewInstructor={() => { }} />}
+                {currentView === 'services' && <ServicesPage onNavigate={setCurrentView} onViewService={(id) => { setSelectedServiceId(id); setCurrentView('service-detail'); }} />}
+                {currentView === 'service-detail' && <ServiceDetailPage serviceId={selectedServiceId} onNavigate={setCurrentView} />}
                 {currentView === 'about' && <AboutPage onNavigate={setCurrentView} />}
                 {currentView === 'contact' && <ContactPage />}
                 {currentView === 'get-started' && <GetStartedPage onNavigate={setCurrentView} />}
@@ -89,13 +91,13 @@ const App: React.FC = () => {
                 {currentView === 'connection-test' && <ConnectionTestPage />}
               </main>
 
-              {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) && 
-               !['admin', 'student', 'instructor-dashboard'].includes(currentView) && 
-               <Footer onNavigate={setCurrentView} />}
+              {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) &&
+                !['admin', 'student', 'instructor-dashboard'].includes(currentView) &&
+                <Footer onNavigate={setCurrentView} />}
 
               {!['admin', 'student', 'instructor-dashboard'].includes(currentView) && <Chatbot />}
             </>
-          } 
+          }
         />
       </Routes>
     </div>
