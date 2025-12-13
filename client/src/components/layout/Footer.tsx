@@ -22,10 +22,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
   const handlePolicyNavigation = (e: React.MouseEvent, view: 'privacy' | 'terms') => {
     e.preventDefault();
+    e.stopPropagation();
+    console.log('Policy navigation clicked:', view);
+    console.log('onNavigate function exists:', !!onNavigate);
     if (onNavigate) {
+      console.log('Calling onNavigate with view:', view);
       onNavigate(view);
       // Scroll to top when navigating to policy pages
-      window.scrollTo(0, 0);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    } else {
+      console.error('onNavigate function is not available');
     }
   };
 
