@@ -2,7 +2,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState } from '../../App';
 import {
   LayoutDashboard, BookOpen, Users, GraduationCap, Settings, LogOut,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { COURSES, INSTRUCTORS, COURSE_CATEGORIES } from '../../constants';
 import { Button } from '../../components/ui/Button';
+import * as adminService from '../../services/adminService';
 
 interface AdminDashboardProps {
   onNavigate: (view: ViewState) => void;
@@ -194,6 +195,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   // Student Detail Modal State
   const [selectedStudent, setSelectedStudent] = useState<typeof STUDENTS_DATA[0] | null>(null);
 
+  // API Data State
+  const [dashboardStats, setDashboardStats] = useState({
+    totalRevenue: 0,
+    activeStudents: 0,
+    courseEnrollments: 0,
+    newInstructors: 0
+  });
+  const [recentEnrollments, setRecentEnrollments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Settings State
   const [settingsData, setSettingsData] = useState({
     general: {
@@ -220,20 +232,67 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }
   });
 
-  // Dummy Data for stats
-  const stats = [
-    { title: 'Total Revenue', value: '₹98,45,000', change: '+12.5%', icon: IndianRupee, color: 'bg-green-100 text-green-600' },
-    { title: 'Active Students', value: '2,345', change: '+5.2%', icon: Users, color: 'bg-brand-100 text-brand-600' },
-    { title: 'Course Enrollments', value: '4,890', change: '+8.1%', icon: BookOpen, color: 'bg-orange-100 text-orange-600' },
-    { title: 'New Instructors', value: '12', change: '+2.0%', icon: GraduationCap, color: 'bg-purple-100 text-purple-600' },
-  ];
+  // Fetch dashboard data on component mount
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-  const recentEnrollments = [
-    { id: 1, student: 'John Cooper', course: 'Full Stack Development', date: '2 mins ago', status: 'Completed' },
-    { id: 2, student: 'Emma Wilson', course: 'UI/UX Design', date: '1 hour ago', status: 'Pending' },
-    { id: 3, student: 'Robert Fox', course: 'Data Science Masterclass', date: '3 hours ago', status: 'Completed' },
-    { id: 4, student: 'Sarah M.', course: 'Python for Beginners', date: '5 hours ago', status: 'Rejected' },
-    { id: 5, student: 'Michael B.', course: 'DevOps Engineering', date: '1 day ago', status: 'Completed' },
+        // Fetch stats and enrollments in parallel
+        const [statsResponse, enrollmentsResponse] = await Promise.all([
+          adminService.getDashboardStats(),
+          adminService.getRecentEnrollments(5)
+        ]);
+
+        if (statsResponse.success) {
+          setDashboardStats(statsResponse.data);
+        }
+
+        if (enrollmentsResponse.success) {
+          setRecentEnrollments(enrollmentsResponse.data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.response?.data?.message || 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Format stats for display
+  const stats = [
+    {
+      title: 'Total Revenue',
+      value: `₹${dashboardStats.totalRevenue.toLocaleString('en-IN')}`,
+      change: '+12.5%',
+      icon: IndianRupee,
+      color: 'bg-green-100 text-green-600'
+    },
+    {
+      title: 'Active Students',
+      value: dashboardStats.activeStudents.toString(),
+      change: '+5.2%',
+      icon: Users,
+      color: 'bg-brand-100 text-brand-600'
+    },
+    {
+      title: 'Course Enrollments',
+      value: dashboardStats.courseEnrollments.toString(),
+      change: '+8.1%',
+      icon: BookOpen,
+      color: 'bg-orange-100 text-orange-600'
+    },
+    {
+      title: 'New Instructors',
+      value: dashboardStats.newInstructors.toString(),
+      change: '+2.0%',
+      icon: GraduationCap,
+      color: 'bg-purple-100 text-purple-600'
+    },
   ];
 
   const SidebarItem = ({ id, icon: Icon, label }: { id: Tab, icon: any, label: string }) => (
