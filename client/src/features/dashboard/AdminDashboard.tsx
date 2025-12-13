@@ -203,6 +203,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     newInstructors: 0
   });
   const [recentEnrollments, setRecentEnrollments] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [instructors, setInstructors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -239,10 +241,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         setIsLoading(true);
         setError(null);
 
-        // Fetch stats and enrollments in parallel
-        const [statsResponse, enrollmentsResponse] = await Promise.all([
+        // Fetch all data in parallel
+        const [statsResponse, enrollmentsResponse, studentsResponse, instructorsResponse] = await Promise.all([
           adminService.getDashboardStats(),
-          adminService.getRecentEnrollments(5)
+          adminService.getRecentEnrollments(5),
+          adminService.getAllStudents(),
+          adminService.getAllInstructors()
         ]);
 
         if (statsResponse.success) {
@@ -251,6 +255,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
         if (enrollmentsResponse.success) {
           setRecentEnrollments(enrollmentsResponse.data);
+        }
+
+        if (studentsResponse.success) {
+          setStudents(studentsResponse.data);
+        }
+
+        if (instructorsResponse.success) {
+          setInstructors(instructorsResponse.data);
         }
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
