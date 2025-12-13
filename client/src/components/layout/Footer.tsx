@@ -40,7 +40,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
 
           {/* Brand Column */}
           <div>
@@ -107,58 +107,50 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </ul>
           </div>
 
-          {/* Courses */}
-          <div>
-            <h3 className="text-white font-bold mb-6">Trending Courses</h3>
-            <ul className="space-y-3 text-sm">
-              <li><a href="#courses" onClick={(e) => handleNav(e, 'courses')} className="hover:text-brand-500 transition-colors">Full Stack Development</a></li>
-              <li><a href="#courses" onClick={(e) => handleNav(e, 'courses')} className="hover:text-brand-500 transition-colors">Data Science & AI</a></li>
-              <li><a href="#courses" onClick={(e) => handleNav(e, 'courses')} className="hover:text-brand-500 transition-colors">Python Programming</a></li>
-              <li><a href="#courses" onClick={(e) => handleNav(e, 'courses')} className="hover:text-brand-500 transition-colors">Digital Marketing</a></li>
-              <li><a href="#courses" onClick={(e) => handleNav(e, 'courses')} className="hover:text-brand-500 transition-colors">Cloud Computing</a></li>
-            </ul>
-          </div>
 
-          {/* Contact Info */}
+
+          {/* Contact Info - Both Locations Side by Side */}
           <div>
             <h3 className="text-white font-bold mb-6">Contact Us</h3>
 
-            {/* Visakhapatnam */}
-            <div className="mb-6">
-              <p className="text-brand-400 font-semibold mb-3">VISAKHAPATNAM</p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <MapPin size={18} className="text-brand-500 mt-0.5 flex-shrink-0" />
-                  <span>#50-50-33/2/1, Shop No.1, 2nd Floor, Priyadarshini Complex, Gurudwara Jn., VISAKHAPATNAM - 530 013, A.P. India</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-brand-500 flex-shrink-0" />
-                  <span>+91 81798 46868 / +91 89144 33003</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-brand-500 flex-shrink-0" />
-                  <span>vizag@ctcglobal.co.uk</span>
-                </li>
-              </ul>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Visakhapatnam */}
+              <div>
+                <p className="text-brand-400 font-semibold mb-3 text-sm">VISAKHAPATNAM</p>
+                <ul className="space-y-2 text-xs">
+                  <li className="flex items-start gap-2">
+                    <MapPin size={14} className="text-brand-500 mt-0.5 flex-shrink-0" />
+                    <span>#50-50-33/2/1, Shop No.1, 2nd Floor, Priyadarshini Complex, Gurudwara Jn., VISAKHAPATNAM - 530 013, A.P. India</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Phone size={14} className="text-brand-500 flex-shrink-0" />
+                    <span>+91 81798 46868 / +91 89144 33003</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Mail size={14} className="text-brand-500 flex-shrink-0" />
+                    <span>vizag@ctcglobal.co.uk</span>
+                  </li>
+                </ul>
+              </div>
 
-            {/* Vijayawada */}
-            <div>
-              <p className="text-brand-400 font-semibold mb-3">VIJAYAWADA</p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <MapPin size={18} className="text-brand-500 mt-0.5 flex-shrink-0" />
-                  <span>C/o Modern Public School, Above SBI, Madhu Gardens, Moghalrajpuram, VIJAYAWADA - 520 010, A.P. India</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-brand-500 flex-shrink-0" />
-                  <span>+91 737 737 1237 / +91 737 737 1238</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-brand-500 flex-shrink-0" />
-                  <span>vijayawada@ctcglobal.co.uk</span>
-                </li>
-              </ul>
+              {/* Vijayawada */}
+              <div>
+                <p className="text-brand-400 font-semibold mb-3 text-sm">VIJAYAWADA</p>
+                <ul className="space-y-2 text-xs">
+                  <li className="flex items-start gap-2">
+                    <MapPin size={14} className="text-brand-500 mt-0.5 flex-shrink-0" />
+                    <span>C/o Modern Public School, Above SBI, Madhu Gardens, Moghalrajpuram, VIJAYAWADA - 520 010, A.P. India</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Phone size={14} className="text-brand-500 flex-shrink-0" />
+                    <span>+91 737 737 1237 / +91 737 737 1238</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Mail size={14} className="text-brand-500 flex-shrink-0" />
+                    <span>vijayawada@ctcglobal.co.uk</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -168,6 +160,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             &copy; {new Date().getFullYear()} Scholastic A Edu. Depot. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-[60]">
+            <a
+              href="#"
+              onClick={(e) => handlePolicyNavigation(e, 'privacy')}
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="#"
+              onClick={(e) => handlePolicyNavigation(e, 'terms')}
+              className="text-slate-300 hover:text-white transition-colors hover:underline underline-offset-4 cursor-pointer"
+            >
+              Terms of Service
+            </a>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ export const InstructorProfilePage: React.FC<InstructorProfilePageProps> = ({ in
 
    // Convert Course from constants to CourseSummary for modal
    const mapCourseToCourseSummary = (course: typeof COURSES[0]): CourseSummary => ({
-      id: course.id,
+      id: String(course.id),
       _id: String(course.id),
       name: course.title,
       slug: course.title.toLowerCase().replace(/\s+/g, '-'),
