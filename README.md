@@ -113,7 +113,7 @@
    This will start both the frontend and backend in development mode with hot-reload.
 
 5. **Access the application**
-   - Frontend: http://localhost:5173
+   - Frontend: http://localhost:3000
    - Backend API: http://localhost:5000
    - API Documentation: http://localhost:5000/api-docs
 
@@ -158,6 +158,49 @@ npm start
 
 ### Environment Variables
 See `.env.example` files in both `client` and `backend` directories for required environment variables.
+
+## 🔗 Connection & Run (Local development)
+
+- **Purpose**: ensure frontend and backend talk to each other without CORS or proxy mismatches during development.
+
+- Backend: uses port `5000` and exposes routes under the `/api` prefix (for example `/api/test`).
+- Frontend (Vite dev server): runs on port `3000` and proxies `/api/*` to the backend in development.
+
+Steps to run locally (recommended):
+
+1. Copy env examples
+   ```powershell
+   cp backend/.env.example backend/.env
+   cp client/.env.example client/.env
+   ```
+   Edit `backend/.env` and set `MONGO_URI` and any other secrets.
+
+2. Install and start services
+   ```powershell
+   # From repository root
+   cd backend; npm install; npm run dev
+   # In a separate terminal
+   cd client; npm install; npm run dev
+   ```
+
+3. Access the app
+   - Frontend: `http://localhost:3000`
+   - Backend test endpoint: `http://localhost:5000/api/test`
+
+Notes:
+- The Vite proxy is configured to forward requests that start with `/api` directly to the backend without stripping the `/api` prefix. This keeps the dev paths aligned with backend routes.
+- The client Axios instance uses `withCredentials: true` so cookies (including CSRF tokens) are sent. The backend CSRF endpoint is at `/api/auth/csrf-token`.
+- For production, set `VITE_API_BASE_URL` in `client/.env` to your backend URL (for example `https://api.yourdomain.com`).
+
+Uploads note:
+- File uploads in this project are implemented with AWS S3. If you do not provide AWS credentials in `backend/.env`, the server will fallback to memory storage and return a warning when the upload route is called. To enable persistent uploads, set these variables in `backend/.env`:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_BUCKET_NAME`
+   - `AWS_REGION`
+
+In development the server prints a visible warning when these are missing; in non-development environments it logs a brief info message instead.
+
 
 ## 🤝 Contributing
 

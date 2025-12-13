@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2, Minimize2, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import api from '../../lib/api';
 
 interface Message {
   id: number;
@@ -34,7 +35,7 @@ export const Chatbot: React.FC = () => {
     return [
       {
         id: 1,
-        text: "Hi there! 👋 I'm the SED Assistant. How can I help you launch your tech career today?",
+        text: "Hi there! 👋 I'm the SED Assistant powered by AI. How can I help you launch your tech career today?",
         sender: 'bot',
         timestamp: new Date()
       }
@@ -65,7 +66,8 @@ export const Chatbot: React.FC = () => {
     }
   }, [isOpen]);
 
-  const generateResponse = (query: string) => {
+  // Fallback keyword-based responses (used when API fails)
+  const generateFallbackResponse = (query: string) => {
     const lowerQuery = query.toLowerCase();
 
     if (lowerQuery.includes('price') || lowerQuery.includes('cost') || lowerQuery.includes('fee')) {
@@ -87,7 +89,32 @@ export const Chatbot: React.FC = () => {
     return "I'm not sure I have the details for that specific query yet. Would you like to speak with a human counselor instead? You can book a call via our Contact page.";
   };
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  // Generate response using backend AI API
+  const generateResponse = async (query: string): Promise<string> => {
+    try {
+      const response = await api.post('/ai/chat', { message: query });
+      
+      // If API returns 503 or fallback flag, use local fallback
+      if (response.data.fallback || response.status === 503) {
+        console.warn('AI service unavailable, using fallback responses');
+        return generateFallbackResponse(query);
+      }
+      
+      return response.data.response || generateFallbackResponse(query);
+    } catch (error: any) {
+      // Check if the error is a 503 Service Unavailable
+      if (error.response?.status === 503) {
+        console.warn('AI service unavailable (503), using fallback responses');
+        return generateFallbackResponse(query);
+      }
+      
+      console.error('AI API Error:', error);
+      // Fallback to keyword-based responses if API fails
+      return generateFallbackResponse(query);
+    }
+  };
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
     if (!inputValue.trim()) return;
@@ -103,18 +130,25 @@ export const Chatbot: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI delay
-    setTimeout(() => {
-      const responseText = generateResponse(newUserMessage.text);
-      const newBotMessage: Message = {
-        id: Date.now() + 1,
-        text: responseText,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, newBotMessage]);
+    // Get AI response
+    try {
+      const responseText = await generateResponse(newUserMessage.text);
+
+      // Simulate typing delay for better UX
+      setTimeout(() => {
+        const newBotMessage: Message = {
+          id: Date.now() + 1,
+          text: responseText,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, newBotMessage]);
+        setIsTyping(false);
+      }, 800);
+    } catch (error) {
+      console.error('Error generating response:', error);
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleClearHistory = () => {
@@ -194,8 +228,8 @@ export const Chatbot: React.FC = () => {
                   {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
                 </div>
                 <div className={`p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === 'user'
-                    ? 'bg-brand-600 text-white rounded-br-none'
-                    : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'
+                  ? 'bg-brand-600 text-white rounded-br-none'
+                  : 'bg-white text-slate-700 border border-slate-100 rounded-bl-none'
                   }`}>
                   {msg.text}
                 </div>

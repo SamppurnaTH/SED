@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { CheckCircle, Mail, Lock, User, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
+import { register as registerService, googleLogin as googleLoginService, AuthResponse } from '../services/authService';
 import { Button } from '../components/ui/Button';
 import { ViewState } from '../App';
 
@@ -8,6 +10,7 @@ interface FormData {
   name: string;
   email: string;
   password: string;
+  confirmpassword: string;
   terms: boolean;
 }
 
@@ -15,6 +18,7 @@ interface FormErrors {
   name?: string;
   email?: string;
   password?: string;
+  confirmpassword?: string;
   terms?: string;
   general?: string;
 }
@@ -29,6 +33,7 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
     name: '',
     email: '',
     password: '',
+    confirmpassword: '',
     terms: false
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -50,6 +55,11 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters long';
+    }
+    if (!formData.confirmpassword) {
+      newErrors.confirmpassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmpassword) {
+      newErrors.confirmpassword = 'Passwords do not match';
     }
     
     if (!formData.terms) {
@@ -87,20 +97,52 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
     setErrors(prev => ({ ...prev, general: undefined }));
     
     try {
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // On success
-      alert('Account created successfully! Redirecting to dashboard...');
-      onNavigate('home');
-    } catch (error) {
+      const response: AuthResponse = await registerService({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        confirmpassword: formData.confirmpassword,
+        role: 'student',
+        acceptTerms: formData.terms,
+      });
+      // Save token and redirect user
+      localStorage.setItem('token', response.token);
+      alert('Account created successfully! Please verify your email before logging in.');
+      onNavigate('login');
+    } catch (error: any) {
       setErrors({
-        general: 'Failed to create account. Please try again.'
+        general: error?.response?.data?.message || 'Failed to create account. Please try again.'
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const googleSignup = useGoogleLogin({
+    onSuccess: async (codeResponse: any) => {
+      setIsLoading(true);
+      try {
+        const response = await googleLoginService(codeResponse.id_token);
+        // Store token and user info
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        // Redirect to dashboard
+        onNavigate('student-dashboard');
+      } catch (err: any) {
+        setErrors({
+          general: err?.response?.data?.message || 'Google signup failed'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      setErrors({
+        general: 'Failed to sign up with Google'
+      });
+    },
+    flow: 'implicit'
+  });
 
   return (
     <div className="min-h-screen flex">
@@ -198,11 +240,13 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-4">
               <button 
-                type="button" 
-                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                type="button"
+                onClick={() => googleSignup()}
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-                Sign up with Google
+                {isLoading ? 'Signing up...' : 'Sign up with Google'}
               </button>
             </div>
 
@@ -290,6 +334,32 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                   </p>
                 ) : (
                   <p className="mt-1 text-xs text-slate-500">Must be at least 8 characters long.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock size={18} className={errors.confirmpassword ? 'text-red-500' : 'text-slate-400'} />
+                  </div>
+                  <input
+                    type="password"
+                    name="confirmpassword"
+                    value={formData.confirmpassword}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-3 py-2.5 border ${
+                      errors.confirmpassword ? 'border-red-500' : 'border-slate-300'
+                    } rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                      errors.confirmpassword ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-brand-500 focus:border-brand-500'
+                    } transition-all`}
+                    placeholder="••••••••"
+                  />
+                </div>
+                {errors.confirmpassword && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <AlertCircle size={14} className="mr-1" /> {errors.confirmpassword}
+                  </p>
                 )}
               </div>
             </div>

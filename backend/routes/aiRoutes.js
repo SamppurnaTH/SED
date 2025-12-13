@@ -1,166 +1,87 @@
-
 const express = require('express');
 const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const ragService = require('../services/ragService');
 const Course = require('../models/Course');
-const axios = require('axios'); // Required for the video proxy
+const axios = require('axios');
 
-// Initialize Google Generative AI
-// Ensure GOOGLE_API_KEY is set in your .env file
-if (!process.env.GOOGLE_API_KEY) {
-  console.warn('WARNING: GOOGLE_API_KEY is not defined. AI features will not work.');
-}
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
+// Log that we're using OpenRouter for AI
+console.log('🤖 AI Service: OpenRouter enabled');
 
 // @route   POST /api/ai/chat
 // @desc    Hybrid RAG Chatbot
 router.post('/chat', async (req, res) => {
     const { message } = req.body;
 
+    console.log('AI Chat Request Received');
+
+    // Validate input
+    if (!message || typeof message !== 'string') {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid message format. Message must be a non-empty string.'
+        });
+    }
+
+    // Check if local AI is properly configured
+    if (!process.env.ENABLE_AI_FEATURES || process.env.ENABLE_AI_FEATURES !== 'true') {
+        return res.status(503).json({
+            success: false,
+            message: 'AI service is currently disabled. Please enable it in the configuration.',
+            fallback: true
+        });
+    }
+
     try {
-        // 1. Try Local RAG Flow if enabled
-        if (process.env.ENABLE_AI_FEATURES === 'true') {
+        console.log('Attempting AI Service...');
+        try {
+            // Try RAG flow with embeddings
             const embedding = await ragService.generateEmbedding(message);
-            if (embedding) {
-                const context = await ragService.queryChroma(embedding);
-                const response = await ragService.chatWithOllama(message, context);
-                return res.json({ response });
-            }
+            console.log('✅ Embedding generated, querying context...');
+            const context = await ragService.queryChroma(embedding);
+            const response = await ragService.chatWithOllama(message, context);
+            return res.json({ response });
+        } catch (ragError) {
+            // If RAG fails, fall back to direct chat without context
+            console.warn('⚠️ RAG embedding failed:', ragError.message);
+            console.log('Falling back to direct chat without context...');
+            const response = await ragService.chatWithOllama(message, []);
+            return res.json({ response });
         }
 
-        // 2. Fallback to Gemini (Cloud)
-        const courses = await Course.find({}, 'name category tagline pricing');
-        const courseContext = courses.map(c => 
-            `- ${c.name} (${c.category}): ${c.tagline}. Price: ${c.pricing.amount}`
-        ).join('\n');
-
-        const systemInstruction = `You are SED Academy's AI. Answer based on: ${courseContext}`;
-        
-        const result = await ai.models.generateContent({
-             model: 'gemini-2.5-flash',
-             contents: message,
-             config: { systemInstruction }
-        });
-        
-        res.json({ response: result.text });
-
     } catch (error) {
-        console.error('AI Chat Error:', error);
-        res.status(500).json({ message: 'AI service unavailable' });
+        console.error('AI Chat Error Details:', error);
+        res.status(500).json({ message: 'AI service unavailable', error: error.message });
     }
 });
 
 // @route   POST /api/ai/generate-resume
-// @desc    Generate Resume Content
+// @desc    Generate Resume Content (Not implemented yet)
 router.post('/generate-resume', async (req, res) => {
-    const { prompt, schema } = req.body;
-
-    try {
-        const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: schema,
-            }
-        });
-        res.json({ text: result.text });
-    } catch (error) {
-        console.error('Resume Gen Error:', error);
-        res.status(500).json({ message: 'Failed to generate resume' });
-    }
+    res.status(501).json({ message: 'Resume generation not yet implemented' });
 });
 
 // @route   POST /api/ai/generate-image
-// @desc    Generate Images
+// @desc    Generate Images (Not implemented yet)
 router.post('/generate-image', async (req, res) => {
-    const { prompt } = req.body;
-
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: { parts: [{ text: prompt }] },
-            config: {
-                responseModalities: [Modality.IMAGE],
-            },
-        });
-
-        const part = response.candidates[0].content.parts.find(p => p.inlineData);
-        if (part) {
-             res.json({ 
-                 imageUrl: `data:image/png;base64,${part.inlineData.data}` 
-             });
-        } else {
-            throw new Error('No image data returned');
-        }
-    } catch (error) {
-        console.error('Image Gen Error:', error);
-        res.status(500).json({ message: 'Failed to generate image' });
-    }
+    res.status(501).json({ message: 'Image generation not yet implemented' });
 });
 
 // @route   POST /api/ai/generate-content
-// @desc    Generate Marketing Copy (Blog/Social)
+// @desc    Generate Marketing Copy (Not implemented yet)
 router.post('/generate-content', async (req, res) => {
-    const { prompt } = req.body;
-    try {
-        const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        res.json({ text: result.text });
-    } catch (error) {
-        console.error('Content Gen Error:', error);
-        res.status(500).json({ message: 'Failed to generate content' });
-    }
+    res.status(501).json({ message: 'Content generation not yet implemented' });
 });
 
 // @route   POST /api/ai/generate-video
 // @desc    Start Video Generation (Veo)
 router.post('/generate-video', async (req, res) => {
-    const { prompt, resolution, aspectRatio, image } = req.body;
-
-    try {
-        const request = {
-            model: 'veo-3.1-fast-generate-preview',
-            prompt,
-            config: {
-                numberOfVideos: 1,
-                resolution: resolution || '720p',
-                aspectRatio: aspectRatio || '16:9',
-            }
-        };
-
-        if (image) {
-            request.image = {
-                imageBytes: image.base64,
-                mimeType: image.mimeType
-            };
-        }
-
-        const operation = await ai.models.generateVideos(request);
-        // We return the operation name/metadata to the client to poll
-        res.json({ operation });
-
-    } catch (error) {
-        console.error('Video Gen Start Error:', error);
-        res.status(500).json({ message: error.message || 'Failed to start video generation' });
-    }
+    res.status(501).json({ message: 'Video generation not yet implemented' });
 });
 
 // @route   POST /api/ai/get-video-operation
 // @desc    Poll Video Generation Status
 router.post('/get-video-operation', async (req, res) => {
-    const { operation } = req.body;
-
-    try {
-        const updatedOp = await ai.operations.getVideosOperation({ operation });
-        res.json({ operation: updatedOp });
-    } catch (error) {
-        console.error('Video Poll Error:', error);
-        res.status(500).json({ message: 'Failed to check video status' });
-    }
+    res.status(501).json({ message: 'Video generation not yet implemented' });
 });
 
 // @route   GET /api/ai/video-proxy

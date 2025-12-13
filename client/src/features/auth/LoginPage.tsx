@@ -1,26 +1,59 @@
 
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Shield, ArrowLeft, User, GraduationCap } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
 import { Button } from '../../components/ui/Button';
 import { ViewState } from '../../App';
+import { useAuth } from '../../contexts/AuthContext';
+import { googleLogin as googleLoginService } from '../../services/authService';
 
 interface LoginPageProps {
   onNavigate: (view: ViewState) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError('');
+    try {
+      await login(email, password);
+      // Navigate to dashboard after successful login
+      onNavigate('student');
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Login failed');
+    } finally {
       setIsLoading(false);
-      alert('Logged in successfully! Redirecting to dashboard...');
-      onNavigate('student'); // Redirect to student dashboard by default for this demo
-    }, 1500);
+    }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse: any) => {
+      setIsLoading(true);
+      try {
+        const response = await googleLoginService(codeResponse.id_token);
+        // Store token and user info
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        // Redirect to dashboard
+        onNavigate('student-dashboard');
+      } catch (err: any) {
+        setError(err?.response?.data?.message || 'Google login failed');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: () => {
+      setError('Failed to login with Google');
+    },
+    flow: 'implicit'
+  });
 
   return (
     <div className="min-h-screen flex">
@@ -38,14 +71,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
         <div className="relative z-10 w-full">
           <div className="flex flex-col items-center mb-12 w-full">
-            <img 
-              src="/logo.png" 
-              alt="Scholastic Edu. Depot" 
+            <img
+              src="/logo.png"
+              alt="Scholastic Edu. Depot"
               className="h-24 w-auto mb-4"
             />
             <h2 className="text-2xl font-display font-bold text-white">SCHOLASTIC EDU. DEPOT</h2>
           </div>
-          
+
           <div className="flex flex-col items-center text-center">
             <h1 className="text-4xl font-display font-bold mb-6 leading-tight">
               Welcome back, <br />
@@ -91,13 +124,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <div className="space-y-4">
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                onClick={() => googleLogin()}
+                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-                Log in with Google
+                {isLoading ? 'Logging in...' : 'Log in with Google'}
               </button>
             </div>
 
@@ -117,6 +153,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   <input
                     type="email"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
                     placeholder="john@example.com"
                   />
@@ -141,6 +179,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   <input
                     type="password"
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all"
                     placeholder="••••••••"
                   />
@@ -170,35 +210,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
               {!isLoading && <ArrowRight size={18} className="ml-2" />}
             </Button>
 
-            <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-slate-500 hover:text-slate-800 text-xs"
-                onClick={() => onNavigate('admin')}
-              >
-                <Shield size={14} className="mr-2" />
-                Admin
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-slate-500 hover:text-slate-800 text-xs"
-                onClick={() => onNavigate('instructor-dashboard')}
-              >
-                <GraduationCap size={14} className="mr-2" />
-                Instructor
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-slate-500 hover:text-slate-800 text-xs"
-                onClick={() => onNavigate('student')}
-              >
-                <User size={14} className="mr-2" />
-                Student
-              </Button>
-            </div>
+
           </form>
         </div>
       </div>

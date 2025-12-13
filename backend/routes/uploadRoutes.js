@@ -29,8 +29,13 @@ const requiredEnvVars = ['AWS_REGION', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_K
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-    console.warn(`WARNING: The following required AWS environment variables are missing: ${missingVars.join(', ')}`);
-    console.warn('File uploads will be disabled. Please set these variables in your .env file to enable file uploads.');
+    // Only print a loud warning during local development to avoid noisy logs in other environments
+    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+        console.warn(`WARNING: The following required AWS environment variables are missing: ${missingVars.join(', ')}`);
+        console.warn('File uploads will be disabled. Please set these variables in your .env file to enable file uploads.');
+    } else {
+        console.info(`AWS S3 not configured (missing: ${missingVars.join(', ')}). File uploads disabled.`);
+    }
 }
 
 // Initialize S3 Client only if all required variables are present

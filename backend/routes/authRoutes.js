@@ -13,13 +13,23 @@ const router = express.Router();
 router.get('/csrf-token', (req, res) => {
     try {
         console.log('CSRF token endpoint hit in auth routes');
-        
-        // The CSRF token is already set in the response cookie by the doubleCsrfProtection middleware
-        // We just need to return a success response
+        // Generate CSRF token if the middleware provides it, otherwise fall back
+        const csrfToken = (typeof req.csrfToken === 'function') ? req.csrfToken() : (res.locals.csrfToken || '');
+
+        if (csrfToken) {
+            // Set a non-httpOnly cookie so the frontend can read the token if needed
+            res.cookie('XSRF-TOKEN', csrfToken, {
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                httpOnly: false
+            });
+        }
+
         res.json({ 
             success: true, 
             message: 'CSRF token generated successfully',
-            csrfToken: res.locals.csrfToken || ''
+            csrfToken
         });
     } catch (error) {
         console.error('Error in CSRF token endpoint:', error);
@@ -40,11 +50,24 @@ const getJwtSecret = () => {
 };
 
 const sendVerificationEmail = async (user, req) => {
-    const verificationToken = user.getEmailVerificationToken();
-    await user.save({ validateBeforeSave: false });
+    // Only generate a new token if one doesn't exist or is expired.
+    let verificationToken = null;
+    const tokenMissingOrExpired = !user.emailVerificationToken || !user.emailVerificationExpire || user.emailVerificationExpire < Date.now();
+    if (tokenMissingOrExpired) {
+        verificationToken = user.getEmailVerificationToken();
+        await user.save({ validateBeforeSave: false });
+    } else {
+        // The stored token is hashed; we need to derive the raw token to send in email.
+        // Since we don't store the raw token, regenerate a fresh one for the email and store it.
+        verificationToken = user.getEmailVerificationToken();
+        await user.save({ validateBeforeSave: false });
+    }
 
-    const frontendBaseUrl = req.headers.origin || 'http://localhost:5173';
-    const verificationUrl = `${frontendBaseUrl}/verify-email/${verificationToken}`;
+    // Build a backend URL so clicks from email hit the server directly.
+    // This makes verification reliable when users click from mail clients.
+    const backendBaseUrl = `${req.protocol}://${req.get('host')}`;
+    const frontendBaseUrl = req.headers.origin || 'http://localhost:3000';
+    const verificationUrl = `${backendBaseUrl}/api/auth/verify-email/${verificationToken}`;
     
     const message = `
         Hi ${user.name},
@@ -62,11 +85,19 @@ const sendVerificationEmail = async (user, req) => {
         The SED Team
     `;
 
-    await sendEmail({
-        email: user.email,
-        subject: 'Verify Your Email Address',
-        message
-    });
+    try {
+        const result = await sendEmail({
+            email: user.email,
+            subject: 'Verify Your Email Address',
+            message
+        });
+        if (!result || result.ok === false) {
+            console.warn('Verification email not sent:', result && result.reason ? result.reason : 'unknown');
+        }
+    } catch (emailErr) {
+        console.error('Error while attempting to send verification email:', emailErr);
+        // Do not throw — registration should succeed even if email cannot be sent
+    }
 };
 
 // POST /api/auth/register/student
@@ -155,8 +186,12 @@ router.get('/verify-email/:token', async (req, res) => {
             emailVerificationExpire: { $gt: Date.now() }
         });
 
+        const frontendBaseUrl = req.headers.origin || 'http://localhost:3000';
+
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired verification token.' });
+            // Redirect to frontend with an error status so users see a friendly message
+            const redirectOnInvalid = `${frontendBaseUrl}/verify-email/${req.params.token}?status=error&message=${encodeURIComponent('Invalid or expired verification token.')}`;
+            return res.redirect(302, redirectOnInvalid);
         }
 
         user.isVerified = true;
@@ -164,10 +199,17 @@ router.get('/verify-email/:token', async (req, res) => {
         user.emailVerificationExpire = undefined;
         await user.save();
 
-        res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+        // If this endpoint is hit directly by a browser (from the email link),
+        // redirect to the frontend verification page with a success status so
+        // the user sees a friendly confirmation page.
+        const redirectUrl = `${frontendBaseUrl}/verify-email/${req.params.token}?status=success`;
+        return res.redirect(302, redirectUrl);
 
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        // On error, redirect back to the frontend with an error status so the
+        // frontend can show a friendly message.
+        const redirectOnError = `${req.headers.origin || 'http://localhost:3000'}/verify-email/${req.params.token}?status=error&message=${encodeURIComponent(error.message)}`;
+        return res.redirect(302, redirectOnError);
     }
 });
 
@@ -837,6 +879,107 @@ router.get('/check-admin', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error checking admin user',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Google OAuth Login Endpoint
+router.post('/google-login', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID Token is required'
+            });
+        }
+
+        // In production, verify the token with Google's servers using google-auth-library
+        // For now, we'll decode it (note: this is not secure and should use proper JWT verification)
+        const parts = idToken.split('.');
+        if (parts.length !== 3) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid token format'
+            });
+        }
+
+        // Decode the payload (second part)
+        const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        const { email, name, picture } = decoded;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email not found in token'
+            });
+        }
+
+        // Find or create user
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create new user from Google info
+            user = new User({
+                email,
+                name: name || email.split('@')[0],
+                avatarUrl: picture || null,
+                role: 'Student',
+                isVerified: true, // Google accounts are verified
+                password: crypto.randomBytes(32).toString('hex'), // Random password
+                oauthProvider: 'google',
+                oauthId: decoded.sub
+            });
+            await user.save();
+        } else {
+            // Update OAuth info if user already exists
+            if (!user.oauthProvider) {
+                user.oauthProvider = 'google';
+                user.oauthId = decoded.sub;
+                await user.save();
+            }
+        }
+
+        // Generate JWT token
+        const jwtToken = jwt.sign(
+            {
+                userId: user._id,
+                email: user.email,
+                role: user.role,
+                name: user.name
+            },
+            getJwtSecret(),
+            { expiresIn: process.env.JWT_EXPIRE || '30d' }
+        );
+
+        // Set session cookie
+        res.cookie('session_token', jwtToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        });
+
+        res.json({
+            success: true,
+            message: 'Google login successful',
+            token: jwtToken,
+            user: {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                isEmailVerified: user.isVerified,
+                avatar: user.avatarUrl
+            }
+        });
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Google login failed',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }

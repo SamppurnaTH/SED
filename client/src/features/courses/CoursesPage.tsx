@@ -41,9 +41,11 @@ interface Testimonial {
   image: string;
 }
 
-// Mock data - replace with actual data from your API
-const COURSE_CATEGORIES = ['All', 'Web Development', 'Data Science', 'Mobile Development', 'Cloud Computing', 'AI & ML'];
-const COURSES: Course[] = [];
+import { fetchCourses, CourseSummary } from '../../services/courseService';
+import { Course as FullCourse } from '../../constants';
+
+// Loading and data states
+const COURSE_CATEGORIES = ['All']; // Will expand after fetching
 const TESTIMONIALS: Testimonial[] = [];
 const COURSE_REVIEWS: Review[] = [];
 
@@ -53,13 +55,54 @@ interface CoursesPageProps {
 }
 
 export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInstructor }) => {
+  const [courses, setCourses] = useState<CourseSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [sortOrder, setSortOrder] = useState<'default' | 'asc' | 'desc'>('default');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCourse, setSelectedCourse] = useState<typeof COURSES[0] | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<FullCourse | null>(null);
   
   const itemsPerPage = 6;
+
+/**
+ * Convert CourseSummary into FullCourse format for the CourseDetailModal
+ */
+const mapSummaryToCourse = (summary: CourseSummary): FullCourse => ({
+  id: summary.id,
+  title: summary.title,
+  instructor: summary.instructor ?? 'SED Instructor',
+  level: (summary.level ?? 'Beginner') as 'Beginner' | 'Intermediate' | 'Advanced',
+  duration: summary.duration ?? '-',
+  students: summary.students ?? 0,
+  rating: summary.rating ?? 0,
+  image: summary.image,
+  description: summary.description ?? '',
+  whatYouWillLearn: summary.whatYouWillLearn ?? [],
+  requirements: summary.requirements ?? [],
+  category: summary.category ?? 'General',
+  price: parseInt(summary.price.replace(/[^0-9]/g, '')) || 0,
+  lessons: summary.lessons ?? 0,
+});
+
+  // Fetch courses once
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchCourses();
+        setCourses(data);
+        // derive categories
+        const cats = Array.from(new Set(data.map(c => c.category).filter((c): c is string => !!c)));
+        COURSE_CATEGORIES.splice(1, COURSE_CATEGORIES.length - 1, ...cats);
+      } catch (e: any) {
+        setError('Failed to load courses');
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   // Reset page when filters/sort change
   useEffect(() => {
@@ -67,15 +110,15 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
   }, [searchQuery, activeCategory, sortOrder]);
 
   // Filter Logic
-  const filteredCourses = COURSES.filter(course => {
+  const filteredCourses = courses.filter(course => {
     const matchesCategory = activeCategory === 'All' || course.category === activeCategory;
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (course.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   // Sort Logic
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
+  const sortedCourses = [...filteredCourses].sort((a: any, b: any) => {
     if (sortOrder === 'default') return 0;
     
     // Remove non-numeric characters to parse price (e.g. "$599" -> 599)
@@ -90,6 +133,13 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentCourses = sortedCourses.slice(indexOfFirstItem, indexOfLastItem);
+
+  if (loading) {
+    return <div className="pt-24 text-center">Loading courses...</div>;
+  }
+  if (error) {
+    return <div className="pt-24 text-center text-red-600">{error}</div>;
+  }
 
   return (
     <div className="pt-24 min-h-screen bg-slate-50 flex flex-col">
@@ -187,7 +237,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
               <div 
                 key={course.id} 
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col cursor-pointer"
-                onClick={() => setSelectedCourse(course)}
+                onClick={() => setSelectedCourse(mapSummaryToCourse(course))}
               >
                 {/* Image Area */}
                 <div className="relative h-52 overflow-hidden">
@@ -209,7 +259,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                   <div className="flex items-center gap-2 text-yellow-500 text-sm font-semibold mb-2">
                     <Star className="fill-current" size={16} />
                     <span>{course.rating}</span>
-                    <span className="text-slate-400 font-normal">({course.students.toLocaleString()} students)</span>
+                    <span className="text-slate-400 font-normal">({(course.students ?? 0).toLocaleString()} students)</span>
                   </div>
 
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
@@ -224,19 +274,19 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                   <div className="grid grid-cols-2 gap-4 py-4 border-t border-slate-100">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Clock size={16} className="text-brand-500" />
-                      <span>{course.duration}</span>
+                      <span>{course.duration ?? '-'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <BookOpen size={16} className="text-brand-500" />
-                      <span>{course.lessons} Lessons</span>
+                      <span>{course.lessons ?? 0} Lessons</span>
                     </div>
                   </div>
 
                   {/* Instructor Section */}
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
                      <img 
-                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor)}&background=EBF4FF&color=2563EB&bold=true`} 
-                       alt={course.instructor}
+                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor ?? '')}&background=EBF4FF&color=2563EB&bold=true`} 
+                       alt={course.instructor ?? 'Instructor'}
                        className="w-10 h-10 rounded-full border-2 border-white shadow-md ring-2 ring-slate-50"
                      />
                      <div className="flex-grow">
@@ -247,7 +297,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                         className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors whitespace-nowrap"
                         onClick={(e) => {
                            e.stopPropagation();
-                           if (onViewInstructor) onViewInstructor(course.instructor);
+                           if (onViewInstructor && course.instructor) onViewInstructor(course.instructor);
                         }}
                      >
                         View Profile
@@ -266,7 +316,7 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                       className="group-hover:bg-brand-600 group-hover:text-white group-hover:border-brand-600 transition-all"
                       onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
                         e.stopPropagation(); // Prevent double trigger since card has onClick
-                        setSelectedCourse(course);
+                        setSelectedCourse(mapSummaryToCourse(course));
                       }}
                     >
                       View Details

@@ -13,7 +13,9 @@ export default defineConfig(({ mode }) => {
             target: 'http://localhost:5000',
             changeOrigin: true,
             secure: false,
-            rewrite: (path) => path.replace(/^\/api/, '')
+            // Keep the `/api` prefix when proxying so backend routes like
+            // `/api/test` match the server's route definitions.
+            // (Previously the config removed `/api` which caused 404s.)
           }
         }
       },

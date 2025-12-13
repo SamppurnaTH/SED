@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   emailVerificationToken: String,
   emailVerificationExpire: Date,
+  oauthProvider: { type: String, enum: ['google', 'github', null], default: null },
+  oauthId: String,
   enrolledCourses: [{
     courseSlug: String,
     progress: { type: Number, default: 0 },

@@ -4,6 +4,9 @@ const path = require('path');
 const resolve = path.resolve;
 const join = path.join;
 
+// Ensure the correct embedding model is used
+process.env.EMBEDDING_MODEL = 'jinaai/jina-embeddings-v2-base-en';
+
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
@@ -34,6 +37,8 @@ const healthCheckRoutes = require('./routes/healthCheck');
 const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const adminUserRoutes = require('./routes/adminUserRoutes');
 
 // Models for seeding
 const Course = require('./models/Course.js');
@@ -115,44 +120,42 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "https://aistudiocdn.com", "https://checkout.razorpay.com", "'unsafe-inline'"],
-      styleSrc: ["'self'", "https://fonts.googleapis.com", "'unsafe-inline'"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "https:", "data:"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'self'", "https://www.youtube.com", "https://www.google.com", "https://api.razorpay.com"],
-    }
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:", "res.cloudinary.com"],
+      connectSrc: ["'self'", "https://*.googleapis.com", "https://*.stripe.com"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'self'", "https://js.stripe.com"]
+    },
   },
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: "same-origin" },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  xssFilter: true,
+  noSniff: true,
+  ieNoOpen: true,
+  hidePoweredBy: true,
+  frameguard: { action: 'deny' }
 }));
 
-app.use(compression());
-
-// ---------------- CORS ----------------
-const whitelist = ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:3000'];
-
+// CORS Configuration
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'Accept', 'X-XSRF-TOKEN'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  exposedHeaders: ['set-cookie', 'xsrf-token']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['set-cookie'],
+  maxAge: 600 // 10 minutes
 };
 
+// Apply CORS with the specified options
 app.use(cors(corsOptions));
 
-// Add CORS headers to all responses
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-});
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // ---------------- PARSERS ----------------
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -171,29 +174,29 @@ const csrfProtection = csrf({
   }
 });
 
-// Apply CSRF middleware to add req.csrfToken() function
-app.use(csrfProtection);
-
-// Apply CSRF protection to all routes except excluded ones
+// Apply CSRF protection selectively. We do NOT apply the CSRF middleware globally
+// because that would validate every request before our exclusion logic runs
+// (causing POSTs like register to be rejected). Instead, call `csrfProtection`
+// inside a conditional middleware so we can exclude specific routes.
 app.use((req, res, next) => {
   // List of routes to exclude from CSRF protection
+  // Note: we DO NOT exclude the csrf-token endpoint because it must run
+  // the CSRF middleware to generate and attach a token on GET requests.
   const csrfExcluded = [
-    '/api/auth/csrf-token',
     '/api/auth/login',
     '/api/auth/register',
-    '/api/health' // Add health check endpoint
+    '/api/auth/google-login',
+    '/api/health', // Add health check endpoint
+    '/api/ai/chat' // Exclude AI chat endpoint from CSRF
   ];
 
   if (csrfExcluded.some(path => req.path.startsWith(path))) {
     return next();
   }
 
-  // Skip CSRF validation for GET/HEAD/OPTIONS requests
-  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-    return next();
-  }
-
-  // Apply CSRF validation for other methods
+  // For all non-excluded routes, run the CSRF middleware. For safe methods
+  // (GET/HEAD/OPTIONS) csurf will attach `req.csrfToken()` without rejecting;
+  // for unsafe methods (POST/PUT/DELETE) it will validate the token.
   return csrfProtection(req, res, next);
 });
 
@@ -281,6 +284,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/admin", adminUserRoutes);
 app.use("/api/assignments", require('./routes/assignmentRoutes'));
 app.use("/api/certificates", require('./routes/certificateRoutes'));
 app.use("/api/submissions", require('./routes/submissionsRoutes'));
