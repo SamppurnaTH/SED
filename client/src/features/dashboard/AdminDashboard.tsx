@@ -167,7 +167,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Selection States
-  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<(string | number)[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
 
   // Data States
@@ -300,7 +300,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }
 
     // Add to list
-    const maxId = coursesList.length > 0 ? Math.max(...coursesList.map(c => parseInt(c.id) || 0)) : 0;
+    const maxId = coursesList.length > 0 ? Math.max(...coursesList.map(c => parseInt(String(c.id)) || 0)) : 0;
     const newId = `${maxId + 1}`;
     const courseToAdd = {
       id: newId,
@@ -365,7 +365,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }
   };
 
-  const toggleSelectCourse = (id: string) => {
+  const toggleSelectCourse = (id: string | number) => {
     if (selectedCourseIds.includes(id)) {
       setSelectedCourseIds(selectedCourseIds.filter(sid => sid !== id));
     } else {
@@ -375,7 +375,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
   const handleBulkDeleteCourses = () => {
     if (window.confirm(`Are you sure you want to delete ${selectedCourseIds.length} selected courses?`)) {
-      setCoursesList(prev => prev.filter(c => !selectedCourseIds.includes(c.id)));
+      setCoursesList(prev => prev.filter(c => !selectedCourseIds.includes(String(c.id))));
       setSelectedCourseIds([]);
       alert('Selected courses have been deleted.');
     }
@@ -1136,12 +1136,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {coursesList.length > 0 ? coursesList.map((course) => (
-                      <tr key={course.id} className={`hover:bg-slate-50 ${selectedCourseIds.includes(course.id) ? 'bg-brand-50/30' : ''}`}>
+                      <tr key={course.id} className={`hover:bg-slate-50 ${selectedCourseIds.map(String).includes(String(course.id)) ? 'bg-brand-50/30' : ''}`}>
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
                             className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer"
-                            checked={selectedCourseIds.includes(course.id)}
+                            checked={selectedCourseIds.map(String).includes(String(course.id))}
                             onChange={() => toggleSelectCourse(course.id)}
                           />
                         </td>
