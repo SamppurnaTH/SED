@@ -47,7 +47,56 @@ import { Course as FullCourse } from '../../constants';
 // Loading and data states
 const COURSE_CATEGORIES = ['All']; // Will expand after fetching
 const TESTIMONIALS: Testimonial[] = [];
-const COURSE_REVIEWS: Review[] = [];
+const COURSE_REVIEWS: Review[] = [
+  {
+    id: '1',
+    courseTitle: 'Full Stack Development',
+    rating: 5,
+    comment: 'Excellent course! The hands-on projects really helped me understand React and Node.js. Landed a job within 2 months of completion.',
+    date: '2 days ago',
+    studentName: 'Rajesh Kumar'
+  },
+  {
+    id: '2',
+    courseTitle: 'Data Science & AI',
+    rating: 5,
+    comment: 'Best investment in my career. The instructors are industry experts and the curriculum is very practical and up-to-date.',
+    date: '5 days ago',
+    studentName: 'Priya Sharma'
+  },
+  {
+    id: '3',
+    courseTitle: 'Python Programming',
+    rating: 4,
+    comment: 'Great course for beginners. Covered everything from basics to advanced concepts. Would recommend to anyone starting with Python.',
+    date: '1 week ago',
+    studentName: 'Amit Patel'
+  },
+  {
+    id: '4',
+    courseTitle: 'Digital Marketing',
+    rating: 5,
+    comment: 'Transformed my understanding of digital marketing. The real-world case studies and practical assignments were incredibly valuable.',
+    date: '1 week ago',
+    studentName: 'Sneha Reddy'
+  },
+  {
+    id: '5',
+    courseTitle: 'Cloud Computing (AWS)',
+    rating: 5,
+    comment: 'Comprehensive AWS training with hands-on labs. Got my AWS certification and now working as a cloud engineer. Thank you SED!',
+    date: '2 weeks ago',
+    studentName: 'Vikram Singh'
+  },
+  {
+    id: '6',
+    courseTitle: 'Full Stack Development',
+    rating: 4,
+    comment: 'Very detailed course with excellent support from instructors. The capstone project helped me build a complete portfolio.',
+    date: '2 weeks ago',
+    studentName: 'Kavya Menon'
+  }
+];
 
 interface CoursesPageProps {
   onNavigate: (view: ViewState) => void;
@@ -194,8 +243,8 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                   key={category}
                   onClick={() => setActiveCategory(category)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${activeCategory === category
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                 >
                   {category}
@@ -359,8 +408,8 @@ export const CoursesPage: React.FC<CoursesPageProps> = ({ onNavigate, onViewInst
                 key={page}
                 onClick={() => setCurrentPage(page)}
                 className={`w-10 h-10 rounded-lg font-medium transition-colors ${currentPage === page
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                   }`}
                 aria-label={`Go to page ${page}`}
                 aria-current={currentPage === page ? 'page' : undefined}
