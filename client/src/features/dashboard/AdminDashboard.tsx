@@ -205,6 +205,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [recentEnrollments, setRecentEnrollments] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [instructors, setInstructors] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
