@@ -143,7 +143,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           <p className="text-sm text-slate-500">
             &copy; {new Date().getFullYear()} Scholastic A Edu. Depot. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-50">
+          <div className="flex space-x-6 mt-4 md:mt-0 text-sm relative z-[60]">
             <a
               href="#"
               onClick={(e) => handlePolicyNavigation(e, 'privacy')}
