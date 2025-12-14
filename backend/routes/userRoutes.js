@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Course = require('../models/Course');
-const { protectStudent } = require('../middleware/authMiddleware');
+const { protectStudent, protect } = require('../middleware/authMiddleware');
 const { userProfileValidators } = require('../middleware/validators');
 
 // --- User Progress Routes ---
