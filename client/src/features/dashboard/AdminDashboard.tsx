@@ -958,8 +958,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               {/* Notification Bell with Pulse */}
               <div className="relative">
                 <button
-                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                  className={`relative p-2.5 rounded-full transition-all duration-200 ${isNotificationsOpen || hasUnreadNotifications ? 'bg-brand-50 text-brand-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
+                  onClick={() => setIsNotificationsModalOpen(true)}
+                  className={`relative p-2.5 rounded-full transition-all duration-200 ${isNotificationsModalOpen || hasUnreadNotifications ? 'bg-brand-50 text-brand-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
                 >
                   <Bell size={20} className={hasUnreadNotifications ? "animate-swing" : ""} />
                   {hasUnreadNotifications && (
@@ -970,8 +970,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                   )}
                 </button>
 
-                {/* Dropdown (Enhanced) */}
-                {isNotificationsOpen && (
+                {/* Dropdown (Legacy - Disabled in favor of full modal) */}
+                {false && isNotificationsOpen && (
                   <>
                     <div className="fixed inset-0 z-[40]" onClick={() => setIsNotificationsOpen(false)}></div>
                     <div className="absolute right-0 mt-4 w-96 bg-white rounded-2xl shadow-xl border border-slate-100/80 ring-1 ring-slate-200/50 z-[50] overflow-hidden animate-fade-in-up origin-top-right backdrop-blur-sm">
