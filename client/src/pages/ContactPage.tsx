@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { FAQ_ITEMS } from '../constants';
+import api from '../lib/api';
 
 export const ContactPage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -20,11 +22,21 @@ export const ContactPage: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would send data to backend
-    alert('Thank you! Your message has been sent. We will get back to you shortly.');
-    setFormState({ name: '', email: '', subject: '', message: '' });
+    setFormStatus('loading');
+
+    try {
+      await api.post('/contact', formState);
+      setFormStatus('success');
+      setFormState({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setFormStatus('idle'), 5000);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setFormStatus('error');
+      setTimeout(() => setFormStatus('idle'), 5000);
+    }
   };
 
   return (
@@ -148,6 +160,20 @@ export const ContactPage: React.FC = () => {
           {/* Contact Form Column */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
             <h3 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h3>
+
+            {formStatus === 'success' && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center">
+                <Send size={20} className="mr-2" />
+                Message sent successfully! We'll allow get back to you soon.
+              </div>
+            )}
+
+            {formStatus === 'error' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                Something went wrong. Please try again later.
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -161,6 +187,7 @@ export const ContactPage: React.FC = () => {
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
                     placeholder="John Doe"
+                    disabled={formStatus === 'loading'}
                   />
                 </div>
                 <div>
@@ -174,6 +201,7 @@ export const ContactPage: React.FC = () => {
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
                     placeholder="john@example.com"
+                    disabled={formStatus === 'loading'}
                   />
                 </div>
               </div>
@@ -186,6 +214,7 @@ export const ContactPage: React.FC = () => {
                   value={formState.subject}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all bg-white"
+                  disabled={formStatus === 'loading'}
                 >
                   <option value="">Select a topic</option>
                   <option value="course_inquiry">Course Inquiry</option>
@@ -207,12 +236,13 @@ export const ContactPage: React.FC = () => {
                   rows={5}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all resize-none"
                   placeholder="How can we help you today?"
+                  disabled={formStatus === 'loading'}
                 ></textarea>
               </div>
 
-              <Button type="submit" size="lg" className="w-full md:w-auto">
+              <Button type="submit" size="lg" className="w-full md:w-auto" disabled={formStatus === 'loading'}>
                 <Send size={18} className="mr-2" />
-                Send Message
+                {formStatus === 'loading' ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
           </div>

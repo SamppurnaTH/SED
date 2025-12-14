@@ -41,6 +41,7 @@ const aiRoutes = require('./routes/aiRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminRoutes = require('./routes/admin');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Models for seeding
 const Course = require('./models/Course.js');
