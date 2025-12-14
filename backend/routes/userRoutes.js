@@ -161,7 +161,7 @@ router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, 
 // @access  Private
 router.get('/profile', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password -emailVerificationToken');
+        const user = await User.findById(req.user.userId).select('-password -emailVerificationToken');
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
     } catch (error) {
@@ -176,7 +176,7 @@ router.get('/enrolled-courses', protectStudent, async (req, res) => {
     try {
         const Enrollment = require('../models/Enrollment');
         // Fetch enrollments and populate course details
-        const enrollments = await Enrollment.find({ student: req.user.id })
+        const enrollments = await Enrollment.find({ student: req.user.userId })
             .populate('course', 'title slug thumbnail level lessons category rating duration description image');
 
         // Format for frontend
@@ -219,7 +219,7 @@ router.get('/assignments', protectStudent, async (req, res) => {
         // but user.enrolledCourses is in the User model based on previous file view.
         // Let's assume we use the Enrollment model for robust querying or fallback to User.
 
-        const enrollments = await Enrollment.find({ student: req.user.id, status: 'in-progress' }).populate('course');
+        const enrollments = await Enrollment.find({ student: req.user.userId, status: 'in-progress' }).populate('course');
         const courseIds = enrollments.map(e => e.course._id);
 
         // 2. Find assignments for these courses
@@ -230,7 +230,7 @@ router.get('/assignments', protectStudent, async (req, res) => {
 
         // 3. Find user submissions for these assignments
         const submissions = await StudentSubmission.find({
-            student: req.user.id,
+            student: req.user.userId,
             assignment: { $in: assignments.map(a => a._id) }
         });
 
@@ -266,7 +266,7 @@ router.get('/schedule', protectStudent, async (req, res) => {
         const Assignment = require('../models/Assignment');
         const Enrollment = require('../models/Enrollment');
 
-        const enrollments = await Enrollment.find({ student: req.user.id }).populate('course');
+        const enrollments = await Enrollment.find({ student: req.user.userId }).populate('course');
         const courseIds = enrollments.map(e => e.course._id);
 
         const assignments = await Assignment.find({
@@ -307,7 +307,7 @@ router.get('/schedule', protectStudent, async (req, res) => {
 router.get('/certificates', protectStudent, async (req, res) => {
     try {
         const Certificate = require('../models/Certificate');
-        const certificates = await Certificate.find({ userId: req.user.id })
+        const certificates = await Certificate.find({ userId: req.user.userId })
             .populate('courseId', 'title');
 
         const formatted = certificates.map(c => ({
@@ -330,7 +330,7 @@ router.get('/certificates', protectStudent, async (req, res) => {
 router.get('/notifications', protectStudent, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
-        const notifications = await Notification.find({ userId: req.user.id })
+        const notifications = await Notification.find({ userId: req.user.userId })
             .sort({ createdAt: -1 })
             .limit(50);
         res.json(notifications);
@@ -346,7 +346,7 @@ router.put('/notifications/:id/read', protectStudent, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
         const notification = await Notification.findOneAndUpdate(
-            { _id: req.params.id, userId: req.user.id },
+            { _id: req.params.id, userId: req.user.userId },
             { read: true },
             { new: true }
         );
@@ -363,7 +363,7 @@ router.put('/notifications/:id/read', protectStudent, async (req, res) => {
 router.delete('/notifications/:id', protectStudent, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
-        const notification = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+        const notification = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.userId });
         if (!notification) return res.status(404).json({ message: 'Notification not found' });
         res.json({ message: 'Notification removed' });
     } catch (error) {
