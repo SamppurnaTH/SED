@@ -171,14 +171,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:", "res.cloudinary.com"],
-      connectSrc: ["'self'", "https://*.googleapis.com", "https://*.stripe.com"],
-      fontSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.googleusercontent.com"],
+      connectSrc: ["'self'", "https://*.googleapis.com", "https://*.stripe.com", "https://accounts.google.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'self'", "https://js.stripe.com"]
+      frameSrc: ["'self'", "https://js.stripe.com", "https://accounts.google.com"]
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
