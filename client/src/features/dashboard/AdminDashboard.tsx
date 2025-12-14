@@ -1050,7 +1050,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
 
                   {/* Modal Header */}
-                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
                     <div>
                       <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                         <Bell className="text-brand-600" size={24} />
@@ -1058,29 +1058,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                       </h3>
                       <p className="text-sm text-slate-500 mt-1">Stay updated with your courses, assignments, and system alerts.</p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={async () => {
-                          try {
-                            await adminService.markAllNotificationsRead();
-                            setHasUnreadNotifications(false);
-                            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                          } catch (err) {
-                            console.error("Failed to mark notifications read", err);
-                          }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                      >
-                        <CheckCircle size={16} />
-                        Mark all read
-                      </button>
-                      <button
-                        onClick={() => setIsNotificationsModalOpen(false)}
-                        className="text-slate-400 hover:text-slate-600 transition-colors p-1"
-                      >
-                        <X size={24} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setIsNotificationsModalOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                    >
+                      <X size={24} />
+                    </button>
                   </div>
 
                   {/* Filter Tabs */}
@@ -1112,7 +1095,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                   </div>
 
                   {/* Scrollable List */}
-                  <div className="overflow-y-auto flex-1 p-6 bg-slate-50/50">
+                  <div className="overflow-y-auto flex-1 p-6 bg-slate-50">
                     {(() => {
                       const filtered = notifications.filter(n => {
                         if (notificationFilter === 'unread') return !n.read;
