@@ -638,7 +638,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                 <div className="h-full flex flex-col">
                     <div className="p-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate('home')}>
-                            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center font-bold text-white">I</div>
+                            <img src="/logo.png" alt="SED" className="w-8 h-8 rounded-lg" />
                             <span className="text-xl font-display font-bold">Instructor<span className="text-brand-500">.</span></span>
                         </div>
                         <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400">

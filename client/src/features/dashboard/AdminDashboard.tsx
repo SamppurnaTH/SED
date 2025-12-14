@@ -891,7 +891,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         <div className="h-full flex flex-col">
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center font-bold text-white">A</div>
+              <img src="/logo.png" alt="SED" className="w-8 h-8 rounded-lg" />
               <span className="text-xl font-display font-bold">Admin<span className="text-brand-500">.</span></span>
             </div>
             <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400">
