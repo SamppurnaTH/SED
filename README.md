@@ -1,273 +1,167 @@
 <div align="center">
   <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="SED Platform" width="100%"/>
-  <h1>Scholastic Edu. Depot (SED)</h1>
-  <p>Bridging the gap between academic learning and industry requirements with a modern, scalable EdTech platform.</p>
+  <h1 style="margin-top: 20px;">Scholastic Edu. Depot (SED)</h1>
+  <p><strong>Bridging the gap between academic learning and industry requirements with a modern, scalable EdTech platform.</strong></p>
   
+  <p>
+    <a href="https://sed-platform.onrender.com"><strong>View Live Demo »</strong></a>
+    <br/>
+    <a href="#-getting-started">Getting Started</a> •
+    <a href="#-key-features">Key Features</a> •
+    <a href="#-tech-stack">Tech Stack</a> •
+    <a href="#-contributing">Contributing</a>
+  </p>
+
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://reactjs.org/)
+  [![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)](https://reactjs.org/)
   [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js)](https://nodejs.org/)
-  [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-4.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
+  [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)
 </div>
+
+---
 
 ## 🌟 Overview
 
-**SED (Scholastic Edu. Depot)** is a comprehensive, high-performance EdTech platform designed to transform the learning experience. Our platform seamlessly connects students, instructors, and administrators through an intuitive, feature-rich interface built with modern web technologies.
+**SED (Scholastic Edu. Depot)** is a comprehensive, high-performance EdTech platform designed to transform the learning experience. It connects students, instructors, and administrators through a unified interface, offering personalized learning paths, real-time analytics, and seamless course management.
+
+Built by **Venu Thota**, this platform prioritizes scalability, security, and user experience.
 
 ## ✨ Key Features
 
-### � For Students
-- **Interactive Learning Dashboard** - Track progress, view upcoming deadlines, and access course materials
-- **Personalized Learning Paths** - AI-powered course recommendations based on interests and performance
-- **Live & Recorded Sessions** - Join live classes or watch recordings at your convenience
-- **Assignment & Grade Tracking** - Submit assignments and monitor academic progress
-- **Digital Certificates** - Earn verifiable credentials upon course completion
+### 🎓 For Students
+- **Personalized Dashboard:** Track course progress, upcoming assignments, and grades.
+- **Interactive Learning:** Access video lectures, quizzes, and coding exercises.
+- **Secure Authentication:** Easy login via Google OAuth or Email/Password.
+- **Responsive Design:** Optimized for mobile, tablet, and desktop learning.
 
 ### 👨‍🏫 For Instructors
-- **Course Management** - Create and manage courses with our intuitive course builder
-- **Student Analytics** - Monitor student engagement and performance metrics
-- **Interactive Content** - Support for videos, quizzes, assignments, and coding exercises
-- **Live Classrooms** - Built-in video conferencing with screen sharing and whiteboard
-- **Monetization** - Set pricing, manage enrollments, and track earnings
+- **Course Management:** Create and update courses with rich media support.
+- **Student Analytics:** Monitor enrollment stats and student performance.
+- **Profile Management:** Customize instructor profiles and credentials.
 
-### �️ For Administrators
-- **Comprehensive Analytics** - Platform-wide insights on users, courses, and revenue
-- **User Management** - Handle user accounts, roles, and permissions
-- **Content Moderation** - Review and approve course content
-- **System Configuration** - Customize platform settings and integrations
+### 🛡️ For Administrators
+- **Platform Analytics:** Real-time insights into revenue, traffic, and user growth.
+- **User Management:** Control access and permissions for all users.
+- **System Settings:** Configure platform-wide variables and notifications.
 
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Framework**: React 19 with TypeScript
-- **Styling**: Tailwind CSS with custom theming
-- **State Management**: React Context API & Redux Toolkit
-- **UI Components**: Headless UI, Radix UI
-- **Form Handling**: React Hook Form with Zod validation
-- **Routing**: React Router v6
-- **Data Fetching**: React Query
-- **Icons**: Lucide Icons
+- **Framework:** [React 18](https://reactjs.org/) with [Vite](https://vitejs.dev/)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) + [PostCSS](https://postcss.org/)
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **HTTP Client:** [Axios](https://axios-http.com/)
 
 ### Backend
-- **Runtime**: Node.js with Express
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT & OAuth 2.0
-- **File Storage**: AWS S3
-- **Real-time**: Socket.IO
-- **API Documentation**: Swagger/OpenAPI
-- **Testing**: Jest & Supertest
-- **Containerization**: Docker & Docker Compose
+- **Runtime:** [Node.js](https://nodejs.org/)
+- **Framework:** [Express.js](https://expressjs.com/)
+- **Database:** [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
+- **Security:** Helmet, CORS, CSURF, Express Rate Limit
+- **Auth:** JWT (JSON Web Tokens) & Google OAuth
+- **Validation:** Express Validator
 
-### DevOps
-- **CI/CD**: GitHub Actions
-- **Container Orchestration**: Kubernetes
-- **Monitoring**: Prometheus & Grafana
-- **Logging**: ELK Stack
-- **Hosting**: AWS/GCP
+### DevOps & Deployment
+- **Hosting:** [Render](https://render.com/) (Web Service)
+- **Version Control:** Git & GitHub
 
-## � Getting Started
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally.
 
 ### Prerequisites
-- Node.js 18+ & npm 9+
-- MongoDB 6.0+
+- Node.js (v18+)
+- MongoDB (Local or Atlas URI)
 - Git
 
-### Local Development
+### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/sed-edtech.git
-   cd sed-edtech
-   ```
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/SamppurnaTH/SED.git
+    cd SED
+    ```
 
-2. **Set up environment variables**
-   ```bash
-   # Backend
-   cp backend/.env.example backend/.env
-   
-   # Frontend
-   cp client/.env.example client/.env
-   ```
-   Update the environment variables with your configuration.
+2.  **Install Backend Dependencies**
+    ```bash
+    cd backend
+    npm install
+    ```
 
-3. **Install dependencies**
-   ```bash
-   # Install root dependencies
-   npm install
-   
-   # Install backend dependencies
-   cd backend
-   npm install
-   
-   # Install frontend dependencies
-   cd ../client
-   npm install
-   ```
+3.  **Install Frontend Dependencies**
+    ```bash
+    cd ../client
+    npm install
+    ```
 
-4. **Start the development servers**
-   ```bash
-   # From project root
-   npm run dev
-   ```
-   This will start both the frontend and backend in development mode with hot-reload.
+### Configuration
 
-5. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - API Documentation: http://localhost:5000/api-docs
+1.  **Backend Environment**
+    Create a `.env` file in the `backend` directory:
+    ```env
+    PORT=5000
+    MONGO_URI=your_mongodb_connection_string
+    JWT_SECRET=your_jwt_secret_key
+    CLIENT_URL=http://localhost:5173
+    # Optional: AWS, Google Auth, etc.
+    ```
 
-## 🧪 Testing
+2.  **Frontend Environment**
+    Create a `.env` file in the `client` directory:
+    ```env
+    VITE_API_BASE_URL=http://localhost:5000/api
+    VITE_GOOGLE_CLIENT_ID=your_google_client_id
+    ```
 
-Run the test suite with:
+### Running the App
 
-```bash
-# Run all tests
-npm test
+1.  **Start Backend**
+    ```bash
+    cd backend
+    npm run dev
+    ```
 
-# Run frontend tests
-cd client && npm test
+2.  **Start Frontend**
+    ```bash
+    cd client
+    npm run dev
+    ```
 
-# Run backend tests
-cd backend && npm test
-```
-
-## 🐳 Docker Setup
-
-Run the entire stack with Docker Compose:
-
-```bash
-docker-compose up --build
-```
+VISIT `http://localhost:5173` to view the application.
 
 ## 📦 Deployment
 
-### Production Build
-```bash
-# Build frontend
-cd client
-npm run build
+The project is configured for deployment on **Render**.
 
-# Build backend
-cd ../backend
-npm run build
-
-# Start production server
-npm start
-```
-
-### Environment Variables
-See `.env.example` files in both `client` and `backend` directories for required environment variables.
-
-## 🔗 Connection & Run (Local development)
-
-- **Purpose**: ensure frontend and backend talk to each other without CORS or proxy mismatches during development.
-
-- Backend: uses port `5000` and exposes routes under the `/api` prefix (for example `/api/test`).
-- Frontend (Vite dev server): runs on port `3000` and proxies `/api/*` to the backend in development.
-
-Steps to run locally (recommended):
-
-1. Copy env examples
-   ```powershell
-   cp backend/.env.example backend/.env
-   cp client/.env.example client/.env
-   ```
-   Edit `backend/.env` and set `MONGO_URI` and any other secrets.
-
-2. Install and start services
-   ```powershell
-   # From repository root
-   cd backend; npm install; npm run dev
-   # In a separate terminal
-   cd client; npm install; npm run dev
-   ```
-
-3. Access the app
-   - Frontend: `http://localhost:3000`
-   - Backend test endpoint: `http://localhost:5000/api/test`
-
-Notes:
-- The Vite proxy is configured to forward requests that start with `/api` directly to the backend without stripping the `/api` prefix. This keeps the dev paths aligned with backend routes.
-- The client Axios instance uses `withCredentials: true` so cookies (including CSRF tokens) are sent. The backend CSRF endpoint is at `/api/auth/csrf-token`.
-- For production, set `VITE_API_BASE_URL` in `client/.env` to your backend URL (for example `https://api.yourdomain.com`).
-
-Uploads note:
-- File uploads in this project are implemented with AWS S3. If you do not provide AWS credentials in `backend/.env`, the server will fallback to memory storage and return a warning when the upload route is called. To enable persistent uploads, set these variables in `backend/.env`:
-   - `AWS_ACCESS_KEY_ID`
-   - `AWS_SECRET_ACCESS_KEY`
-   - `AWS_BUCKET_NAME`
-   - `AWS_REGION`
-
-In development the server prints a visible warning when these are missing; in non-development environments it logs a brief info message instead.
-
+1.  **Build Command:** `cd client && npm install --include=dev && npm run build ; cd ../backend ; npm install`
+2.  **Start Command:** `cd backend ; node server.js`
+3.  **Environment Variables:** Ensure all secrets (`MONGO_URI`, `JWT_SECRET`, etc.) are set in the Render Dashboard.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [React](https://reactjs.org/)
-- [Node.js](https://nodejs.org/)
-- [MongoDB](https://www.mongodb.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- And all other amazing open-source projects that made this possible!
-
----
-
-<div align="center">
-  Made with ❤️ by the SED Team
-</div>
-   - Click **"Log in"** in the header.
-   - Use the **"Demo Access"** buttons at the bottom of the login form to instantly switch between:
-     - `Admin Dashboard`
-     - `Instructor Dashboard`
-     - `Student Dashboard`
-3. **Dashboards:**
-   - Each dashboard has a sidebar for internal navigation (e.g., switching from "Overview" to "Settings").
-   - Use the **"Log Out"** button in the sidebar to return to the public login screen.
-
----
-
-## 🎨 Design System
-
-The application uses a custom Tailwind configuration defined in `index.html`:
-
-- **Brand Colors:**
-  - Primary: `brand-600` (#2563EB - Royal Blue)
-  - Secondary: `brand-900` (#1e3a8a - Navy)
-  - Accent: `accent-500` (#F97316 - Orange)
-- **Typography:**
-  - Headings: *Poppins*
-  - Body: *Inter*
-
----
-
-## 🤝 Contributing
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
+## 👤 Author
+
+**Venu Thota**
+
+- GitHub: [@SamppurnaTH](https://github.com/SamppurnaTH)
+- Email: venuthota722@gmail.com
+
 ---
 
-*© 2024 Scholastic A Edu. Depot. All Rights Reserved.*
+<div align="center">
+  Made with ❤️ by Venu Thota for the Future of Education.
+</div>
