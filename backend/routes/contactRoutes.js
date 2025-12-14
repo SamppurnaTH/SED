@@ -35,11 +35,12 @@ router.post('/', async (req, res) => {
     }
 });
 
-// @desc    Get all contact messages (Admin only - placeholder for future)
+const { protect, protectAdmin } = require('../middleware/authMiddleware');
+
+// @desc    Get all contact messages
 // @route   GET /api/contact
 // @access  Private/Admin
-router.get('/', async (req, res) => {
-    // In a real app, ensure you add auth/admin middleware here
+router.get('/', protectAdmin, async (req, res) => {
     try {
         const contacts = await Contact.find().sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: contacts });
