@@ -70,15 +70,15 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onNavigate
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-24 flex justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="pt-24 min-h-screen bg-slate-50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden animate-fade-in-up border border-slate-100 p-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
