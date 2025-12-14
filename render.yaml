@@ -13,10 +13,5 @@ services:
         sync: false # User must provide this in dashboard
       - key: JWT_SECRET
         sync: false # User must provide this in dashboard
-      - key: CLIENT_URL
-        fromService:
-          type: web
-          name: sed-platform
-          property: url
       - key: NODE_ENV
         value: production
