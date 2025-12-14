@@ -186,7 +186,7 @@ export const ContactPage: React.FC = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                    placeholder="John Doe"
+                    placeholder="Venu Thota"
                     disabled={formStatus === 'loading'}
                   />
                 </div>
@@ -200,7 +200,7 @@ export const ContactPage: React.FC = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                    placeholder="john@example.com"
+                    placeholder="venuthota@gmail.com"
                     disabled={formStatus === 'loading'}
                   />
                 </div>
