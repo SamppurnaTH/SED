@@ -197,7 +197,7 @@ router.get('/enrolled-courses', protectStudent, async (req, res) => {
                 category: e.course.category || 'General',
                 rating: e.course.rating || 5.0,
                 description: e.course.description,
-                nextLesson: 'Continue Learning',
+                nextLesson: e.progress === 100 ? 'Course Completed' : `Lesson ${Math.floor((e.progress / 100) * (e.course.lessons || 1)) + 1}`,
                 status: e.status
             };
         }).filter(item => item !== null);

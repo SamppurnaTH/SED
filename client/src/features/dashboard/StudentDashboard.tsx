@@ -494,7 +494,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
                         <div className="relative z-10">
                            <h1 className="text-3xl font-display font-bold mb-2">Hello, {profile.name}! 👋</h1>
-                           <p className="text-brand-100 text-lg mb-6">You've learned 80% more this week. Keep it up!</p>
+                           <p className="text-brand-100 text-lg mb-6">Welcome back to your learning journey! Keep up the great work.</p>
 
                            {enrolledCourses.length > 0 && (
                               <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-xl inline-block max-w-md">
@@ -524,7 +524,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               <div className="p-3 rounded-lg bg-green-50 text-green-600"><CheckCircle size={24} /></div>
                               <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Done</span>
                            </div>
-                           <h3 className="text-3xl font-bold text-slate-900 mb-1">1</h3>
+                           <h3 className="text-3xl font-bold text-slate-900 mb-1">{enrolledCourses.filter(c => c.progress === 100).length}</h3>
                            <p className="text-sm text-slate-500">Courses Completed</p>
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -532,15 +532,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               <div className="p-3 rounded-lg bg-purple-50 text-purple-600"><Award size={24} /></div>
                               <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full">Earned</span>
                            </div>
-                           <h3 className="text-3xl font-bold text-slate-900 mb-1">1</h3>
+                           <h3 className="text-3xl font-bold text-slate-900 mb-1">{certificates.length}</h3>
                            <p className="text-sm text-slate-500">Certificates</p>
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                            <div className="flex justify-between items-start mb-4">
                               <div className="p-3 rounded-lg bg-orange-50 text-orange-600"><Clock size={24} /></div>
-                              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">This Week</span>
+                              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">Est. Total</span>
                            </div>
-                           <h3 className="text-3xl font-bold text-slate-900 mb-1">12.5h</h3>
+                           <h3 className="text-3xl font-bold text-slate-900 mb-1">
+                              {Math.round(enrolledCourses.reduce((acc, curr) => acc + (curr.progress / 100 * curr.lessons * 1.5), 0))}h
+                           </h3>
                            <p className="text-sm text-slate-500">Learning Time</p>
                         </div>
                      </div>
