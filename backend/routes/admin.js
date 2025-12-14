@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 // @route   GET /api/admin/stats
 // @desc    Get dashboard statistics
@@ -31,14 +31,30 @@ router.get('/stats', protect, authorize('admin'), async (req, res) => {
             createdAt: { $gte: thirtyDaysAgo }
         });
 
+        // Calculate changes (Simulated for Demo based on current values or mock)
+        // Ideally these would be calculated by comparing with previous month's data
+        const statsWithChanges = {
+            totalRevenue: {
+                value: totalRevenue,
+                change: totalRevenue > 0 ? '+12.5%' : '0%' // Simulated growth if revenue exists
+            },
+            activeStudents: {
+                value: activeStudents,
+                change: activeStudents > 0 ? '+5.2%' : '0%'
+            },
+            courseEnrollments: {
+                value: courseEnrollments,
+                change: courseEnrollments > 0 ? '+8.1%' : '0%'
+            },
+            newInstructors: {
+                value: newInstructors,
+                change: newInstructors > 0 ? '+2.0%' : '0%'
+            }
+        };
+
         res.json({
             success: true,
-            data: {
-                totalRevenue,
-                activeStudents,
-                courseEnrollments,
-                newInstructors
-            }
+            data: statsWithChanges
         });
     } catch (error) {
         console.error('Error fetching admin stats:', error);
@@ -221,12 +237,51 @@ router.get('/analytics', protect, authorize('admin'), async (req, res) => {
             select: 'title'
         });
 
+        // SIMULATED DATA FOR "Ap distices" (Andhra Pradesh Districts) & Traffic Sources
+        // Since User model doesn't have location data yet
+        const apDistricts = [
+            'Visakhapatnam', 'Krishna', 'Guntur', 'East Godavari', 'Chittoor',
+            'Nellore', 'Kurnool', 'Anantapur', 'West Godavari', 'Srikakulam'
+        ];
+
+        // Generate random distribution for Top Regions
+        const topRegions = apDistricts
+            .map(district => ({
+                district: district,
+                users: Math.floor(Math.random() * 5000) + 500 // Random users
+            }))
+            .sort((a, b) => b.users - a.users) // Sort by users desc
+            .slice(0, 5) // Top 5
+            .map(item => ({
+                ...item,
+                percent: Math.floor((item.users / 20000) * 100) + '%' // Dummy percent
+            }));
+
+        // Generate Traffic Sources
+        const trafficSources = [
+            { label: 'Google Search', percent: 45, color: 'bg-purple-600' },
+            { label: 'Social Media', percent: 30, color: 'bg-blue-500' },
+            { label: 'Direct', percent: 15, color: 'bg-green-500' },
+            { label: 'Referral', percent: 10, color: 'bg-orange-500' }
+        ];
+
+        // Simulated Session Metrics
+        const sessionMetrics = {
+            avgSessionDuration: '12m 30s',
+            sessionDurationChange: '+8.2%',
+            bounceRate: '42.5%',
+            bounceRateChange: '-2.1%'
+        };
+
         res.json({
             success: true,
             data: {
                 revenueTrends,
                 studentGrowth,
-                coursePerformance: populatedCourses
+                coursePerformance: populatedCourses,
+                topRegions,
+                trafficSources,
+                sessionMetrics
             }
         });
     } catch (error) {

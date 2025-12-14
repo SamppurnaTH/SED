@@ -139,11 +139,22 @@ export const deleteStudents = async (ids: (string | number)[]) => {
     }
 };
 
+// Create a new user (Instructor/Student)
+export const createUser = async (userData: any) => {
+    try {
+        const response = await api.post('/admin/users', userData);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating user:', error);
+        throw error;
+    }
+};
+
 // Get Settings
 export const getSettings = async () => {
     try {
         const response = await api.get('/admin/settings');
-        return response.data; // returns { success: true, data: settings }
+        return response.data;
     } catch (error) {
         console.error('Error fetching settings:', error);
         throw error;
@@ -151,12 +162,34 @@ export const getSettings = async () => {
 };
 
 // Update Settings
-export const updateSettings = async (settings: any) => {
+export const updateSettings = async (settingsData: any) => {
     try {
-        const response = await api.put('/admin/settings', settings);
+        const response = await api.put('/admin/settings', settingsData);
         return response.data;
     } catch (error) {
         console.error('Error updating settings:', error);
+        throw error;
+    }
+};
+
+// Get Notifications
+export const getNotifications = async () => {
+    try {
+        const response = await api.get('/notifications');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+    }
+};
+
+// Mark all notifications as read
+export const markAllNotificationsRead = async () => {
+    try {
+        const response = await api.put('/notifications/mark-read');
+        return response.data;
+    } catch (error) {
+        console.error('Error marking notifications read:', error);
         throw error;
     }
 };
@@ -173,5 +206,7 @@ export default {
     suspendStudents,
     deleteStudents,
     getSettings,
-    updateSettings
+    updateSettings,
+    getNotifications,
+    markAllNotificationsRead
 };

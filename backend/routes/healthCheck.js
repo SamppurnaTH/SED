@@ -1,14 +1,35 @@
 const express = require('express');
 const router = express.Router();
 
+const mongoose = require('mongoose');
+
 // Health check endpoint
 router.get('/', (req, res) => {
-    res.status(200).json({
-        status: 'ok',
+    // Check MongoDB connection state
+    // 0: disconnected, 1: connected, 2: connecting, 3: disconnecting
+    const dbState = mongoose.connection.readyState;
+    const dbStatus = dbState === 1 ? 'UP' : (dbState === 2 ? 'CONNECTING' : 'DOWN');
+
+    // Determine overall system status
+    const overallStatus = dbState === 1 ? 'UP' : 'DEGRADED';
+    const statusCode = overallStatus === 'UP' ? 200 : 503;
+
+    res.status(statusCode).json({
+        status: overallStatus,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
-        nodeVersion: process.version,
-        memoryUsage: process.memoryUsage()
+        services: {
+            database: {
+                status: dbStatus,
+                state: dbState
+            },
+            server: {
+                status: 'UP',
+                uptime: process.uptime(),
+                memoryUsage: process.memoryUsage(),
+                nodeVersion: process.version
+            }
+        }
     });
 });
 
@@ -26,7 +47,7 @@ router.get('/csrf-check', (req, res) => {
 router.get('/auth-check', (req, res) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
-    
+
     res.status(200).json({
         success: true,
         hasAuthHeader: !!authHeader,

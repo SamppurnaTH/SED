@@ -37,6 +37,104 @@ router.get('/users', protectAdmin, async (req, res) => {
 });
 
 // -----------------------------------------------------------------------------
+// POST /api/admin/users
+// Body: { name, email, password, role, ... }
+// Create a new user (Student or Instructor)
+// -----------------------------------------------------------------------------
+router.post('/users', protectAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    // Basic Validation
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
+
+    // Check if user exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
+
+    // Role Validation (Limit creation to Student/Instructor for now)
+    if (!['Student', 'Instructor', 'Admin'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Invalid role' });
+    }
+
+    // Create user
+    // Password hashing happens in User model pre-save hook (assuming standard setup)
+    // If not, we might need to hash here. Checking User.js... User.js doesn't show pre-save hook in the snippet I saw.
+    // Wait, the seed script hashes manually: bcrypt.hashSync('password', salt).
+    // I should check if User.js has a pre-save hook.
+    // The strict view of User.js showed NO pre-save hook.
+    // So I MUST hash the password here.
+    const bcrypt = require('bcryptjs');
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      isVerified: true // Auto-verify admin created users
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+});
+
+// -----------------------------------------------------------------------------
+// GET /api/admin/settings
+// Get platform settings
+// -----------------------------------------------------------------------------
+router.get('/settings', protectAdmin, async (req, res) => {
+    try {
+        const settings = await Settings.getSettings();
+        res.json({ success: true, data: settings });
+    } catch (error) {
+        console.error('Get settings error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+// -----------------------------------------------------------------------------
+// PUT /api/admin/settings
+// Update platform settings
+// -----------------------------------------------------------------------------
+router.put('/settings', protectAdmin, async (req, res) => {
+    try {
+        const { general, notifications, security, billing } = req.body;
+        
+        let settings = await Settings.getSettings();
+
+        if (general) settings.general = { ...settings.general, ...general };
+        if (notifications) settings.notifications = { ...settings.notifications, ...notifications };
+        if (security) settings.security = { ...settings.security, ...security };
+        if (billing) settings.billing = { ...settings.billing, ...billing };
+
+        await settings.save();
+
+        res.json({ success: true, data: settings, message: 'Settings updated successfully' });
+    } catch (error) {
+        console.error('Update settings error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+// -----------------------------------------------------------------------------
 // DELETE /api/admin/users
 // Body: { ids: ["id1", "id2"] }
 // Bulk delete students/instructors

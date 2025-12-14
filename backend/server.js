@@ -25,6 +25,7 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
 const bcrypt = require('bcryptjs');
+const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -333,6 +334,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminUserRoutes);
 app.use("/api/admin/dashboard", adminRoutes);
+app.use("/api/notifications", require('./routes/notificationRoutes'));
 app.use("/api/instructor", require('./routes/instructorRoutes')); // Register Instructor Routes
 app.use("/api/assignments", require('./routes/assignmentRoutes'));
 app.use("/api/certificates", require('./routes/certificateRoutes'));
@@ -345,13 +347,8 @@ app.get("/", (req, res) => {
 });
 
 // ---------------- ERROR HANDLER ----------------
-app.use((err, req, res, next) => {
-  if (err.code === "EBADCSRFTOKEN" || err.code === "EBADCSRF") {
-    return res.status(403).json({ message: "Invalid CSRF Token" });
-  }
-  console.error("Error:", err);
-  res.status(500).json({ message: err.message });
-});
+app.use(notFound);
+app.use(errorHandler);
 
 // ---------------- START SERVER ----------------
 // Only start the server after MongoDB is connected

@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { ViewState } from '../../App';
 import {
@@ -9,7 +6,7 @@ import {
   Bell, Search, Plus, MoreVertical, TrendingUp, DollarSign,
   Filter, Menu, X, Edit, Trash2, Archive, Mail, CheckCircle, AlertCircle, Download, Award,
   Globe, Shield, CreditCard, Save, Lock, IndianRupee, PieChart, BarChart2, Activity, MousePointer, Clock, MapPin, ArrowUpRight,
-  Phone, Calendar, FileText, ChevronLeft, ChevronRight, RefreshCw, Key, Ban
+  Phone, Calendar, FileText, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, Key, Ban
 } from 'lucide-react';
 import { COURSE_CATEGORIES } from '../../constants';
 import { Button } from '../../components/ui/Button';
@@ -59,10 +56,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
   // API Data State
   const [dashboardStats, setDashboardStats] = useState({
-    totalRevenue: 0,
-    activeStudents: 0,
-    courseEnrollments: 0,
-    newInstructors: 0
+    totalRevenue: { value: 0, change: '0%' },
+    activeStudents: { value: 0, change: '0%' },
+    courseEnrollments: { value: 0, change: '0%' },
+    newInstructors: { value: 0, change: '0%' }
   });
   const [recentEnrollments, setRecentEnrollments] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
@@ -70,7 +67,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+  // Notification Modal State
+  const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+  const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread'>('all');
+
+  // Add Instructor Modal State
+  const [isAddInstructorModalOpen, setIsAddInstructorModalOpen] = useState(false);
+  const [newInstructor, setNewInstructor] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'Instructor',
+    title: '',
+    bio: ''
+  });
 
   // Settings State
   const [settingsData, setSettingsData] = useState({
@@ -128,12 +142,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         setError(null);
 
         // Fetch all data in parallel
-        const [statsResponse, enrollmentsResponse, studentsResponse, instructorsResponse, coursesResponse] = await Promise.all([
+        const [statsResponse, enrollmentsResponse, studentsResponse, instructorsResponse, coursesResponse, analyticsResponse, settingsResponse, notificationsResponse] = await Promise.all([
           adminService.getDashboardStats(),
           adminService.getRecentEnrollments(5),
           adminService.getAllStudents(),
           adminService.getAllInstructors(),
-          adminService.getAllCourses()
+          adminService.getAllCourses(),
+          adminService.getAnalytics(),
+          adminService.getSettings(),
+          adminService.getNotifications()
         ]);
 
         if (statsResponse.success) {
@@ -156,6 +173,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           setCoursesList(coursesResponse.data);
         }
 
+        if (analyticsResponse.success) {
+          setAnalyticsData(analyticsResponse.data);
+        }
+
+        if (settingsResponse.success) {
+          setSettingsData(settingsResponse.data);
+        }
+
         if (studentsResponse.success) {
           setStudentsList(studentsResponse.data);
           // Also set students if needed, or just use studentsList
@@ -173,37 +198,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
     // specific notification check
     userService.getNotifications().then(notifs => {
+      setNotifications(notifs);
       setHasUnreadNotifications(notifs.some(n => !n.read));
     }).catch(err => console.error("Failed to fetch notifications", err));
   }, []);
 
   // Format stats for display
+  // Format stats for display
   const stats = [
     {
       title: 'Total Revenue',
-      value: `₹${dashboardStats.totalRevenue.toLocaleString('en-IN')}`,
-      change: '+12.5%',
+      value: `₹${(dashboardStats.totalRevenue?.value || 0).toLocaleString('en-IN')} `,
+      change: dashboardStats.totalRevenue?.change || '0%',
       icon: IndianRupee,
       color: 'bg-green-100 text-green-600'
     },
     {
       title: 'Active Students',
-      value: dashboardStats.activeStudents.toString(),
-      change: '+5.2%',
+      value: (dashboardStats.activeStudents?.value || 0).toString(),
+      change: dashboardStats.activeStudents?.change || '0%',
       icon: Users,
       color: 'bg-brand-100 text-brand-600'
     },
     {
       title: 'Course Enrollments',
-      value: dashboardStats.courseEnrollments.toString(),
-      change: '+8.1%',
+      value: (dashboardStats.courseEnrollments?.value || 0).toString(),
+      change: dashboardStats.courseEnrollments?.change || '0%',
       icon: BookOpen,
       color: 'bg-orange-100 text-orange-600'
     },
     {
       title: 'New Instructors',
-      value: dashboardStats.newInstructors.toString(),
-      change: '+2.0%',
+      value: (dashboardStats.newInstructors?.value || 0).toString(),
+      change: dashboardStats.newInstructors?.change || '0%',
       icon: GraduationCap,
       color: 'bg-purple-100 text-purple-600'
     },
@@ -219,6 +246,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         ? 'bg-brand-600 text-white shadow-md'
         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
         }`}
+
     >
       <Icon size={20} />
       <span className="font-medium">{label}</span>
@@ -357,7 +385,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   };
 
   const handleBulkDeleteCourses = async () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedCourseIds.length} selected courses?`)) {
+    if (window.confirm(`Are you sure you want to delete ${selectedCourseIds.length} selected courses ? `)) {
       try {
         await adminService.deleteCourses(selectedCourseIds);
 
@@ -413,7 +441,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     const selected = studentsList.filter(s => selectedStudentIds.includes(s.id));
     const emails = selected.map(s => s.email).filter(e => e).join(',');
     if (emails) {
-      window.location.href = `mailto:?bcc=${emails}`;
+      window.location.href = `mailto:? bcc = ${emails} `;
     } else {
       alert("No emails found for selected students.");
     }
@@ -421,7 +449,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   };
 
   const handleBulkSuspendStudents = async () => {
-    if (window.confirm(`Are you sure you want to suspend ${selectedStudentIds.length} students?`)) {
+    if (window.confirm(`Are you sure you want to suspend ${selectedStudentIds.length} students ? `)) {
       try {
         await adminService.suspendStudents(selectedStudentIds);
 
@@ -441,7 +469,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   };
 
   const handleBulkDeleteStudents = async () => {
-    if (window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedStudentIds.length} students? This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedStudentIds.length} students ? This action cannot be undone.`)) {
       try {
         await adminService.deleteStudents(selectedStudentIds);
 
@@ -460,6 +488,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         console.error("Failed to delete students", err);
         alert("Failed to delete students");
       }
+    }
+  };
+
+  const handleAddInstructor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newInstructor.name || !newInstructor.email || !newInstructor.password) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      await adminService.createUser(newInstructor);
+      alert("Instructor added successfully!");
+      setIsAddInstructorModalOpen(false);
+      setNewInstructor({ name: '', email: '', password: '', role: 'Instructor', title: '', bio: '' });
+
+      // Refresh instructors
+      const instructorsResponse = await adminService.getAllInstructors();
+      if (instructorsResponse.success) {
+        setInstructors(instructorsResponse.data);
+      }
+    } catch (err: any) {
+      console.error("Failed to add instructor", err);
+      alert("Failed to add instructor: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -592,6 +644,73 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <div className="flex justify-end gap-3 pt-8 mt-2">
                 <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
                 <Button type="submit">Create Course</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Instructor Modal */}
+      {isAddInstructorModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in-up">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100">
+              <h3 className="text-xl font-bold text-slate-900">Add New Instructor</h3>
+              <button onClick={() => setIsAddInstructorModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddInstructor} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="e.g. John Doe"
+                    value={newInstructor.name}
+                    onChange={e => setNewInstructor({ ...newInstructor, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Email <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="e.g. john@sed.com"
+                    value={newInstructor.email}
+                    onChange={e => setNewInstructor({ ...newInstructor, email: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Temporary Password <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="e.g. TempPass123"
+                    value={newInstructor.password}
+                    onChange={e => setNewInstructor({ ...newInstructor, password: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Title (Optional)</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="e.g. Senior Lecturer"
+                    value={newInstructor.title}
+                    onChange={e => setNewInstructor({ ...newInstructor, title: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 mt-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddInstructorModalOpen(false)}>Cancel</Button>
+                <Button type="submit">Add Instructor</Button>
               </div>
             </form>
           </div>
@@ -805,41 +924,240 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
 
         {/* Top Header */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 lg:px-8 z-40">
+        {/* Top Header - Professional Glassmorphism Design */}
+        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 h-20 flex items-center justify-between px-8 z-40 sticky top-0 transition-all duration-200">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden text-slate-500">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors">
               <Menu size={24} />
             </button>
-            <h2 className="text-xl font-bold text-slate-800 capitalize">{activeTab}</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 capitalize tracking-tight">{activeTab}</h2>
+              <p className="text-xs text-slate-500 hidden sm:block">Manage your {activeTab} preferences and data</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="relative hidden md:block">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            {/* Advanced Animated Search */}
+            <div className="relative hidden md:group md:block">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={18} className="text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+              </div>
               <input
                 type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 w-64"
+                placeholder="Search anything..."
+                className="pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 w-64 focus:w-80 transition-all duration-300 ease-in-out shadow-sm placeholder:text-slate-400 text-slate-700"
               />
-            </div>
-            <button
-              onClick={() => onNavigate('notifications')}
-              className="relative text-slate-500 hover:text-slate-700 transition-colors"
-            >
-              <Bell size={20} />
-              {hasUnreadNotifications && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>}
-            </button>
-            <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
-              <img
-                src="https://ui-avatars.com/api/?name=Admin+User&background=2563EB&color=fff"
-                alt="Admin"
-                className="w-8 h-8 rounded-full ring-2 ring-slate-100"
-              />
-              <div className="hidden sm:block">
-                <p className="text-sm font-bold text-slate-900">Admin User</p>
-                <p className="text-xs text-slate-500">Super Admin</p>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-xs text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">⌘K</span>
               </div>
             </div>
+
+            <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
+
+            <div className="flex items-center gap-4">
+              {/* Notification Bell with Pulse */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className={`relative p-2.5 rounded-full transition-all duration-200 ${isNotificationsOpen || hasUnreadNotifications ? 'bg-brand-50 text-brand-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}`}
+                >
+                  <Bell size={20} className={hasUnreadNotifications ? "animate-swing" : ""} />
+                  {hasUnreadNotifications && (
+                    <span className="absolute top-2 right-2.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white"></span>
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown (Enhanced) */}
+                {isNotificationsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[40]" onClick={() => setIsNotificationsOpen(false)}></div>
+                    <div className="absolute right-0 mt-4 w-96 bg-white rounded-2xl shadow-xl border border-slate-100/80 ring-1 ring-slate-200/50 z-[50] overflow-hidden animate-fade-in-up origin-top-right backdrop-blur-sm">
+                      <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
+                        <h4 className="font-bold text-slate-900 text-sm">Notifications</h4>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await adminService.markAllNotificationsRead();
+                              setHasUnreadNotifications(false);
+                              setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                            } catch (err) {
+                              console.error("Failed to mark notifications read", err);
+                            }
+                          }}
+                          className="text-xs text-brand-600 hover:text-brand-700 font-bold hover:underline px-2 py-1 rounded hover:bg-brand-50 transition-colors"
+                        >
+                          Mark all read
+                        </button>
+                      </div>
+                      <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                        {notifications.length === 0 ? (
+                          <div className="p-10 text-center flex flex-col items-center gap-3">
+                            <div className="p-3 bg-slate-50 rounded-full text-slate-300"><Bell size={24} /></div>
+                            <p className="text-slate-500 text-sm font-medium">No new notifications</p>
+                          </div>
+                        ) : (
+                          notifications.map((notif, idx) => (
+                            <div key={idx} className={`p-4 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer group ${!notif.read ? 'bg-brand-50/30' : ''}`}>
+                              <div className="flex gap-3 items-start">
+                                <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notif.read ? 'bg-brand-500' : 'bg-transparent'}`}></div>
+                                <div>
+                                  <p className="text-sm text-slate-800 font-semibold mb-1 group-hover:text-brand-700 transition-colors">{notif.title}</p>
+                                  <p className="text-xs text-slate-500 leading-relaxed">{notif.message}</p>
+                                  <span className="text-[10px] text-slate-400 mt-2 block font-medium">
+                                    {new Date(notif.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="p-2 bg-slate-50/80 backdrop-blur-sm border-t border-slate-100">
+                        <button
+                          onClick={() => {
+                            setIsNotificationsOpen(false);
+                            setIsNotificationsModalOpen(true);
+                          }}
+                          className="w-full py-2 text-xs font-bold text-brand-600 hover:text-brand-700 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-200"
+                        >
+                          View All Notifications
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* User Profile - Professional Badge */}
+              <div className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-slate-50 rounded-lg p-1.5 transition-colors border border-transparent hover:border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20 text-sm ring-2 ring-white">
+                  AU
+                </div>
+                <div className="hidden sm:block text-left mr-1">
+                  <p className="text-sm font-bold text-slate-800 leading-none">Admin User</p>
+                  <p className="text-[10px] font-bold text-brand-600 uppercase tracking-wide mt-1">Super Admin</p>
+                </div>
+                <ChevronLeft size={16} className="text-slate-400 rotate-[-90deg] hidden sm:block" />
+              </div>
+            </div>
+
+            {/* Full Notification Modal */}
+            {isNotificationsModalOpen && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
+
+                  {/* Modal Header */}
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <Bell className="text-brand-600" size={24} />
+                        Notifications
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-1">Stay updated with your courses, assignments, and system alerts.</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await adminService.markAllNotificationsRead();
+                            setHasUnreadNotifications(false);
+                            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                          } catch (err) {
+                            console.error("Failed to mark notifications read", err);
+                          }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                      >
+                        <CheckCircle size={16} />
+                        Mark all read
+                      </button>
+                      <button
+                        onClick={() => setIsNotificationsModalOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="px-6 pt-4 border-b border-slate-100 flex gap-6">
+                    <button
+                      onClick={() => setNotificationFilter('all')}
+                      className={`pb-3 text-sm font-semibold transition-colors relative ${notificationFilter === 'all'
+                        ? 'text-brand-600'
+                        : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      All
+                      {notificationFilter === 'all' && (
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full"></span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setNotificationFilter('unread')}
+                      className={`pb-3 text-sm font-semibold transition-colors relative ${notificationFilter === 'unread'
+                        ? 'text-brand-600'
+                        : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      Unread
+                      {notificationFilter === 'unread' && (
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full"></span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Scrollable List */}
+                  <div className="overflow-y-auto flex-1 p-6 bg-slate-50/50">
+                    {(() => {
+                      const filtered = notifications.filter(n => {
+                        if (notificationFilter === 'unread') return !n.read;
+                        return true;
+                      });
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                              <Bell size={32} />
+                            </div>
+                            <h4 className="text-lg font-semibold text-slate-900 mb-1">No notifications found</h4>
+                            <p className="text-slate-500 text-sm">You're all caught up!</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {filtered.map((notif, idx) => (
+                            <div key={idx} className={`p-4 rounded-xl border transition-all hover:shadow-sm ${!notif.read ? 'bg-white border-brand-100 shadow-sm' : 'bg-white/50 border-slate-200'}`}>
+                              <div className="flex gap-4">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notif.read ? 'bg-blue-100 text-brand-600' : 'bg-slate-100 text-slate-500'}`}>
+                                  <Bell size={20} />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-start">
+                                    <h5 className={`text-sm font-semibold ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>{notif.title}</h5>
+                                    <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
+                                      {new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
@@ -962,21 +1280,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
                 {/* Custom CSS Bar Chart */}
                 <div className="h-64 flex items-end justify-between gap-2 sm:gap-4">
-                  {[45, 60, 75, 50, 80, 95, 85, 70, 65, 90, 100, 85].map((h, i) => (
-                    <div key={i} className="w-full flex flex-col justify-end group cursor-pointer relative">
-                      <div className="w-full bg-brand-100 rounded-t-sm hover:bg-brand-200 transition-all relative overflow-hidden" style={{ height: '100%' }}>
-                        <div
-                          style={{ height: `${h}%` }}
-                          className="absolute bottom-0 w-full bg-brand-600 rounded-t-sm group-hover:bg-brand-500 transition-colors"
-                        ></div>
+                  <div className="h-64 flex items-end justify-between gap-2 sm:gap-4">
+                    {analyticsData?.revenueTrends && analyticsData.revenueTrends.length > 0 ? (() => {
+                      const maxRevenue = Math.max(...analyticsData.revenueTrends.map((d: any) => d.revenue));
+                      return analyticsData.revenueTrends.map((data: any, i: number) => {
+                        const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+                        const monthName = new Date(0, data._id.month - 1).toLocaleString('default', { month: 'short' });
+                        return (
+                          <div key={i} className="w-full flex flex-col justify-end group cursor-pointer relative">
+                            <div className="w-full bg-brand-100 rounded-t-sm hover:bg-brand-200 transition-all relative overflow-hidden" style={{ height: '100%' }}>
+                              <div
+                                style={{ height: `${heightPercent}%` }}
+                                className="absolute bottom-0 w-full bg-brand-600 rounded-t-sm group-hover:bg-brand-500 transition-colors"
+                              ></div>
+                            </div>
+                            {/* Tooltip */}
+                            <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-800 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                              ₹{data.revenue.toLocaleString('en-IN')}
+                            </div>
+                            <span className="text-xs text-slate-400 text-center mt-3 font-medium">{monthName}</span>
+                          </div>
+                        );
+                      });
+                    })() : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        No revenue data available for recent months.
                       </div>
-                      {/* Tooltip */}
-                      <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-800 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
-                        ₹{(h * 15000).toLocaleString()}
-                      </div>
-                      <span className="text-xs text-slate-400 text-center mt-3 font-medium">{['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}</span>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -988,12 +1319,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                     <h4 className="text-lg font-bold text-slate-900">Traffic Sources</h4>
                   </div>
                   <div className="space-y-6">
-                    {[
-                      { label: 'Google Search', percent: 45, color: 'bg-purple-600' },
-                      { label: 'Social Media', percent: 30, color: 'bg-blue-500' },
-                      { label: 'Direct', percent: 15, color: 'bg-green-500' },
-                      { label: 'Referral', percent: 10, color: 'bg-orange-500' }
-                    ].map((item, idx) => (
+                    {analyticsData?.trafficSources ? analyticsData.trafficSources.map((item: any, idx: number) => (
                       <div key={idx}>
                         <div className="flex justify-between text-sm mb-2">
                           <span className="text-slate-600 font-medium">{item.label}</span>
@@ -1003,7 +1329,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                           <div style={{ width: `${item.percent}%` }} className={`h-2.5 rounded-full ${item.color}`}></div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-4 text-slate-500">Loading data...</div>
+                    )}
                   </div>
                 </div>
 
@@ -1014,8 +1342,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                       <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Clock size={20} /></div>
                       <p className="text-sm text-slate-500 font-medium">Avg. Session Duration</p>
                     </div>
-                    <h3 className="text-3xl font-bold text-slate-900">12m 30s</h3>
-                    <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><ArrowUpRight size={14} /> +8.2% vs last month</p>
+                    <h3 className="text-3xl font-bold text-slate-900">{analyticsData?.sessionMetrics?.avgSessionDuration || '0m 0s'}</h3>
+                    <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><ArrowUpRight size={14} /> {analyticsData?.sessionMetrics?.sessionDurationChange || '0%'} vs last month</p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -1023,35 +1351,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                       <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Activity size={20} /></div>
                       <p className="text-sm text-slate-500 font-medium">Bounce Rate</p>
                     </div>
-                    <h3 className="text-3xl font-bold text-slate-900">42.5%</h3>
-                    <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><ArrowUpRight size={14} /> -2.1% improvement</p>
+                    <h3 className="text-3xl font-bold text-slate-900">{analyticsData?.sessionMetrics?.bounceRate || '0%'}</h3>
+                    <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><ArrowUpRight size={14} /> {analyticsData?.sessionMetrics?.bounceRateChange || '0%'} improvement</p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 sm:col-span-2">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><MapPin size={20} /></div>
-                        <h4 className="font-bold text-slate-900">Top Regions</h4>
+                        <h4 className="font-bold text-slate-900">Top Regions (AP Districts)</h4>
                       </div>
                       <Button variant="ghost" size="sm">View Full Report</Button>
                     </div>
                     <div className="space-y-3">
-                      {[
-                        { country: 'India', users: '12,450', percent: '65%' },
-                        { country: 'United States', users: '3,200', percent: '18%' },
-                        { country: 'United Kingdom', users: '1,100', percent: '8%' },
-                      ].map((region, idx) => (
+                      {analyticsData?.topRegions ? analyticsData.topRegions.map((region: any, idx: number) => (
                         <div key={idx} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors">
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-bold text-slate-500">0{idx + 1}</span>
-                            <span className="text-sm font-medium text-slate-900">{region.country}</span>
+                            <span className="text-sm font-medium text-slate-900">{region.district}</span>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-bold text-slate-900 block">{region.users}</span>
+                            <span className="text-sm font-bold text-slate-900 block">{typeof region.users === 'number' ? region.users.toLocaleString() : region.users}</span>
                             <span className="text-xs text-slate-500">{region.percent}</span>
                           </div>
                         </div>
-                      ))}
+                      )) : (
+                        <div className="text-center py-4 text-slate-500">Loading regions...</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1093,7 +1419,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-slate-900">{conversion}%</span>
                                 <div className="w-16 bg-slate-100 rounded-full h-1.5">
-                                  <div style={{ width: `${conversion}%` }} className="h-1.5 rounded-full bg-green-500"></div>
+                                  <div style={{ width: `${conversion}% ` }} className="h-1.5 rounded-full bg-green-500"></div>
                                 </div>
                               </div>
                             </td>
@@ -1213,446 +1539,507 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           )}
 
           {/* Instructors Tab */}
+          {/* Instructors Tab */}
           {activeTab === 'instructors' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-              {instructors.map((instructor, idx) => (
-                <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.name)}&background=random`}
-                        alt={instructor.name}
-                        className="w-14 h-14 rounded-full"
-                      />
-                      <div>
-                        <h3 className="font-bold text-slate-900">{instructor.name}</h3>
-                        <p className="text-xs text-brand-600 font-bold uppercase">{instructor.role}</p>
+            <div className="space-y-6 animate-fade-in-up">
+              {/* Header */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Instructors</h3>
+                  <p className="text-slate-500 text-sm">Manage your teaching staff and their assignments.</p>
+                </div>
+                <div className="flex gap-3">
+                  <div className="relative">
+                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search instructors..."
+                      className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+                    />
+                  </div>
+                  <Button onClick={() => setIsAddInstructorModalOpen(true)}>
+                    <Plus size={18} className="mr-2" /> Add Instructor
+                  </Button>
+                </div>
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {instructors.map((instructor, idx) => (
+                  <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.name)}&background=random`}
+                          alt={instructor.name}
+                          className="w-14 h-14 rounded-full"
+                        />
+                        <div>
+                          <h3 className="font-bold text-slate-900">{instructor.name}</h3>
+                          <p className="text-xs text-brand-600 font-bold uppercase">{instructor.role}</p>
+                        </div>
+                      </div >
+                      <div className="p-1 rounded-full hover:bg-slate-100 cursor-pointer text-slate-400">
+                        <MoreVertical size={18} />
+                      </div>
+                    </div >
+
+                    <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <p className="text-xs text-slate-500 uppercase font-bold">Students</p>
+                        <p className="font-bold text-slate-900">{instructor.students ? instructor.students.toLocaleString() : 0}</p>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <p className="text-xs text-slate-500 uppercase font-bold">Rating</p>
+                        <p className="font-bold text-slate-900">{instructor.rating || 'N/A'}</p>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <p className="text-xs text-slate-500 uppercase font-bold">Reviews</p>
+                        <p className="font-bold text-slate-900">{instructor.reviews || 0}</p>
                       </div>
                     </div>
-                    <div className="p-1 rounded-full hover:bg-slate-100 cursor-pointer text-slate-400">
-                      <MoreVertical size={18} />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-3 gap-2 mb-6 text-center">
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <p className="text-xs text-slate-500 uppercase font-bold">Students</p>
-                      <p className="font-bold text-slate-900">{instructor.students.toLocaleString()}</p>
+                    <div className="flex gap-3">
+                      <Button variant="outline" size="sm" className="flex-1">View Profile</Button>
+                      <Button size="sm" className="flex-1">Message</Button>
                     </div>
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <p className="text-xs text-slate-500 uppercase font-bold">Rating</p>
-                      <p className="font-bold text-slate-900">{instructor.rating}</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg">
-                      <p className="text-xs text-slate-500 uppercase font-bold">Reviews</p>
-                      <p className="font-bold text-slate-900">{instructor.reviews}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button variant="outline" size="sm" className="flex-1">View Profile</Button>
-                    <Button size="sm" className="flex-1">Message</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </div >
+                ))}
+              </div>
+            </div >
           )}
 
           {/* Students Tab */}
-          {activeTab === 'students' && (
-            <div className="animate-fade-in-up space-y-8">
-              {/* Student Stats */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-slate-500 font-medium text-sm">Total Students</h3>
-                    <div className="p-2 bg-brand-50 rounded-lg text-brand-600"><Users size={20} /></div>
-                  </div>
-                  <p className="text-3xl font-bold text-slate-900">2,450</p>
-                  <p className="text-green-600 text-xs font-bold mt-1 flex items-center gap-1"><TrendingUp size={12} /> +15% this month</p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-slate-500 font-medium text-sm">Active Learners</h3>
-                    <div className="p-2 bg-green-50 rounded-lg text-green-600"><BookOpen size={20} /></div>
-                  </div>
-                  <p className="text-3xl font-bold text-slate-900">1,890</p>
-                  <p className="text-green-600 text-xs font-bold mt-1 flex items-center gap-1"><CheckCircle size={12} /> 85% engagement</p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-slate-500 font-medium text-sm">Course Completion</h3>
-                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><Award size={20} /></div>
-                  </div>
-                  <p className="text-3xl font-bold text-slate-900">78%</p>
-                  <p className="text-slate-400 text-xs mt-1">Avg. completion rate</p>
-                </div>
-              </div>
-
-              {/* Students Table */}
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                  {selectedStudentIds.length > 0 ? (
-                    <div className="flex items-center gap-4 w-full md:w-auto bg-brand-50 p-2 rounded-lg border border-brand-100">
-                      <span className="text-brand-700 font-medium text-sm pl-2">{selectedStudentIds.length} Selected</span>
-                      <div className="h-4 w-px bg-brand-200"></div>
-                      <div className="flex gap-2">
-                        <button onClick={handleBulkEmailStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-slate-600 border border-slate-200 rounded-md hover:text-brand-600 hover:border-brand-200 transition-colors flex items-center gap-1">
-                          <Mail size={14} /> Email
-                        </button>
-                        <button onClick={handleBulkSuspendStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-orange-600 border border-slate-200 rounded-md hover:border-orange-200 hover:bg-orange-50 transition-colors flex items-center gap-1">
-                          <Ban size={14} /> Suspend
-                        </button>
-                        <button onClick={handleBulkDeleteStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-red-600 border border-slate-200 rounded-md hover:border-red-200 hover:bg-red-50 transition-colors flex items-center gap-1">
-                          <Trash2 size={14} /> Delete
-                        </button>
-                      </div>
+          {
+            activeTab === 'students' && (
+              <div className="animate-fade-in-up space-y-8">
+                {/* Student Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-slate-500 font-medium text-sm">Total Students</h3>
+                      <div className="p-2 bg-brand-50 rounded-lg text-brand-600"><Users size={20} /></div>
                     </div>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
-                      <h3 className="text-xl font-bold text-slate-900">Student Directory</h3>
-                      <div className="hidden md:block w-px h-6 bg-slate-200"></div>
-                      {/* Filter Dropdown */}
-                      <div className="relative w-full sm:w-40">
-                        <select
-                          value={studentStatusFilter}
-                          onChange={(e) => setStudentStatusFilter(e.target.value)}
-                          className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-700 py-2 pl-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer font-medium"
-                        >
-                          <option value="All">All Status</option>
-                          <option value="Active">Active</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Inactive">Inactive</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-                          <ChevronLeft size={14} className="rotate-[-90deg]" />
+                    <p className="text-3xl font-bold text-slate-900">{students.length.toLocaleString()}</p>
+                    <p className="text-green-600 text-xs font-bold mt-1 flex items-center gap-1"><TrendingUp size={12} /> +15% this month</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-slate-500 font-medium text-sm">Active Learners</h3>
+                      <div className="p-2 bg-green-50 rounded-lg text-green-600"><BookOpen size={20} /></div>
+                    </div>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {students.filter(s => s.enrolledCourses?.length > 0).length.toLocaleString()}
+                    </p>
+                    <p className="text-green-600 text-xs font-bold mt-1 flex items-center gap-1"><CheckCircle size={12} />
+                      {students.length > 0 ? Math.round((students.filter(s => s.enrolledCourses?.length > 0).length / students.length) * 100) : 0}% engagement
+                    </p>
+                  </div>
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-slate-500 font-medium text-sm">Course Completion</h3>
+                      <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><Award size={20} /></div>
+                    </div>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {(() => {
+                        const totalProgress = students.reduce((acc, s) => {
+                          if (!s.enrolledCourses || s.enrolledCourses.length === 0) return acc;
+                          const studentAvg = s.enrolledCourses.reduce((sum: number, c: any) => sum + (c.progress || 0), 0) / s.enrolledCourses.length;
+                          return acc + studentAvg;
+                        }, 0);
+                        return students.length > 0 ? Math.round(totalProgress / students.length) : 0;
+                      })()}%
+                    </p>
+                    <p className="text-slate-400 text-xs mt-1">Avg. completion rate</p>
+                  </div>
+                </div>
+
+                {/* Students Table */}
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                    {selectedStudentIds.length > 0 ? (
+                      <div className="flex items-center gap-4 w-full md:w-auto bg-brand-50 p-2 rounded-lg border border-brand-100">
+                        <span className="text-brand-700 font-medium text-sm pl-2">{selectedStudentIds.length} Selected</span>
+                        <div className="h-4 w-px bg-brand-200"></div>
+                        <div className="flex gap-2">
+                          <button onClick={handleBulkEmailStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-slate-600 border border-slate-200 rounded-md hover:text-brand-600 hover:border-brand-200 transition-colors flex items-center gap-1">
+                            <Mail size={14} /> Email
+                          </button>
+                          <button onClick={handleBulkSuspendStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-orange-600 border border-slate-200 rounded-md hover:border-orange-200 hover:bg-orange-50 transition-colors flex items-center gap-1">
+                            <Ban size={14} /> Suspend
+                          </button>
+                          <button onClick={handleBulkDeleteStudents} className="px-3 py-1.5 text-xs font-medium bg-white text-red-600 border border-slate-200 rounded-md hover:border-red-200 hover:bg-red-50 transition-colors flex items-center gap-1">
+                            <Trash2 size={14} /> Delete
+                          </button>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
+                        <h3 className="text-xl font-bold text-slate-900">Student Directory</h3>
+                        <div className="hidden md:block w-px h-6 bg-slate-200"></div>
+                        {/* Filter Dropdown */}
+                        <div className="relative w-full sm:w-40">
+                          <select
+                            value={studentStatusFilter}
+                            onChange={(e) => setStudentStatusFilter(e.target.value)}
+                            className="appearance-none w-full bg-slate-50 border border-slate-200 text-slate-700 py-2 pl-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer font-medium"
+                          >
+                            <option value="All">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                            <ChevronLeft size={14} className="rotate-[-90deg]" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="flex gap-3 w-full md:w-auto">
-                    <div className="relative flex-grow md:flex-grow-0">
-                      <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Search students..."
-                        className="w-full md:w-64 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"
-                        value={studentSearch}
-                        onChange={(e) => setStudentSearch(e.target.value)}
-                      />
+                    <div className="flex gap-3 w-full md:w-auto">
+                      <div className="relative flex-grow md:flex-grow-0">
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search students..."
+                          className="w-full md:w-64 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+                          value={studentSearch}
+                          onChange={(e) => setStudentSearch(e.target.value)}
+                        />
+                      </div>
+                      <Button variant="outline" className="hidden sm:flex"><Download size={18} className="mr-2" /> Export</Button>
                     </div>
-                    <Button variant="outline" className="hidden sm:flex"><Download size={18} className="mr-2" /> Export</Button>
                   </div>
-                </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50 text-left">
-                      <tr>
-                        <th className="px-6 py-4 w-10">
-                          <input
-                            type="checkbox"
-                            className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer"
-                            checked={selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0}
-                            onChange={toggleSelectAllStudents}
-                          />
-                        </th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Enrolled Course</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Join Date</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filteredStudents.length > 0 ? filteredStudents.map((student) => (
-                        <tr
-                          key={student.id}
-                          className={`hover:bg-slate-50 transition-colors cursor-pointer ${selectedStudentIds.includes(student.id) ? 'bg-brand-50/30' : ''}`}
-                          onClick={() => setSelectedStudent(student)}
-                        >
-                          <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-slate-50 text-left">
+                        <tr>
+                          <th className="px-6 py-4 w-10">
                             <input
                               type="checkbox"
                               className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer"
-                              checked={selectedStudentIds.includes(student.id)}
-                              onChange={() => toggleSelectStudent(student.id)}
+                              checked={selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0}
+                              onChange={toggleSelectAllStudents}
                             />
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-sm border border-brand-200">
-                                {student.avatar}
-                              </div>
-                              <div>
-                                <div className="font-bold text-slate-900 text-sm hover:text-brand-600 transition-colors">{student.name}</div>
-                                <div className="text-xs text-slate-500">{student.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600 font-medium max-w-xs truncate" title={student.course}>
-                            {student.course}
-                          </td>
-                          <td className="px-6 py-4 w-32">
-                            <div className="w-full bg-slate-200 rounded-full h-2 mb-1">
-                              <div
-                                className={`h-2 rounded-full ${student.progress === 100 ? 'bg-green-500' : 'bg-brand-500'}`}
-                                style={{ width: `${student.progress}%` }}
-                              ></div>
-                            </div>
-                            <div className="text-xs text-slate-500 text-right">{student.progress}%</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusBadge status={student.status} />
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-500">
-                            {student.joined}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                              <button onClick={() => setSelectedStudent(student)} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="View Profile">
-                                <Users size={16} />
-                              </button>
-                              <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Message">
-                                <Mail size={16} />
-                              </button>
-                            </div>
-                          </td>
+                          </th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student Name</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Enrolled Course</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Progress</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Join Date</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
-                      )) : (
-                        <tr>
-                          <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
-                            <div className="flex flex-col items-center">
-                              <Search size={48} className="text-slate-200 mb-4" />
-                              <p className="text-lg font-medium text-slate-700">No students found</p>
-                              <p className="text-sm">Try adjusting your search terms or filters.</p>
-                              <Button variant="outline" className="mt-4" onClick={() => { setStudentSearch(''); setStudentStatusFilter('All'); }}>Clear Filters</Button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredStudents.length > 0 ? filteredStudents.map((student) => (
+                          <tr
+                            key={student.id}
+                            className={`hover:bg-slate-50 transition-colors cursor-pointer ${selectedStudentIds.includes(student.id) ? 'bg-brand-50/30' : ''}`}
+                            onClick={() => setSelectedStudent(student)}
+                          >
+                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer"
+                                checked={selectedStudentIds.includes(student.id)}
+                                onChange={() => toggleSelectStudent(student.id)}
+                              />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-sm border border-brand-200">
+                                  {student.avatar}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-900 text-sm hover:text-brand-600 transition-colors">{student.name}</div>
+                                  <div className="text-xs text-slate-500">{student.email}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600 font-medium max-w-xs truncate" title={student.enrolledCourses?.[0]?.courseSlug || "No active course"}>
+                              {student.enrolledCourses?.[0]?.courseSlug ? student.enrolledCourses[0].courseSlug.replace(/-/g, ' ') : "Not Enrolled"}
+                            </td>
+                            <td className="px-6 py-4 w-32">
+                              <div className="w-full bg-slate-200 rounded-full h-2 mb-1">
+                                <div
+                                  className={`h-2 rounded-full ${student.enrolledCourses?.[0]?.progress === 100 ? 'bg-green-500' : 'bg-brand-500'}`}
+                                  style={{ width: `${student.enrolledCourses?.[0]?.progress || 0}%` }}
+                                ></div>
+                              </div>
+                              <div className="text-xs text-slate-500 text-right">{student.enrolledCourses?.[0]?.progress || 0}%</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <StatusBadge status={student.status || "Active"} />
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-500">
+                              {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : "N/A"}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => setSelectedStudent(student)} className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="View Profile">
+                                  <Users size={16} />
+                                </button>
+                                <button className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" title="Message">
+                                  <Mail size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                              <div className="flex flex-col items-center">
+                                <Search size={48} className="text-slate-200 mb-4" />
+                                <p className="text-lg font-medium text-slate-700">No students found</p>
+                                <p className="text-sm">Try adjusting your search terms or filters.</p>
+                                <Button variant="outline" className="mt-4" onClick={() => { setStudentSearch(''); setStudentStatusFilter('All'); }}>Clear Filters</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
-                {/* Pagination */}
-                <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                  <span className="text-sm text-slate-500">
-                    Showing <span className="font-bold text-slate-900">{filteredStudents.length}</span> results
-                  </span>
-                  <div className="flex gap-2">
-                    <button disabled className="p-2 rounded-lg border border-slate-200 bg-white text-slate-300 cursor-not-allowed">
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button className="px-3 py-1 rounded-lg border border-brand-500 bg-brand-50 text-brand-600 font-bold text-sm">1</button>
-                    <button className="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-sm font-medium">2</button>
-                    <button className="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-sm font-medium">3</button>
-                    <span className="px-2 py-1 text-slate-400">...</span>
-                    <button className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                      <ChevronRight size={16} />
-                    </button>
+                  {/* Pagination */}
+                  <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <span className="text-sm text-slate-500">
+                      Showing <span className="font-bold text-slate-900">{filteredStudents.length}</span> results
+                    </span>
+                    <div className="flex gap-2">
+                      <button disabled className="p-2 rounded-lg border border-slate-200 bg-white text-slate-300 cursor-not-allowed">
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button className="px-3 py-1 rounded-lg border border-brand-500 bg-brand-50 text-brand-600 font-bold text-sm">1</button>
+                      <button className="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-sm font-medium">2</button>
+                      <button className="px-3 py-1 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-sm font-medium">3</button>
+                      <span className="px-2 py-1 text-slate-400">...</span>
+                      <button className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )
+          }
 
           {/* Platform Settings Tab */}
-          {activeTab === 'settings' && (
-            <div className="animate-fade-in-up space-y-8 pb-12">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-900">Platform Settings</h3>
-                  <p className="text-slate-500">Manage your application configuration and preferences.</p>
-                </div>
-                <Button id="save-settings-btn" onClick={handleSaveSettings}>
-                  <Save size={18} className="mr-2" /> Save Changes
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                {/* General Settings */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Globe size={20} /></div>
-                    <h4 className="text-lg font-bold text-slate-900">General Information</h4>
+          {
+            activeTab === 'settings' && (
+              <div className="animate-fade-in-up space-y-8 pb-12 max-w-7xl mx-auto">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4 pb-6 border-b border-slate-200/60">
+                  <div>
+                    <h3 className="text-3xl font-bold text-slate-900 tracking-tight">Platform Settings</h3>
+                    <p className="text-slate-500 mt-2 text-lg">Manage your application configuration, security, and preferences.</p>
                   </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Platform Name</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                        value={settingsData.general.platformName}
-                        onChange={(e) => handleSettingChange('general', 'platformName', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Support Email</label>
-                      <input
-                        type="email"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                        value={settingsData.general.supportEmail}
-                        onChange={(e) => handleSettingChange('general', 'supportEmail', e.target.value)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="font-medium text-slate-900 text-sm">Maintenance Mode</p>
-                        <p className="text-xs text-slate-500">Disable access for non-admin users</p>
-                      </div>
-                      <button
-                        onClick={() => handleSettingChange('general', 'maintenanceMode', !settingsData.general.maintenanceMode)}
-                        className={`w-11 h-6 rounded-full transition-colors relative ${settingsData.general.maintenanceMode ? 'bg-brand-600' : 'bg-slate-200'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settingsData.general.maintenanceMode ? 'left-6' : 'left-1'}`}></div>
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="font-medium text-slate-900 text-sm">Public Registration</p>
-                        <p className="text-xs text-slate-500">Allow new users to sign up</p>
-                      </div>
-                      <button
-                        onClick={() => handleSettingChange('general', 'publicRegistration', !settingsData.general.publicRegistration)}
-                        className={`w-11 h-6 rounded-full transition-colors relative ${settingsData.general.publicRegistration ? 'bg-brand-600' : 'bg-slate-200'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settingsData.general.publicRegistration ? 'left-6' : 'left-1'}`}></div>
-                      </button>
-                    </div>
-                  </div>
+                  <Button id="save-settings-btn" onClick={handleSaveSettings} className="shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 transition-all px-6">
+                    <Save size={18} className="mr-2" /> Save Changes
+                  </Button>
                 </div>
 
-                {/* Security Settings */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-red-50 text-red-600 rounded-lg"><Shield size={20} /></div>
-                    <h4 className="text-lg font-bold text-slate-900">Security</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="font-medium text-slate-900 text-sm">Two-Factor Authentication (2FA)</p>
-                        <p className="text-xs text-slate-500">Require 2FA for all admin accounts</p>
-                      </div>
-                      <button
-                        onClick={() => handleSettingChange('security', 'twoFactorAuth', !settingsData.security.twoFactorAuth)}
-                        className={`w-11 h-6 rounded-full transition-colors relative ${settingsData.security.twoFactorAuth ? 'bg-brand-600' : 'bg-slate-200'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settingsData.security.twoFactorAuth ? 'left-6' : 'left-1'}`}></div>
-                      </button>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Minimum Password Length</label>
-                      <select
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
-                        value={settingsData.security.minPasswordLength}
-                        onChange={(e) => handleSettingChange('security', 'minPasswordLength', e.target.value)}
-                      >
-                        <option value="6">6 Characters</option>
-                        <option value="8">8 Characters</option>
-                        <option value="12">12 Characters (Recommended)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Session Timeout (Minutes)</label>
-                      <input
-                        type="number"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                        value={settingsData.security.sessionTimeout}
-                        onChange={(e) => handleSettingChange('security', 'sessionTimeout', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                {/* Notification Settings */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg"><Bell size={20} /></div>
-                    <h4 className="text-lg font-bold text-slate-900">Notifications</h4>
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Email Alerts', sub: 'Receive daily summary emails', key: 'emailAlerts' },
-                      { label: 'New Student Notification', sub: 'When a new student registers', key: 'newStudentNotify' },
-                      { label: 'Instructor Application', sub: 'When an instructor applies', key: 'instructorAppNotify' },
-                      { label: 'Marketing Emails', sub: 'Receive tips and product updates', key: 'marketingEmails' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                  {/* General Settings */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3 bg-blue-50 text-blue-600 rounded-xl ring-4 ring-blue-50/50"><Globe size={24} /></div>
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900">General Information</h4>
+                        <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">Platform Basics</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Platform Name</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
+                          value={settingsData.general.platformName}
+                          onChange={(e) => handleSettingChange('general', 'platformName', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Support Email</label>
+                        <input
+                          type="email"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
+                          value={settingsData.general.supportEmail}
+                          onChange={(e) => handleSettingChange('general', 'supportEmail', e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div>
-                          <p className="font-medium text-slate-900 text-sm">{item.label}</p>
-                          <p className="text-xs text-slate-500">{item.sub}</p>
+                          <p className="font-bold text-slate-900 text-sm">Maintenance Mode</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Disable access for users</p>
                         </div>
                         <button
-                          onClick={() => handleSettingChange('notifications', item.key, !settingsData.notifications[item.key as keyof typeof settingsData.notifications])}
-                          className={`w-11 h-6 rounded-full transition-colors relative ${settingsData.notifications[item.key as keyof typeof settingsData.notifications] ? 'bg-brand-600' : 'bg-slate-200'}`}
+                          onClick={() => handleSettingChange('general', 'maintenanceMode', !settingsData.general.maintenanceMode)}
+                          className={`w-12 h-7 rounded-full transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 ${settingsData.general.maintenanceMode ? 'bg-brand-600' : 'bg-slate-300'}`}
                         >
-                          <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settingsData.notifications[item.key as keyof typeof settingsData.notifications] ? 'left-6' : 'left-1'}`}></div>
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settingsData.general.maintenanceMode ? 'left-6' : 'left-1'}`}></div>
                         </button>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Billing Settings */}
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-green-50 text-green-600 rounded-lg"><CreditCard size={20} /></div>
-                    <h4 className="text-lg font-bold text-slate-900">Billing & Payment</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                        <select
-                          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
-                          value={settingsData.billing.currency}
-                          onChange={(e) => handleSettingChange('billing', 'currency', e.target.value)}
+                      <div className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">Public Registration</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Allow new signups</p>
+                        </div>
+                        <button
+                          onClick={() => handleSettingChange('general', 'publicRegistration', !settingsData.general.publicRegistration)}
+                          className={`w-12 h-7 rounded-full transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 ${settingsData.general.publicRegistration ? 'bg-brand-600' : 'bg-slate-300'}`}
                         >
-                          <option value="INR">INR (₹)</option>
-                          <option value="USD">USD ($)</option>
-                          <option value="EUR">EUR (€)</option>
-                          <option value="GBP">GBP (£)</option>
-                        </select>
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settingsData.general.publicRegistration ? 'left-6' : 'left-1'}`}></div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security Settings */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3 bg-red-50 text-red-600 rounded-xl ring-4 ring-red-50/50"><Shield size={24} /></div>
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900">Security</h4>
+                        <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">Access Control</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between py-3 px-4 bg-red-50/50 rounded-xl border border-red-100">
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">Two-Factor Auth (2FA)</p>
+                          <p className="text-xs text-slate-500 mt-0.5">Recommended for admins</p>
+                        </div>
+                        <button
+                          onClick={() => handleSettingChange('security', 'twoFactorAuth', !settingsData.security.twoFactorAuth)}
+                          className={`w-12 h-7 rounded-full transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${settingsData.security.twoFactorAuth ? 'bg-red-600' : 'bg-slate-300'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settingsData.security.twoFactorAuth ? 'left-6' : 'left-1'}`}></div>
+                        </button>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate (%)</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Minimum Password Length</label>
+                        <div className="relative">
+                          <select
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none appearance-none font-medium text-slate-700"
+                            value={settingsData.security.minPasswordLength}
+                            onChange={(e) => handleSettingChange('security', 'minPasswordLength', e.target.value)}
+                          >
+                            <option value="6">6 Characters</option>
+                            <option value="8">8 Characters</option>
+                            <option value="12">12 Characters (Recommended)</option>
+                          </select>
+                          <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 rotate-[-90deg] text-slate-400 pointer-events-none" size={16} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Session Timeout (Minutes)</label>
                         <input
                           type="number"
-                          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                          value={settingsData.billing.taxRate}
-                          onChange={(e) => handleSettingChange('billing', 'taxRate', e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
+                          value={settingsData.security.sessionTimeout}
+                          onChange={(e) => handleSettingChange('security', 'sessionTimeout', e.target.value)}
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Invoice Prefix</label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                        value={settingsData.billing.invoicePrefix}
-                        onChange={(e) => handleSettingChange('billing', 'invoicePrefix', e.target.value)}
-                      />
+                  </div>
+
+                  {/* Notification Settings */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl ring-4 ring-yellow-50/50"><Bell size={24} /></div>
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900">Notifications</h4>
+                        <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">Alert Preferences</p>
+                      </div>
                     </div>
-                    <div className="pt-2">
-                      <Button variant="outline" className="w-full">
-                        <Lock size={16} className="mr-2" /> Configure Payment Gateway
-                      </Button>
+                    <div className="space-y-4">
+                      {[
+                        { label: 'Email Alerts', sub: 'Receive daily summary emails', key: 'emailAlerts' },
+                        { label: 'New Student Notification', sub: 'When a new student registers', key: 'newStudentNotify' },
+                        { label: 'Instructor Application', sub: 'When an instructor applies', key: 'instructorAppNotify' },
+                        { label: 'Marketing Emails', sub: 'Receive tips and product updates', key: 'marketingEmails' }
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-3 px-4 bg-slate-50/50 rounded-xl border border-slate-50 hover:bg-slate-50 hover:border-slate-100 transition-colors">
+                          <div>
+                            <p className="font-bold text-slate-900 text-sm">{item.label}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">{item.sub}</p>
+                          </div>
+                          <button
+                            onClick={() => handleSettingChange('notifications', item.key, !settingsData.notifications[item.key as keyof typeof settingsData.notifications])}
+                            className={`w-12 h-7 rounded-full transition-all duration-300 relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 ${settingsData.notifications[item.key as keyof typeof settingsData.notifications] ? 'bg-brand-600' : 'bg-slate-300'}`}
+                          >
+                            <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settingsData.notifications[item.key as keyof typeof settingsData.notifications] ? 'left-6' : 'left-1'}`}></div>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Billing Settings */}
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3 bg-green-50 text-green-600 rounded-xl ring-4 ring-green-50/50"><CreditCard size={24} /></div>
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900">Billing & Payment</h4>
+                        <p className="text-xs text-slate-400 mt-1 uppercase font-bold tracking-wider">Financial Config</p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Currency</label>
+                          <div className="relative">
+                            <select
+                              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none appearance-none font-medium text-slate-700"
+                              value={settingsData.billing.currency}
+                              onChange={(e) => handleSettingChange('billing', 'currency', e.target.value)}
+                            >
+                              <option value="INR">INR (₹)</option>
+                              <option value="USD">USD ($)</option>
+                              <option value="EUR">EUR (€)</option>
+                              <option value="GBP">GBP (£)</option>
+                            </select>
+                            <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 rotate-[-90deg] text-slate-400 pointer-events-none" size={16} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Tax Rate (%)</label>
+                          <input
+                            type="number"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
+                            value={settingsData.billing.taxRate}
+                            onChange={(e) => handleSettingChange('billing', 'taxRate', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Invoice Prefix</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400 font-medium text-slate-700"
+                          value={settingsData.billing.invoicePrefix}
+                          onChange={(e) => handleSettingChange('billing', 'invoicePrefix', e.target.value)}
+                        />
+                      </div>
+                      <div className="pt-4 border-t border-slate-100 mt-4">
+                        <Button variant="outline" className="w-full py-6 border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600 hover:bg-brand-50 group font-bold">
+                          <Lock size={18} className="mr-2 group-hover:text-brand-500 transition-colors" /> Configure Payment Gateway
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-
               </div>
-            </div>
-          )}
+            )
+          }
 
-        </div>
-      </main>
-    </div>
+        </div >
+      </main >
+    </div >
   );
 };
