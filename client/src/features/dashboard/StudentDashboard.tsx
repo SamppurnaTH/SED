@@ -11,7 +11,7 @@ import {
    Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { userService, UserProfile, Assignment, ScheduleEvent, Certificate } from '../../services/userService';
+import { userService, UserProfile, Assignment, ScheduleEvent, Certificate, Notification } from '../../services/userService';
 
 interface StudentDashboardProps {
    onNavigate: (view: ViewState) => void;
@@ -35,23 +35,32 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
    const [assignments, setAssignments] = useState<Assignment[]>([]);
    const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);
    const [certificates, setCertificates] = useState<Certificate[]>([]);
+
+   const [notifications, setNotifications] = useState<Notification[]>([]);
+   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+   const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+   const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread'>('all');
    const [loading, setLoading] = useState(true);
 
    React.useEffect(() => {
       const fetchData = async () => {
          try {
-            const [userProfile, userCourses, userAssignments, userSchedule, userCerts] = await Promise.all([
+            const [userProfile, userCourses, userAssignments, userSchedule, userCerts, userNotifications] = await Promise.all([
                userService.getProfile(),
                userService.getEnrolledCourses(),
                userService.getAssignments(),
                userService.getSchedule(),
-               userService.getCertificates()
+               userService.getCertificates(),
+               userService.getNotifications()
             ]);
             setProfile(userProfile);
             setEnrolledCourses(userCourses);
             setAssignments(userAssignments);
             setSchedule(userSchedule);
             setCertificates(userCerts);
+            setNotifications(userNotifications);
+            setHasUnreadNotifications(userNotifications.some(n => !n.read));
          } catch (error) {
             console.error(error);
          } finally {
@@ -175,6 +184,116 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
             </div>
          )}
 
+         {/* Notifications Modal */}
+         {isNotificationsModalOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+               <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
+                  {/* Header */}
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-shrink-0">
+                     <div>
+                        <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                           <Bell className="text-brand-600" size={24} />
+                           Notifications
+                        </h3>
+                        <p className="text-sm text-slate-500 mt-1">Updates on your courses and platform announcements.</p>
+                     </div>
+                     <button
+                        onClick={() => setIsNotificationsModalOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                     >
+                        <X size={24} />
+                     </button>
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="px-6 pt-4 border-b border-slate-100 flex gap-6 flex-shrink-0">
+                     <button
+                        onClick={() => setNotificationFilter('all')}
+                        className={`pb-3 text-sm font-semibold transition-colors relative ${notificationFilter === 'all'
+                           ? 'text-brand-600'
+                           : 'text-slate-500 hover:text-slate-700'
+                           }`}
+                     >
+                        All
+                        {notificationFilter === 'all' && (
+                           <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full"></span>
+                        )}
+                     </button>
+                     <button
+                        onClick={() => setNotificationFilter('unread')}
+                        className={`pb-3 text-sm font-semibold transition-colors relative ${notificationFilter === 'unread'
+                           ? 'text-brand-600'
+                           : 'text-slate-500 hover:text-slate-700'
+                           }`}
+                     >
+                        Unread
+                        {notificationFilter === 'unread' && (
+                           <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full"></span>
+                        )}
+                     </button>
+                  </div>
+
+                  {/* List */}
+                  <div className="overflow-y-auto flex-1 p-6 bg-slate-50">
+                     {(() => {
+                        const filtered = notifications.filter(n => {
+                           if (notificationFilter === 'unread') return !n.read;
+                           return true;
+                        });
+
+                        if (filtered.length === 0) {
+                           return (
+                              <div className="flex flex-col items-center justify-center py-16 text-center">
+                                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                                    <Bell size={32} />
+                                 </div>
+                                 <h4 className="text-lg font-semibold text-slate-900 mb-1">No notifications found</h4>
+                                 <p className="text-slate-500 text-sm">You are all caught up!</p>
+                              </div>
+                           );
+                        }
+
+                        return (
+                           <div className="space-y-3">
+                              {filtered.map((notif, idx) => (
+                                 <div key={idx} className={`p-4 rounded-xl border transition-all hover:shadow-md ${!notif.read ? 'bg-white border-brand-100 shadow-sm' : 'bg-white/50 border-slate-200'}`}>
+                                    <div className="flex gap-4">
+                                       <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notif.read ? 'bg-blue-100 text-brand-600' : 'bg-slate-100 text-slate-500'}`}>
+                                          <Bell size={20} />
+                                       </div>
+                                       <div className="flex-1">
+                                          <div className="flex justify-between items-start">
+                                             <h5 className={`text-sm font-semibold ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>{notif.title}</h5>
+                                             <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
+                                                {new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                             </span>
+                                          </div>
+                                          <p className="text-sm text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
+
+                                          {!notif.read && (
+                                             <button
+                                                onClick={async (e) => {
+                                                   e.stopPropagation();
+                                                   await userService.markNotificationAsRead(notif._id);
+                                                   setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true } : n));
+                                                }}
+                                                className="text-xs font-bold text-brand-600 mt-2 hover:underline"
+                                             >
+                                                Mark as read
+                                             </button>
+                                          )}
+                                       </div>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        );
+                     })()}
+                  </div>
+               </div>
+            </div>
+         )}
+
          {/* Sidebar */}
          <aside
             className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-64 flex-shrink-0'
@@ -247,13 +366,81 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 w-64"
                      />
                   </div>
-                  <button
-                     onClick={() => onNavigate('notifications')}
-                     className="relative text-slate-500 hover:text-slate-700 transition-colors"
-                  >
-                     <Bell size={20} />
-                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                  </button>
+                  <div className="relative">
+                     <button
+                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        className={`relative text-slate-500 hover:text-slate-700 transition-colors p-2 rounded-full hover:bg-slate-100 ${isNotificationsOpen || hasUnreadNotifications ? 'text-brand-600 bg-brand-50' : ''}`}
+                     >
+                        <Bell size={20} className={hasUnreadNotifications ? "animate-swing" : ""} />
+                        {hasUnreadNotifications && (
+                           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                        )}
+                     </button>
+
+                     {/* Notification Dropdown */}
+                     {isNotificationsOpen && (
+                        <>
+                           <div className="fixed inset-0 z-[40]" onClick={() => setIsNotificationsOpen(false)}></div>
+                           <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-xl border border-slate-100 ring-1 ring-slate-200/50 z-[50] overflow-hidden animate-fade-in-up origin-top-right">
+                              <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm sticky top-0 z-10">
+                                 <h4 className="font-bold text-slate-900 text-sm">Notifications</h4>
+                                 <button
+                                    onClick={async () => {
+                                       try {
+                                          await userService.markNotificationAsRead('all'); // Assuming backend supports this or loop
+                                          // For now loop through
+                                          const unread = notifications.filter(n => !n.read);
+                                          await Promise.all(unread.map(n => userService.markNotificationAsRead(n._id)));
+
+                                          setHasUnreadNotifications(false);
+                                          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                                       } catch (err) {
+                                          console.error("Failed to mark notifications read", err);
+                                       }
+                                    }}
+                                    className="text-xs text-brand-600 hover:text-brand-700 font-bold hover:underline"
+                                 >
+                                    Mark all read
+                                 </button>
+                              </div>
+                              <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                                 {notifications.length === 0 ? (
+                                    <div className="p-10 text-center flex flex-col items-center gap-3">
+                                       <div className="p-3 bg-slate-50 rounded-full text-slate-300"><Bell size={24} /></div>
+                                       <p className="text-slate-500 text-sm font-medium">No new notifications</p>
+                                    </div>
+                                 ) : (
+                                    notifications.slice(0, 5).map((notif, idx) => (
+                                       <div key={idx} className={`p-4 border-b border-slate-50 hover:bg-slate-50/80 transition-colors cursor-pointer group ${!notif.read ? 'bg-brand-50/30' : ''}`}>
+                                          <div className="flex gap-3 items-start">
+                                             <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notif.read ? 'bg-brand-500' : 'bg-transparent'}`}></div>
+                                             <div>
+                                                <p className="text-sm text-slate-800 font-semibold mb-1 group-hover:text-brand-700 transition-colors">{notif.title}</p>
+                                                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{notif.message}</p>
+                                                <span className="text-[10px] text-slate-400 mt-2 block font-medium">
+                                                   {new Date(notif.createdAt).toLocaleDateString()}
+                                                </span>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    ))
+                                 )}
+                              </div>
+                              <div className="p-2 bg-slate-50/80 backdrop-blur-sm border-t border-slate-100">
+                                 <button
+                                    onClick={() => {
+                                       setIsNotificationsOpen(false);
+                                       setIsNotificationsModalOpen(true);
+                                    }}
+                                    className="w-full py-2 text-xs font-bold text-brand-600 hover:text-brand-700 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-200"
+                                 >
+                                    View All Notifications
+                                 </button>
+                              </div>
+                           </div>
+                        </>
+                     )}
+                  </div>
                   <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
                   <button onClick={() => onNavigate('home')} className="text-sm font-medium text-brand-600 hover:text-brand-700 hidden sm:block">
                      Back to Website
