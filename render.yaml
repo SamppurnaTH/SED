@@ -4,7 +4,7 @@ services:
     name: sed-platform
     runtime: node
     plan: free # Optional: defaults to free or starter depending on account
-    buildCommand: cd client && npm install && npm run build && cd ../backend && npm install
+    buildCommand: cd client && npm install --include=dev && npm run build && cd ../backend && npm install
     startCommand: cd backend && node server.js
     envVars:
       - key: NODE_VERSION
