@@ -184,6 +184,7 @@ app.use(helmet({
         "https://www.transparenttextures.com",
         "https://www.google.com",
         "https://img-prod-cms-rt-microsoft-com.akamaized.net",
+        "https://www.microsoft.com",
         "https://upload.wikimedia.org"
       ],
       connectSrc: ["'self'", "https://*.googleapis.com", "https://*.stripe.com", "https://accounts.google.com"],
