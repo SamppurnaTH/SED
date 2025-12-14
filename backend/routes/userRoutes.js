@@ -15,7 +15,7 @@ router.get('/progress', protectStudent, async (req, res) => {
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) {
-             return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
         res.json(user.enrolledCourses || []);
     } catch (error) {
@@ -32,7 +32,7 @@ router.post('/progress/enroll', protectStudent, userProfileValidators.enroll, as
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) {
-             return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const alreadyEnrolled = user.enrolledCourses.some(c => c.courseSlug === courseSlug);
@@ -45,7 +45,7 @@ router.post('/progress/enroll', protectStudent, userProfileValidators.enroll, as
 
         res.status(201).json(user.enrolledCourses);
     } catch (error) {
-         res.status(500).json({ message: 'Server Error', error: error.message });
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
 
@@ -54,7 +54,7 @@ router.post('/progress/enroll', protectStudent, userProfileValidators.enroll, as
 // @access  Private/Student
 router.post('/progress/complete-lesson', protectStudent, userProfileValidators.completeLesson, async (req, res) => {
     const { courseSlug, lessonId } = req.body;
-    
+
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) return res.status(404).json({ message: 'User not found' });
@@ -70,15 +70,15 @@ router.post('/progress/complete-lesson', protectStudent, userProfileValidators.c
         // Calculate progress percentage
         const course = await Course.findOne({ slug: courseSlug });
         if (course) {
-             let totalTopics = 0;
-             course.curriculum.forEach(week => {
-                 totalTopics += week.topics.length;
-             });
-             
-             const completedCount = enrolledCourse.completedLessons.length;
-             const newProgress = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
-             
-             enrolledCourse.progress = Math.min(newProgress, 100);
+            let totalTopics = 0;
+            course.curriculum.forEach(week => {
+                totalTopics += week.topics.length;
+            });
+
+            const completedCount = enrolledCourse.completedLessons.length;
+            const newProgress = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0;
+
+            enrolledCourse.progress = Math.min(newProgress, 100);
         }
 
         await user.save();
@@ -97,10 +97,10 @@ router.put('/profile-image', protectStudent, userProfileValidators.avatar, async
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) return res.status(404).json({ message: 'User not found' });
-        
+
         user.avatarUrl = avatarUrl;
         await user.save();
-        
+
         res.json({ message: 'Profile image updated', avatarUrl: user.avatarUrl });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
@@ -117,9 +117,9 @@ router.get('/saved-courses', protectStudent, async (req, res) => {
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) {
-             return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
-        
+
         res.status(200).json(user.savedCourses || []);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
@@ -131,11 +131,11 @@ router.get('/saved-courses', protectStudent, async (req, res) => {
 // @access  Private/Student
 router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, async (req, res) => {
     const { courseName } = req.body;
-    
+
     try {
         const user = await User.findOne({ email: req.user.email });
         if (!user) {
-             return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const courseIndex = user.savedCourses.indexOf(courseName);
@@ -145,10 +145,227 @@ router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, 
         } else {
             user.savedCourses.push(courseName);
         }
-        
+
         await user.save();
 
         res.status(200).json(user.savedCourses);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// --- Dashboard Data Routes ---
+
+// @desc    Get current user profile with detailed stats
+// @route   GET /api/user/profile
+// @access  Private
+router.get('/profile', protectStudent, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password -emailVerificationToken');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Get enrolled courses with full details
+// @route   GET /api/user/enrolled-courses
+// @access  Private
+router.get('/enrolled-courses', protectStudent, async (req, res) => {
+    try {
+        const Enrollment = require('../models/Enrollment');
+        // Fetch enrollments and populate course details
+        const enrollments = await Enrollment.find({ student: req.user.id })
+            .populate('course', 'title slug thumbnail level lessons category rating duration description image');
+
+        // Format for frontend
+        const formatted = enrollments.map(e => {
+            if (!e.course) return null; // Handle deleted courses
+            return {
+                id: e.course._id,
+                title: e.course.title,
+                slug: e.course.slug,
+                progress: e.progress,
+                lastAccessed: e.updatedAt,
+                lessons: e.course.lessons || 0,
+                image: e.course.thumbnail || e.course.image || '/placeholder.jpg',
+                category: e.course.category || 'General',
+                rating: e.course.rating || 5.0,
+                description: e.course.description,
+                nextLesson: 'Continue Learning',
+                status: e.status
+            };
+        }).filter(item => item !== null);
+
+        res.json(formatted);
+    } catch (error) {
+        console.error('Error fetching enrolled courses:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Get user assignments
+// @route   GET /api/user/assignments
+// @access  Private
+router.get('/assignments', protectStudent, async (req, res) => {
+    try {
+        const Assignment = require('../models/Assignment');
+        const StudentSubmission = require('../models/StudentSubmission');
+        const Enrollment = require('../models/Enrollment');
+
+        // 1. Find all courses the user is enrolled in
+        // Using the Enrollment model is more reliable if you switched to it, 
+        // but user.enrolledCourses is in the User model based on previous file view.
+        // Let's assume we use the Enrollment model for robust querying or fallback to User.
+
+        const enrollments = await Enrollment.find({ student: req.user.id, status: 'in-progress' }).populate('course');
+        const courseIds = enrollments.map(e => e.course._id);
+
+        // 2. Find assignments for these courses
+        const assignments = await Assignment.find({
+            courseId: { $in: courseIds },
+            deadline: { $gte: new Date() } // Filter pending/future assignments? Or all?
+        }).populate('courseId', 'title slug');
+
+        // 3. Find user submissions for these assignments
+        const submissions = await StudentSubmission.find({
+            student: req.user.id,
+            assignment: { $in: assignments.map(a => a._id) }
+        });
+
+        // 4. Map them together
+        const result = assignments.map(assignment => {
+            const submission = submissions.find(s => s.assignment.toString() === assignment._id.toString());
+            return {
+                id: assignment._id,
+                title: assignment.title,
+                course: assignment.courseId ? assignment.courseId.title : 'Unknown Course',
+                dueDate: assignment.deadline,
+                status: submission ? submission.status : (new Date(assignment.deadline) < new Date() ? 'Overdue' : 'Pending'),
+                grade: submission ? submission.grade : '-'
+            };
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching assignments:', error);
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Get user schedule/events
+// @route   GET /api/user/schedule
+// @access  Private
+router.get('/schedule', protectStudent, async (req, res) => {
+    try {
+        // Mocking some schedule data based on assignments and enrolled courses for now
+        // In a real app, this would query a Schedule/Event model
+        // For Phase 1, we generate from assignments + dummy live classes
+
+        const Assignment = require('../models/Assignment');
+        const Enrollment = require('../models/Enrollment');
+
+        const enrollments = await Enrollment.find({ student: req.user.id }).populate('course');
+        const courseIds = enrollments.map(e => e.course._id);
+
+        const assignments = await Assignment.find({
+            courseId: { $in: courseIds },
+            deadline: { $gte: new Date() }
+        }).limit(5);
+
+        const schedule = assignments.map(a => ({
+            id: a._id,
+            title: `Due: ${a.title}`,
+            type: 'Deadline',
+            date: a.deadline,
+            time: '11:59 PM',
+            link: `/assignments/${a._id}`
+        }));
+
+        // Add some dummy live classes if enrolled
+        if (enrollments.length > 0) {
+            schedule.push({
+                id: 'live-1',
+                title: 'Weekly Live Q&A',
+                type: 'Live Class',
+                date: new Date(Date.now() + 86400000), // Tomorrow
+                time: '10:00 AM',
+                link: '#'
+            });
+        }
+
+        res.json(schedule);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Get user certificates
+// @route   GET /api/user/certificates
+// @access  Private
+router.get('/certificates', protectStudent, async (req, res) => {
+    try {
+        const Certificate = require('../models/Certificate');
+        const certificates = await Certificate.find({ userId: req.user.id })
+            .populate('courseId', 'title');
+
+        const formatted = certificates.map(c => ({
+            id: c._id,
+            course: c.courseId ? c.courseId.title : 'Course',
+            date: c.issueDate,
+            id_code: c.uniqueId,
+            url: c.certificateUrl
+        }));
+
+        res.json(formatted);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Get user notifications
+// @route   GET /api/user/notifications
+// @access  Private
+router.get('/notifications', protectStudent, async (req, res) => {
+    try {
+        const Notification = require('../models/Notification');
+        const notifications = await Notification.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Mark notification as read
+// @route   PUT /api/user/notifications/:id/read
+// @access  Private
+router.put('/notifications/:id/read', protectStudent, async (req, res) => {
+    try {
+        const Notification = require('../models/Notification');
+        const notification = await Notification.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.id },
+            { read: true },
+            { new: true }
+        );
+        if (!notification) return res.status(404).json({ message: 'Notification not found' });
+        res.json(notification);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Delete notification
+// @route   DELETE /api/user/notifications/:id
+// @access  Private
+router.delete('/notifications/:id', protectStudent, async (req, res) => {
+    try {
+        const Notification = require('../models/Notification');
+        const notification = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+        if (!notification) return res.status(404).json({ message: 'Notification not found' });
+        res.json({ message: 'Notification removed' });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

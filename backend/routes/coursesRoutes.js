@@ -57,7 +57,7 @@ router.post('/', protectAdmin, courseValidator, async (req, res) => {
 router.put('/:slug', protectAdmin, courseValidator, async (req, res) => {
     try {
         const course = await Course.findOne({ slug: req.params.slug });
-        
+
         if (course) {
             // Check if slug is being updated and if it already exists
             if (req.body.slug && req.body.slug !== course.slug) {
@@ -76,6 +76,31 @@ router.put('/:slug', protectAdmin, courseValidator, async (req, res) => {
         } else {
             res.status(404).json({ message: 'Course not found' });
         }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// @desc    Bulk delete courses
+// @route   DELETE /api/courses/bulk
+// @access  Private/Admin
+router.delete('/bulk', protectAdmin, async (req, res) => {
+    try {
+        const { ids } = req.body; // Expecting array of course IDs or slugs
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ message: 'Invalid request. Provide ids array.' });
+        }
+
+        // Delete by ID if they look like ObjectIds, or Slug?
+        // Let's assume frontend sends IDs usually for bulk actions.
+        const result = await Course.deleteMany({
+            $or: [
+                { _id: { $in: ids } },
+                { slug: { $in: ids } }
+            ]
+        });
+
+        res.json({ message: 'Courses removed', count: result.deletedCount });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

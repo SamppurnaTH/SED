@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState } from '../../App';
-import { MOCK_NOTIFICATIONS } from '../../constants';
-import { Bell, Check, Trash2, Filter, AlertCircle } from 'lucide-react';
+import { userService, Notification } from '../../services/userService';
+import { Bell, Check, Trash2, Filter } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 interface NotificationsPageProps {
@@ -10,19 +9,56 @@ interface NotificationsPageProps {
 }
 
 export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onNavigate }) => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [loading, setLoading] = useState(true);
 
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const data = await userService.getNotifications();
+        setNotifications(data);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await userService.markNotificationAsRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
   };
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
+    // Optimistic update
+    const unreadIds = notifications.filter(n => !n.read).map(n => n._id);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+    // API calls in background
+    try {
+      await Promise.all(unreadIds.map(id => userService.markNotificationAsRead(id)));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      // Revert if needed, but keeping simple for now
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await userService.deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n._id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
   const filteredNotifications = notifications.filter(n => {
@@ -31,6 +67,14 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onNavigate
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-24 flex justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 min-h-screen bg-slate-50">
@@ -77,7 +121,7 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onNavigate
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notification) => (
               <div
-                key={notification.id}
+                key={notification._id}
                 className={`bg-white rounded-xl p-5 border shadow-sm transition-all hover:shadow-md flex gap-4 ${notification.read ? 'border-slate-200' : 'border-brand-200 bg-brand-50/20'
                   }`}
               >
@@ -94,21 +138,21 @@ export const NotificationsPage: React.FC<NotificationsPageProps> = ({ onNavigate
                     <h3 className={`font-bold text-slate-900 ${!notification.read ? 'text-brand-700' : ''}`}>
                       {notification.title}
                     </h3>
-                    <span className="text-xs text-slate-400 whitespace-nowrap ml-2">{new Date(notification.timestamp).toLocaleDateString()}</span>
+                    <span className="text-xs text-slate-400 whitespace-nowrap ml-2">{new Date(notification.createdAt).toLocaleDateString()}</span>
                   </div>
                   <p className="text-slate-600 text-sm mt-1 mb-3 leading-relaxed">{notification.message}</p>
 
                   <div className="flex gap-3">
                     {!notification.read && (
                       <button
-                        onClick={() => handleMarkAsRead(notification.id)}
+                        onClick={(e) => handleMarkAsRead(notification._id, e)}
                         className="text-xs font-semibold text-brand-600 hover:text-brand-800 transition-colors"
                       >
                         Mark as Read
                       </button>
                     )}
                     <button
-                      onClick={() => handleDelete(notification.id)}
+                      onClick={(e) => handleDelete(notification._id, e)}
                       className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors"
                     >
                       Delete

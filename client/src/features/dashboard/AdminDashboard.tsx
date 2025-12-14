@@ -11,9 +11,11 @@ import {
   Globe, Shield, CreditCard, Save, Lock, IndianRupee, PieChart, BarChart2, Activity, MousePointer, Clock, MapPin, ArrowUpRight,
   Phone, Calendar, FileText, ChevronLeft, ChevronRight, RefreshCw, Key, Ban
 } from 'lucide-react';
-import { COURSES, INSTRUCTORS, COURSE_CATEGORIES } from '../../constants';
+import { COURSE_CATEGORIES } from '../../constants';
 import { Button } from '../../components/ui/Button';
+
 import * as adminService from '../../services/adminService';
+import { userService } from '../../services/userService';
 
 interface AdminDashboardProps {
   onNavigate: (view: ViewState) => void;
@@ -21,147 +23,7 @@ interface AdminDashboardProps {
 
 type Tab = 'overview' | 'courses' | 'students' | 'instructors' | 'settings' | 'analytics';
 
-// Mock Data for Students
-const STUDENTS_DATA = [
-  {
-    id: 1,
-    name: 'Alice Johnson',
-    email: 'alice.j@example.com',
-    phone: '+91 98765 43210',
-    location: 'Mumbai, India',
-    course: 'Full Stack Web Development',
-    progress: 75,
-    grade: 'A',
-    status: 'Active',
-    joined: 'Mar 10, 2024',
-    avatar: 'A',
-    lastActive: '2 hours ago',
-    enrollments: [
-      { course: 'Full Stack Web Development', date: 'Mar 10, 2024', status: 'Active', progress: 75 },
-      { course: 'Python for Beginners', date: 'Jan 15, 2024', status: 'Completed', progress: 100 }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Michael Smith',
-    email: 'mike.smith@example.com',
-    phone: '+1 555 0123 456',
-    location: 'New York, USA',
-    course: 'Data Science & AI',
-    progress: 30,
-    grade: 'B+',
-    status: 'Active',
-    joined: 'Feb 14, 2024',
-    avatar: 'M',
-    lastActive: '1 day ago',
-    enrollments: [
-      { course: 'Data Science & AI', date: 'Feb 14, 2024', status: 'Active', progress: 30 }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Emma Wilson',
-    email: 'emma.w@example.com',
-    phone: '+44 20 7946 0958',
-    location: 'London, UK',
-    course: 'UI/UX Design Fundamentals',
-    progress: 100,
-    grade: 'A+',
-    status: 'Completed',
-    joined: 'Jan 05, 2024',
-    avatar: 'E',
-    lastActive: '3 days ago',
-    enrollments: [
-      { course: 'UI/UX Design Fundamentals', date: 'Jan 05, 2024', status: 'Completed', progress: 100 }
-    ]
-  },
-  {
-    id: 4,
-    name: 'James Brown',
-    email: 'j.brown@example.com',
-    phone: '+1 202 555 0198',
-    location: 'Toronto, Canada',
-    course: 'DevOps Engineering',
-    progress: 10,
-    grade: '-',
-    status: 'Inactive',
-    joined: 'Mar 22, 2024',
-    avatar: 'J',
-    lastActive: '1 month ago',
-    enrollments: [
-      { course: 'DevOps Engineering', date: 'Mar 22, 2024', status: 'Dropped', progress: 10 }
-    ]
-  },
-  {
-    id: 5,
-    name: 'Sophia Davis',
-    email: 'sophia.d@example.com',
-    phone: '+61 412 345 678',
-    location: 'Sydney, Australia',
-    course: 'Python for Beginners',
-    progress: 90,
-    grade: 'A',
-    status: 'Active',
-    joined: 'Feb 28, 2024',
-    avatar: 'S',
-    lastActive: '5 hours ago',
-    enrollments: [
-      { course: 'Python for Beginners', date: 'Feb 28, 2024', status: 'Active', progress: 90 }
-    ]
-  },
-  {
-    id: 6,
-    name: 'Daniel Garcia',
-    email: 'daniel.g@example.com',
-    phone: '+34 91 123 45 67',
-    location: 'Madrid, Spain',
-    course: 'Java Enterprise',
-    progress: 45,
-    grade: 'B',
-    status: 'Active',
-    joined: 'Mar 01, 2024',
-    avatar: 'D',
-    lastActive: '1 week ago',
-    enrollments: [
-      { course: 'Java Enterprise', date: 'Mar 01, 2024', status: 'Active', progress: 45 }
-    ]
-  },
-  {
-    id: 7,
-    name: 'Olivia Martinez',
-    email: 'olivia.m@example.com',
-    phone: '+52 55 1234 5678',
-    location: 'Mexico City, Mexico',
-    course: 'Digital Marketing',
-    progress: 0,
-    grade: '-',
-    status: 'Pending',
-    joined: 'Apr 02, 2024',
-    avatar: 'O',
-    lastActive: 'Never',
-    enrollments: [
-      { course: 'Digital Marketing', date: 'Apr 02, 2024', status: 'Active', progress: 0 }
-    ]
-  },
-  {
-    id: 8,
-    name: 'William Lee',
-    email: 'will.lee@example.com',
-    phone: '+65 6789 1234',
-    location: 'Singapore',
-    course: 'Cloud Architecture',
-    progress: 60,
-    grade: 'B+',
-    status: 'Active',
-    joined: 'Jan 15, 2024',
-    avatar: 'W',
-    lastActive: '2 days ago',
-    enrollments: [
-      { course: 'Cloud Architecture', date: 'Jan 15, 2024', status: 'Active', progress: 60 },
-      { course: 'DevOps Engineering', date: 'Dec 10, 2023', status: 'Completed', progress: 100 }
-    ]
-  },
-];
+// Mock data removed. Using API data.
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -172,8 +34,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
 
   // Data States
-  const [studentsList, setStudentsList] = useState(STUDENTS_DATA);
-  const [coursesList, setCoursesList] = useState(COURSES);
+  const [studentsList, setStudentsList] = useState<any[]>([]);
+  const [coursesList, setCoursesList] = useState<any[]>([]);
 
   const [studentSearch, setStudentSearch] = useState('');
   const [studentStatusFilter, setStudentStatusFilter] = useState('All');
@@ -193,7 +55,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   });
 
   // Student Detail Modal State
-  const [selectedStudent, setSelectedStudent] = useState<typeof STUDENTS_DATA[0] | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
   // API Data State
   const [dashboardStats, setDashboardStats] = useState({
@@ -208,6 +70,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
 
   // Settings State
   const [settingsData, setSettingsData] = useState({
@@ -235,6 +98,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }
   });
 
+  // Fetch settings separately
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await adminService.getSettings();
+        if (response.success && response.data) {
+          // Merge with defaults to ensure all fields exist
+          const merged = { ...settingsData, ...response.data };
+          // Ensure nested objects are merged too if partial
+          if (response.data.general) merged.general = { ...settingsData.general, ...response.data.general };
+          if (response.data.notifications) merged.notifications = { ...settingsData.notifications, ...response.data.notifications };
+          if (response.data.security) merged.security = { ...settingsData.security, ...response.data.security };
+          if (response.data.billing) merged.billing = { ...settingsData.billing, ...response.data.billing };
+          setSettingsData(merged);
+        }
+      } catch (err) {
+        console.error("Failed to load settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   // Fetch dashboard data on component mount
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -243,11 +128,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         setError(null);
 
         // Fetch all data in parallel
-        const [statsResponse, enrollmentsResponse, studentsResponse, instructorsResponse] = await Promise.all([
+        const [statsResponse, enrollmentsResponse, studentsResponse, instructorsResponse, coursesResponse] = await Promise.all([
           adminService.getDashboardStats(),
           adminService.getRecentEnrollments(5),
           adminService.getAllStudents(),
-          adminService.getAllInstructors()
+          adminService.getAllInstructors(),
+          adminService.getAllCourses()
         ]);
 
         if (statsResponse.success) {
@@ -265,6 +151,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
         if (instructorsResponse.success) {
           setInstructors(instructorsResponse.data);
         }
+
+        if (coursesResponse.success) {
+          setCoursesList(coursesResponse.data);
+        }
+
+        if (studentsResponse.success) {
+          setStudentsList(studentsResponse.data);
+          // Also set students if needed, or just use studentsList
+          setStudents(studentsResponse.data);
+        }
       } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
         setError(err.response?.data?.message || 'Failed to load dashboard data');
@@ -274,6 +170,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     };
 
     fetchDashboardData();
+
+    // specific notification check
+    userService.getNotifications().then(notifs => {
+      setHasUnreadNotifications(notifs.some(n => !n.read));
+    }).catch(err => console.error("Failed to fetch notifications", err));
   }, []);
 
   // Format stats for display
@@ -341,7 +242,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     );
   };
 
-  const handleAddCourse = (e: React.FormEvent) => {
+  const handleAddCourse = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const errors: string[] = [];
@@ -371,50 +272,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
       return;
     }
 
-    // Add to list
-    const maxId = coursesList.length > 0 ? Math.max(...coursesList.map(c => parseInt(String(c.id)) || 0)) : 0;
-    const newId = `${maxId + 1}`;
-    const courseToAdd = {
-      id: newId,
-      ...newCourse,
-      rating: 0,
-      students: 0,
-      icon: BookOpen, // default
-    };
+    try {
+      const slug = newCourse.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const coursePayload = {
+        ...newCourse,
+        slug: slug,
+        price: parseFloat(newCourse.price.replace(/[^0-9.]/g, '')) || 0,
+        rating: 0,
+        students: 0,
+      };
 
-    // @ts-ignore - Ignoring type strictness for mock data ease
-    setCoursesList([...coursesList, courseToAdd]);
+      await adminService.createCourse(coursePayload);
 
-    // Simulate Success
-    alert(`Course "${newCourse.title}" added successfully!`);
-    setIsAddModalOpen(false);
+      // Refresh courses
+      const coursesResponse = await adminService.getAllCourses();
+      if (coursesResponse.success) {
+        setCoursesList(coursesResponse.data);
+      } else if (Array.isArray(coursesResponse)) {
+        // Handle different response formats if needed
+        setCoursesList(coursesResponse);
+      }
 
-    // Reset Form
-    setNewCourse({
-      title: '',
-      description: '',
-      instructor: '',
-      category: 'Development',
-      price: '',
-      duration: '',
-      level: 'Beginner',
-      image: '',
-      lessons: 0
-    });
+      alert(`Course "${newCourse.title}" added successfully!`);
+      setIsAddModalOpen(false);
+
+      // Reset Form
+      setNewCourse({
+        title: '',
+        description: '',
+        instructor: '',
+        category: 'Development',
+        price: '',
+        duration: '',
+        level: 'Beginner',
+        image: '',
+        lessons: 0
+      });
+    } catch (err: any) {
+      console.error("Failed to add course:", err);
+      alert("Failed to add course: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const handleSaveSettings = () => {
-    // Simulate API call
+  const handleSaveSettings = async () => {
     const btn = document.getElementById('save-settings-btn');
-    if (btn) {
-      const originalText = btn.innerText;
-      btn.innerText = 'Saving...';
+    if (btn) btn.innerText = 'Saving...';
+    try {
+      await adminService.updateSettings(settingsData);
+      if (btn) btn.innerText = 'Changes Saved!';
       setTimeout(() => {
-        btn.innerText = 'Changes Saved!';
-        setTimeout(() => {
-          btn.innerText = originalText;
-        }, 2000);
-      }, 800);
+        if (btn) btn.innerText = 'Save Changes';
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to save settings", err);
+      if (btn) btn.innerText = 'Failed to Save';
     }
   };
 
@@ -445,11 +356,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }
   };
 
-  const handleBulkDeleteCourses = () => {
+  const handleBulkDeleteCourses = async () => {
     if (window.confirm(`Are you sure you want to delete ${selectedCourseIds.length} selected courses?`)) {
-      setCoursesList(prev => prev.filter(c => !selectedCourseIds.includes(String(c.id))));
-      setSelectedCourseIds([]);
-      alert('Selected courses have been deleted.');
+      try {
+        await adminService.deleteCourses(selectedCourseIds);
+
+        // Refresh courses
+        const coursesResponse = await adminService.getAllCourses();
+        if (coursesResponse.success) {
+          setCoursesList(coursesResponse.data);
+        } else {
+          setCoursesList(prev => prev.filter(c => !selectedCourseIds.includes(String(c.id))));
+        }
+
+        setSelectedCourseIds([]);
+        alert('Selected courses have been deleted.');
+      } catch (err) {
+        console.error("Failed to delete courses", err);
+        alert("Failed to delete courses");
+      }
     }
   };
 
@@ -485,25 +410,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
   // Student Bulk Action Handlers
   const handleBulkEmailStudents = () => {
-    alert(`Composing email to ${selectedStudentIds.length} students...`);
+    const selected = studentsList.filter(s => selectedStudentIds.includes(s.id));
+    const emails = selected.map(s => s.email).filter(e => e).join(',');
+    if (emails) {
+      window.location.href = `mailto:?bcc=${emails}`;
+    } else {
+      alert("No emails found for selected students.");
+    }
     setSelectedStudentIds([]);
   };
 
-  const handleBulkSuspendStudents = () => {
+  const handleBulkSuspendStudents = async () => {
     if (window.confirm(`Are you sure you want to suspend ${selectedStudentIds.length} students?`)) {
-      setStudentsList(prev => prev.map(s =>
-        selectedStudentIds.includes(s.id) ? { ...s, status: 'Inactive' } : s
-      ));
-      alert(`${selectedStudentIds.length} students have been suspended.`);
-      setSelectedStudentIds([]);
+      try {
+        await adminService.suspendStudents(selectedStudentIds);
+
+        // Refresh students
+        const studentsResponse = await adminService.getAllStudents();
+        if (studentsResponse.success) {
+          setStudents(studentsResponse.data);
+          setStudentsList(studentsResponse.data);
+        }
+        alert(`${selectedStudentIds.length} students have been suspended.`);
+        setSelectedStudentIds([]);
+      } catch (err) {
+        console.error("Failed to suspend students", err);
+        alert("Failed to suspend students");
+      }
     }
   };
 
-  const handleBulkDeleteStudents = () => {
+  const handleBulkDeleteStudents = async () => {
     if (window.confirm(`Are you sure you want to PERMANENTLY delete ${selectedStudentIds.length} students? This action cannot be undone.`)) {
-      setStudentsList(prev => prev.filter(s => !selectedStudentIds.includes(s.id)));
-      alert(`${selectedStudentIds.length} students have been deleted.`);
-      setSelectedStudentIds([]);
+      try {
+        await adminService.deleteStudents(selectedStudentIds);
+
+        // Refresh students
+        const studentsResponse = await adminService.getAllStudents();
+        if (studentsResponse.success) {
+          setStudents(studentsResponse.data);
+          setStudentsList(studentsResponse.data);
+        } else {
+          setStudentsList(prev => prev.filter(s => !selectedStudentIds.includes(s.id)));
+        }
+
+        alert(`${selectedStudentIds.length} students have been deleted.`);
+        setSelectedStudentIds([]);
+      } catch (err) {
+        console.error("Failed to delete students", err);
+        alert("Failed to delete students");
+      }
     }
   };
 
@@ -871,7 +827,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               className="relative text-slate-500 hover:text-slate-700 transition-colors"
             >
               <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {hasUnreadNotifications && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>}
             </button>
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
               <img
@@ -1259,7 +1215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
           {/* Instructors Tab */}
           {activeTab === 'instructors' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up">
-              {INSTRUCTORS.map((instructor, idx) => (
+              {instructors.map((instructor, idx) => (
                 <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-all">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">

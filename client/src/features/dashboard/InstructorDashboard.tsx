@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { COURSE_CATEGORIES } from '../../constants';
+import { instructorService, InstructorStats, InstructorCourse, InstructorStudent } from '../../services/instructorService';
+import { userService, UserProfile } from '../../services/userService';
 
 interface InstructorDashboardProps {
     onNavigate: (view: ViewState) => void;
@@ -99,85 +101,48 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ label, value, onChange,
     );
 };
 
-// Mock Data
-const INSTRUCTOR_DATA = {
-    name: 'Sarah Chen',
-    role: 'Lead Java Architect',
-    avatar: 'SC',
-    stats: {
-        students: 12450,
-        rating: 4.8,
-        courses: 4,
-        revenue: '₹12,45,000'
-    }
-};
-
-const MY_COURSES = [
-    {
-        id: 1,
-        title: 'Java Enterprise Development',
-        description: '<p>Master enterprise-level Java development using <strong>Spring Boot</strong>, <strong>Hibernate</strong>, and Microservices architecture.</p><ul><li>Deep dive into Spring Core</li><li>REST API Best Practices</li><li>Security Implementation</li></ul>',
-        students: 1850,
-        rating: 4.7,
-        revenue: '₹4,50,000',
-        status: 'Published',
-        price: '49999',
-        duration: '5 Months',
-        level: 'Advanced'
-    },
-    { id: 2, title: 'Spring Boot Microservices', description: 'Build scalable microservices.', students: 840, rating: 4.9, revenue: '₹3,20,000', status: 'Published', price: '34999', duration: '3 Months', level: 'Intermediate' },
-    { id: 3, title: 'Advanced Java Patterns', description: 'Design patterns for professionals.', students: 0, rating: 0, revenue: '₹0', status: 'Draft', price: '29999', duration: '2 Months', level: 'Advanced' },
-    { id: 4, title: 'Legacy System Migration', description: 'Updating old monoliths.', students: 120, rating: 4.5, revenue: '₹85,000', status: 'Archived', price: '19999', duration: '1 Month', level: 'Advanced' },
-];
-
-const ASSIGNMENTS = [
-    { id: 1, student: 'John Doe', course: 'Java Enterprise', task: 'Build a REST API', submitted: '2 hours ago', status: 'Pending' },
-    { id: 2, student: 'Alice Smith', course: 'Spring Boot', task: 'Docker Config', submitted: '5 hours ago', status: 'Pending' },
-    { id: 3, student: 'Robert Fox', course: 'Java Enterprise', task: 'JPA Entities', submitted: '1 day ago', status: 'Graded', grade: '95/100' },
-];
-
-const INITIAL_SCHEDULE = [
-    { id: 1, title: 'Live Q&A: Spring Security', date: 'Today', time: '10:00 AM - 11:00 AM', type: 'Live Class' },
-    { id: 2, title: '1-on-1 Mentorship', date: 'Tomorrow', time: '2:00 PM - 2:30 PM', type: 'Meeting' },
-    { id: 3, title: 'Course Update Deadline', date: 'Mar 25', time: '11:59 PM', type: 'Task' },
-];
-
-const INSTRUCTOR_STUDENTS_LIST = [
-    { id: 1, name: 'Alice Johnson', email: 'alice@example.com', course: 'Java Enterprise Development', progress: 75, status: 'Active', joined: 'Mar 10, 2024' },
-    { id: 2, name: 'Bob Smith', email: 'bob@example.com', course: 'Spring Boot Microservices', progress: 30, status: 'Active', joined: 'Feb 14, 2024' },
-    { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', course: 'Java Enterprise Development', progress: 100, status: 'Completed', joined: 'Jan 05, 2024' },
-    { id: 4, name: 'Diana Prince', email: 'diana@example.com', course: 'Spring Boot Microservices', progress: 12, status: 'Inactive', joined: 'Mar 20, 2024' },
-    { id: 5, name: 'Evan Wright', email: 'evan@example.com', course: 'Legacy System Migration', progress: 45, status: 'Active', joined: 'Feb 01, 2024' },
-    { id: 6, name: 'Fiona Gallagher', email: 'fiona@example.com', course: 'Java Enterprise Development', progress: 88, status: 'Active', joined: 'Jan 22, 2024' },
-    { id: 7, name: 'George Miller', email: 'george@example.com', course: 'Spring Boot Microservices', progress: 5, status: 'Dropped', joined: 'Mar 01, 2024' },
-    { id: 8, name: 'Hannah Lee', email: 'hannah@example.com', course: 'Java Enterprise Development', progress: 60, status: 'Active', joined: 'Feb 10, 2024' },
-];
-
-const MOCK_CURRICULUM = [
-    {
-        id: 1,
-        title: 'Introduction & Setup',
-        lessons: [
-            { id: 101, title: 'Course Overview', type: 'video', duration: '5:00', content: '<p>Welcome to the course. In this video we cover...</p>' },
-            { id: 102, title: 'Setting up JDK 17', type: 'video', duration: '12:30', content: '<p>Step 1: Download JDK...</p>' },
-            { id: 103, title: 'IDE Configuration (IntelliJ)', type: 'article', duration: '5 min read', content: '<p>Recommended plugins list...</p>' }
-        ]
-    },
-    {
-        id: 2,
-        title: 'Core Architecture Patterns',
-        lessons: [
-            { id: 201, title: 'MVC Pattern Deep Dive', type: 'video', duration: '25:00', content: '' },
-            { id: 202, title: 'Repository Pattern Implementation', type: 'video', duration: '32:15', content: '' },
-            { id: 203, title: 'Dependency Injection Principles', type: 'quiz', duration: '15 questions', content: '' }
-        ]
-    }
-];
+// Mock data removed. Using dynamic data from instructorService.
 
 export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavigate }) => {
     const [activeTab, setActiveTab] = useState<InstructorTab>('dashboard');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+    const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+
+    // State for dashboard data
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [stats, setStats] = useState<InstructorStats | null>(null);
+    const [courses, setCourses] = useState<InstructorCourse[]>([]);
+    const [students, setStudents] = useState<InstructorStudent[]>([]);
+    const [scheduleItems, setScheduleItems] = useState<any[]>([]);
+    const [assignments, setAssignments] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Initial Data Fetch
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [userProfile, instructorStats, instructorCourses, instructorStudents, instructorSchedule, instructorAssignments] = await Promise.all([
+                    userService.getProfile(),
+                    instructorService.getStats(),
+                    instructorService.getCourses(),
+                    instructorService.getStudents(),
+                    instructorService.getSchedule(),
+                    instructorService.getAssignments()
+                ]);
+                setProfile(userProfile);
+                setStats(instructorStats);
+                setCourses(instructorCourses);
+                setStudents(instructorStudents);
+                setScheduleItems(instructorSchedule.length ? instructorSchedule : []);
+                setAssignments(instructorAssignments);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     // Student List State
     const [studentSearch, setStudentSearch] = useState('');
@@ -185,7 +150,6 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
     // Schedule State
-    const [scheduleItems, setScheduleItems] = useState(INITIAL_SCHEDULE);
     const [isEventModalOpen, setIsEventModalOpen] = useState(false);
     const [currentEvent, setCurrentEvent] = useState({
         id: 0,
@@ -252,17 +216,17 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
         });
     };
 
-    const getSelectedCourse = () => MY_COURSES.find(c => c.id === selectedCourseId) || MY_COURSES[0];
+    const getSelectedCourse = () => courses.find(c => c.id === selectedCourseId) || courses[0];
 
     // Initialize editing state when course changes
     useEffect(() => {
         if (selectedCourseId) {
-            setEditingCourseDescription(getSelectedCourse().description || '');
+            setEditingCourseDescription((getSelectedCourse() as any).description || '');
         }
     }, [selectedCourseId]);
 
     // Filter Students
-    const filteredStudents = INSTRUCTOR_STUDENTS_LIST.filter(student => {
+    const filteredStudents = students.filter(student => {
         const matchesSearch = student.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
             student.email.toLowerCase().includes(studentSearch.toLowerCase());
         const matchesCourse = courseFilter === 'All' || student.course === courseFilter;
@@ -685,11 +649,11 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                     <div className="px-6 py-2">
                         <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800 border border-slate-700">
                             <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-lg font-bold">
-                                {INSTRUCTOR_DATA.avatar}
+                                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full" /> : (profile?.name ? profile.name.charAt(0) : 'I')}
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-sm font-bold text-white truncate">{INSTRUCTOR_DATA.name}</p>
-                                <p className="text-xs text-slate-400 truncate">{INSTRUCTOR_DATA.role}</p>
+                                <p className="text-sm font-bold text-white truncate">{profile?.name || 'Instructor'}</p>
+                                <p className="text-xs text-slate-400 truncate">{profile?.role || 'Lead Instructor'}</p>
                             </div>
                         </div>
                     </div>
@@ -764,7 +728,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                         <div className="p-3 bg-green-50 text-green-600 rounded-lg"><DollarSign size={24} /></div>
                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{INSTRUCTOR_DATA.stats.revenue}</h3>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{stats?.revenue || "₹0"}</h3>
                                     <p className="text-sm text-slate-500">Total Revenue</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -772,7 +736,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                         <div className="p-3 bg-brand-50 text-brand-600 rounded-lg"><Users size={24} /></div>
                                         <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-full">+45 new</span>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{INSTRUCTOR_DATA.stats.students.toLocaleString()}</h3>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{(stats?.students || 0).toLocaleString()}</h3>
                                     <p className="text-sm text-slate-500">Total Students</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -780,14 +744,14 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                         <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg"><Star size={24} /></div>
                                         <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">4.8 avg</span>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{INSTRUCTOR_DATA.stats.rating}</h3>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{stats?.rating || 0}</h3>
                                     <p className="text-sm text-slate-500">Instructor Rating</p>
                                 </div>
                                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="p-3 bg-purple-50 text-purple-600 rounded-lg"><BookOpen size={24} /></div>
                                     </div>
-                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{INSTRUCTOR_DATA.stats.courses}</h3>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-1">{stats?.courses || 0}</h3>
                                     <p className="text-sm text-slate-500">Active Courses</p>
                                 </div>
                             </div>
@@ -810,11 +774,11 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
-                                                {MY_COURSES.map((course) => (
+                                                {courses.map((course: InstructorCourse) => (
                                                     <tr key={course.id} className="hover:bg-slate-50">
                                                         <td className="px-4 py-3 font-medium text-slate-900 text-sm">{course.title}</td>
-                                                        <td className="px-4 py-3 text-sm text-slate-600">{course.students.toLocaleString()}</td>
-                                                        <td className="px-4 py-3 text-sm font-medium text-slate-900">{course.revenue}</td>
+                                                        <td className="px-4 py-3 text-sm text-slate-600">{(course.students || 0).toLocaleString()}</td>
+                                                        <td className="px-4 py-3 text-sm font-medium text-slate-900">{course.revenue || "₹0"}</td>
                                                         <td className="px-4 py-3 text-right">
                                                             <span className={`px-2 py-1 rounded-full text-xs font-bold ${course.status === 'Published' ? 'bg-green-100 text-green-700' :
                                                                 course.status === 'Draft' ? 'bg-yellow-100 text-yellow-700' :
@@ -869,7 +833,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {MY_COURSES.map((course) => (
+                                {courses.map((course: InstructorCourse) => (
                                     <div key={course.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col">
                                         <div className="flex justify-between items-start mb-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-bold ${course.status === 'Published' ? 'bg-green-100 text-green-700' :
@@ -884,11 +848,11 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div>
                                                 <p className="text-xs text-slate-500 uppercase font-bold">Students</p>
-                                                <p className="font-bold text-slate-900">{course.students.toLocaleString()}</p>
+                                                <p className="font-bold text-slate-900">{(course.students || 0).toLocaleString()}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs text-slate-500 uppercase font-bold">Revenue</p>
-                                                <p className="font-bold text-slate-900">{course.revenue}</p>
+                                                <p className="font-bold text-slate-900">{course.revenue || "₹0"}</p>
                                             </div>
                                         </div>
                                         <div className="mt-auto flex gap-3">
@@ -1002,7 +966,11 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                             <Button size="sm"><Plus size={16} className="mr-2" /> Add Module</Button>
                                         </div>
                                         <div className="p-6 space-y-4">
-                                            {MOCK_CURRICULUM.map((module, mIdx) => (
+                                            {/* Curriculum editing placeholder - implementation coming soon */}
+                                            <div className="text-center py-8 text-slate-500">
+                                                <p>Curriculum modules will appear here.</p>
+                                            </div>
+                                            {([] as any[]).map((module, mIdx) => (
                                                 <div key={module.id} className="border border-slate-200 rounded-lg overflow-hidden">
                                                     <div className="bg-slate-50 p-3 flex items-center gap-3 border-b border-slate-200">
                                                         <GripVertical size={16} className="text-slate-400 cursor-grab" />
@@ -1013,7 +981,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                                         </div>
                                                     </div>
                                                     <div className="p-3 space-y-2">
-                                                        {module.lessons.map((lesson) => (
+                                                        {module.lessons.map((lesson: any) => (
                                                             <div key={lesson.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded border border-transparent hover:border-slate-100 transition-colors">
                                                                 <GripVertical size={14} className="text-slate-300 cursor-grab" />
                                                                 <div className={`p-1.5 rounded ${lesson.type === 'video' ? 'bg-blue-100 text-blue-600' :
@@ -1193,7 +1161,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {ASSIGNMENTS.map((item) => (
+                                        {assignments.map((item) => (
                                             <tr key={item.id} className="hover:bg-slate-50">
                                                 <td className="px-6 py-4 font-medium text-slate-900 text-sm">{item.student}</td>
                                                 <td className="px-6 py-4 text-sm text-slate-600">
@@ -1229,7 +1197,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                 <div className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
                                     <h3 className="text-slate-500 font-medium text-sm mb-2">Total Students</h3>
                                     <div className="flex items-end gap-2">
-                                        <span className="text-3xl font-bold text-slate-900">{INSTRUCTOR_STUDENTS_LIST.length}</span>
+                                        <span className="text-3xl font-bold text-slate-900">{students.length}</span>
                                         <span className="text-green-600 text-sm font-bold mb-1">+45 this week</span>
                                     </div>
                                 </div>
@@ -1237,7 +1205,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                     <h3 className="text-slate-500 font-medium text-sm mb-2">Active Learners</h3>
                                     <div className="flex items-end gap-2">
                                         <span className="text-3xl font-bold text-slate-900">
-                                            {INSTRUCTOR_STUDENTS_LIST.filter(s => s.status === 'Active').length}
+                                            {students.filter(s => s.status === 'Active').length}
                                         </span>
                                         <span className="text-brand-600 text-sm font-bold mb-1">Currently enrolled</span>
                                     </div>
@@ -1246,7 +1214,9 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                     <h3 className="text-slate-500 font-medium text-sm mb-2">Avg. Completion</h3>
                                     <div className="flex items-end gap-2">
                                         <span className="text-3xl font-bold text-slate-900">
-                                            {Math.round(INSTRUCTOR_STUDENTS_LIST.reduce((acc, s) => acc + s.progress, 0) / INSTRUCTOR_STUDENTS_LIST.length)}%
+                                            <span className="text-3xl font-bold text-slate-900">
+                                                {students.length > 0 ? Math.round(students.reduce((acc, s) => acc + s.progress, 0) / students.length) : 0}%
+                                            </span>
                                         </span>
                                         <span className="text-slate-400 text-sm font-medium mb-1">Across all courses</span>
                                     </div>
@@ -1274,7 +1244,7 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                                             onChange={(e) => setCourseFilter(e.target.value)}
                                         >
                                             <option value="All">All Courses</option>
-                                            {MY_COURSES.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
+                                            {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -1425,18 +1395,18 @@ export const InstructorDashboard: React.FC<InstructorDashboardProps> = ({ onNavi
                             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
                                 <div className="flex items-center gap-6 mb-8">
                                     <div className="w-24 h-24 rounded-full bg-brand-600 text-white flex items-center justify-center text-3xl font-bold border-4 border-slate-50">
-                                        {INSTRUCTOR_DATA.avatar}
+                                        {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full" /> : (profile?.name ? profile.name.charAt(0) : 'I')}
                                     </div>
                                     <Button variant="outline">Change Photo</Button>
                                 </div>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Display Name</label>
-                                        <input type="text" defaultValue={INSTRUCTOR_DATA.name} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                                        <input type="text" defaultValue={profile?.name} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Professional Headline</label>
-                                        <input type="text" defaultValue={INSTRUCTOR_DATA.role} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                                        <input type="text" defaultValue={profile?.role} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>

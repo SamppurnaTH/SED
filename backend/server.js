@@ -47,12 +47,56 @@ const Partner = require('./models/Partner.js');
 const Service = require('./models/Service.js');
 const BlogPost = require('./models/BlogPost.js');
 const User = require('./models/User.js');
+const SuccessStory = require('./models/SuccessStory.js');
 const data = require('./data.js');
 
 const initialCourses = data.courses;
 const initialPartners = data.partners;
 const initialServices = data.services;
 const initialBlogPosts = data.blogPosts;
+
+const initialSuccessStories = [
+  {
+    name: "Sarah Jenkins",
+    role: "Full Stack Developer",
+    company: "TechFlow Inc.",
+    previousRole: "Marketing Specialist",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800",
+    story: "I was stuck in a marketing job I didn't enjoy. The Full Stack Bootcamp gave me the skills and confidence to switch careers. I'm now earning double my previous salary and loving my work!",
+    outcome: "150% Salary Hike",
+    featured: true
+  },
+  {
+    name: "Michael Chen",
+    role: "Data Scientist",
+    company: "DataSphere",
+    previousRole: "Financial Analyst",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=800",
+    story: "Coming from finance, I knew numbers but not coding. This program bridged the gap perfectly. The career support was phenomenal - they helped me polish my resume and ace the interviews.",
+    outcome: "Hired at Top Firm",
+    featured: true
+  },
+  {
+    name: "Priya Patel",
+    role: "Product Designer",
+    company: "Creative Studios",
+    previousRole: "Graphic Designer",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800",
+    story: "I wanted to move from graphic design to UX/UI. The curriculum was practical and portfolio-focused. My capstone project directly led to my job offer at Creative Studios.",
+    outcome: "Career Pivot",
+    featured: true
+  },
+  {
+    name: "David Wilson",
+    role: "Cloud Engineer",
+    company: "SkyHigh Cloud",
+    previousRole: "IT Support",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800",
+    story: "Leveling up from IT support to Cloud Engineering seemed impossible, but the structured learning path made it achievable. The hands-on labs were the game changer for me.",
+    outcome: "Senior Role",
+    featured: true
+  }
+];
 
 const app = express();
 const port = 5000;
@@ -252,6 +296,7 @@ async function seedData() {
     if (await Partner.countDocuments() === 0) await Partner.insertMany(initialPartners);
     if (await Service.countDocuments() === 0) await Service.insertMany(initialServices);
     if (await BlogPost.countDocuments() === 0) await BlogPost.insertMany(initialBlogPosts);
+    if (await SuccessStory.countDocuments() === 0) await SuccessStory.insertMany(initialSuccessStories);
 
     if (await User.countDocuments() === 0) {
       const salt = bcrypt.genSaltSync(10);
@@ -288,9 +333,11 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminUserRoutes);
 app.use("/api/admin/dashboard", adminRoutes);
+app.use("/api/instructor", require('./routes/instructorRoutes')); // Register Instructor Routes
 app.use("/api/assignments", require('./routes/assignmentRoutes'));
 app.use("/api/certificates", require('./routes/certificateRoutes'));
 app.use("/api/submissions", require('./routes/submissionsRoutes'));
+app.use("/api/success-stories", require('./routes/successStoryRoutes'));
 app.use("/api/health", healthCheckRoutes);
 
 app.get("/", (req, res) => {

@@ -1,6 +1,6 @@
 import { Building, GraduationCap, Users, Code } from 'lucide-react';
 
-// Notification related types and data
+// Notification related types
 export interface Notification {
   id: number;
   title: string;
@@ -10,42 +10,7 @@ export interface Notification {
   type: 'info' | 'warning' | 'success' | 'error';
 }
 
-export const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 1,
-    title: 'New Course Available',
-    message: 'A new course on Advanced React has been added to your learning path.',
-    timestamp: '2025-11-25T10:30:00Z',
-    read: false,
-    type: 'info'
-  },
-  {
-    id: 2,
-    title: 'Assignment Due',
-    message: 'Your assignment for "Introduction to TypeScript" is due in 2 days.',
-    timestamp: '2025-11-24T14:15:00Z',
-    read: false,
-    type: 'warning'
-  },
-  {
-    id: 3,
-    title: 'Course Completed',
-    message: 'Congratulations! You have successfully completed the JavaScript Fundamentals course.',
-    timestamp: '2025-11-23T09:45:00Z',
-    read: true,
-    type: 'success'
-  },
-  {
-    id: 4,
-    title: 'System Maintenance',
-    message: 'Scheduled maintenance is planned for this weekend. The platform will be unavailable for 2 hours.',
-    timestamp: '2025-11-22T16:20:00Z',
-    read: true,
-    type: 'info'
-  }
-];
-
-// Instructor related types and data
+// Instructor related types
 export interface Instructor {
   name: string;
   role: string;
@@ -67,50 +32,7 @@ export interface Instructor {
   skills: string[];
 }
 
-export const INSTRUCTORS: Instructor[] = [
-  {
-    name: 'John Doe',
-    role: 'Senior Frontend Developer',
-    bio: '10+ years of experience in web development',
-    rating: 4.9,
-    students: 12500,
-    courses: 8,
-    image: '/instructors/john-doe.jpg',
-    socials: {
-      linkedin: 'https://linkedin.com/in/johndoe',
-      twitter: 'https://twitter.com/johndoe',
-      website: 'https://johndoe.dev',
-      email: 'john@example.com'
-    },
-    reviews: 2540,
-    skills: ['React', 'TypeScript', 'Node.js', 'Next.js'],
-    about: 'Passionate about teaching modern web development with a focus on React, TypeScript, and modern JavaScript.',
-    experience: '10+ years in web development, previously at Google and Microsoft',
-    teachingStyle: 'Hands-on with real-world projects and examples'
-  },
-  {
-    name: 'Jane Smith',
-    role: 'Full Stack Developer',
-    bio: 'Specializing in React, Node.js, and GraphQL',
-    rating: 4.8,
-    students: 9800,
-    courses: 6,
-    image: '/instructors/jane-smith.jpg',
-    socials: {
-      linkedin: 'https://linkedin.com/in/janesmith',
-      twitter: 'https://twitter.com/janesmith',
-      website: 'https://janesmith.dev',
-      email: 'jane@example.com'
-    },
-    reviews: 1890,
-    skills: ['Node.js', 'Express', 'MongoDB', 'GraphQL'],
-    about: 'Full-stack developer with a passion for building scalable applications and teaching others.',
-    experience: '8+ years in full-stack development, previously at Amazon and Uber',
-    teachingStyle: 'Project-based learning with clear explanations'
-  }
-];
-
-// Course related types and data
+// Course related types
 export interface Course {
   id: string | number;
   title: string;
@@ -128,61 +50,6 @@ export interface Course {
   lessons: number;
   icon?: string;
 }
-
-export const COURSES: Course[] = [
-  {
-    id: 'react-advanced',
-    title: 'Advanced React Patterns',
-    instructor: 'John Doe',
-    level: 'Advanced',
-    duration: '8 weeks',
-    students: 3500,
-    rating: 4.9,
-    image: '/courses/react-advanced.jpg',
-    description: 'Master advanced React patterns and techniques used by senior developers.',
-    whatYouWillLearn: [
-      'Advanced React hooks and custom hooks',
-      'Performance optimization techniques',
-      'State management at scale',
-      'Advanced component composition',
-      'Testing React applications'
-    ],
-    requirements: [
-      'JavaScript ES6+',
-      'React fundamentals',
-      'Basic understanding of hooks'
-    ],
-    category: 'Development',
-    price: 4999,
-    lessons: 42
-  },
-  {
-    id: 'nodejs-masterclass',
-    title: 'Node.js Masterclass',
-    instructor: 'Jane Smith',
-    level: 'Intermediate',
-    duration: '10 weeks',
-    students: 4200,
-    rating: 4.8,
-    image: '/courses/nodejs-masterclass.jpg',
-    description: 'Build scalable and efficient server-side applications with Node.js.',
-    whatYouWillLearn: [
-      'Asynchronous JavaScript',
-      'Building RESTful APIs with Express',
-      'Authentication and authorization',
-      'Database integration',
-      'Deployment and scaling'
-    ],
-    requirements: [
-      'JavaScript fundamentals',
-      'Basic understanding of HTTP',
-      'Familiarity with command line'
-    ],
-    category: 'Development',
-    price: 3999,
-    lessons: 35
-  }
-];
 
 // Navigation Links
 export const NAV_LINKS = [
@@ -298,7 +165,7 @@ export const TEAM_MEMBERS = [
   { name: 'Bob Smith', role: 'CTO', image: '/team/bob.jpg' }
 ];
 
-// Success Stories
+// Success Stories Types
 export interface SuccessStory {
   id: string;
   name: string;
@@ -310,45 +177,3 @@ export interface SuccessStory {
   outcome: string;
 }
 
-export const SUCCESS_STORIES: SuccessStory[] = [
-  {
-    id: '1',
-    name: 'Sarah Chen',
-    image: '/success-stories/sarah-chen.jpg',
-    company: 'Google',
-    story: 'After completing the Advanced React course, I landed my dream job at Google. The hands-on projects and mentorship were invaluable in preparing me for real-world challenges.',
-    previousRole: 'Junior Developer',
-    role: 'Senior Frontend Engineer',
-    outcome: '150% Salary Increase'
-  },
-  {
-    id: '2',
-    name: 'Michael Rodriguez',
-    image: '/success-stories/michael-rodriguez.jpg',
-    company: 'Microsoft',
-    story: 'The Node.js Masterclass transformed my career. I went from struggling with backend concepts to confidently building scalable applications. Now I lead a team of developers at Microsoft.',
-    previousRole: 'Marketing Manager',
-    role: 'Full Stack Developer',
-    outcome: 'Career Switch Success'
-  },
-  {
-    id: '3',
-    name: 'Priya Sharma',
-    image: '/success-stories/priya-sharma.jpg',
-    company: 'Amazon',
-    story: 'The comprehensive curriculum and industry-relevant projects gave me the confidence to apply for senior positions. Within 2 months of completing the course, I joined Amazon as a Tech Lead.',
-    previousRole: 'Frontend Developer',
-    role: 'Tech Lead',
-    outcome: '120% Salary Hike'
-  },
-  {
-    id: '4',
-    name: 'David Kim',
-    image: '/success-stories/david-kim.jpg',
-    company: 'Startup Founder',
-    story: 'The skills I gained helped me build my own SaaS product. The course not only taught me technical skills but also how to think like a product engineer.',
-    previousRole: 'Freelancer',
-    role: 'Startup Founder & CTO',
-    outcome: 'Built $1M ARR Product'
-  }
-];

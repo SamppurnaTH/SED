@@ -131,6 +131,29 @@ router.get('/instructors', protect, authorize('admin'), async (req, res) => {
     }
 });
 
+// @route   GET /api/admin/courses
+// @desc    Get all courses
+// @access  Private/Admin
+router.get('/courses', protect, authorize('admin'), async (req, res) => {
+    try {
+        const courses = await Course.find()
+            .populate('instructor', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            count: courses.length,
+            data: courses
+        });
+    } catch (error) {
+        console.error('Error fetching courses:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching courses'
+        });
+    }
+});
+
 // @route   GET /api/admin/analytics
 // @desc    Get analytics data
 // @access  Private/Admin

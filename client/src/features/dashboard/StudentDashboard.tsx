@@ -11,7 +11,7 @@ import {
    Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { COURSES } from '../../constants';
+import { userService, UserProfile, Assignment, ScheduleEvent, Certificate } from '../../services/userService';
 
 interface StudentDashboardProps {
    onNavigate: (view: ViewState) => void;
@@ -20,65 +20,7 @@ interface StudentDashboardProps {
 type StudentTab = 'dashboard' | 'my-courses' | 'schedule' | 'assignments' | 'certificates' | 'settings';
 
 // Mock Student Data
-const STUDENT_PROFILE = {
-   name: 'John Doe',
-   email: 'john.doe@example.com',
-   avatar: 'J',
-   enrolledCourses: [
-      { ...COURSES[0], progress: 65, lastAccessed: '2 hours ago', nextLesson: 'State Management in React' },
-      { ...COURSES[3], progress: 12, lastAccessed: '3 days ago', nextLesson: 'Python Lists & Dictionaries' },
-      { ...COURSES[7], progress: 100, lastAccessed: '1 week ago', nextLesson: 'Completed' }
-   ],
-   assignments: [
-      { id: 1, title: 'React Component Structure', course: 'Full Stack Web Development', dueDate: 'Mar 25, 2024', status: 'Pending', grade: '-' },
-      { id: 2, title: 'Python Data Analysis Script', course: 'Python for Beginners', dueDate: 'Mar 20, 2024', status: 'Submitted', grade: 'Waiting' },
-      { id: 3, title: 'UI Design System', course: 'UI/UX Design Fundamentals', dueDate: 'Feb 28, 2024', status: 'Graded', grade: 'A (95%)' }
-   ],
-   schedule: [
-      { id: 1, title: 'Live Q&A: React Hooks', type: 'Live Class', date: 'Tomorrow', time: '10:00 AM - 11:00 AM', link: '#', instructor: 'Alex Rivera' },
-      { id: 2, title: 'Python Project Submission', type: 'Deadline', date: 'Mar 20', time: '11:59 PM', link: '#', instructor: 'Emily Davis' },
-      { id: 3, title: 'Career Mentorship Session', type: 'Meeting', date: 'Mar 22', time: '2:00 PM - 2:30 PM', link: '#', instructor: 'Sarah Jenkins' }
-   ],
-   certificates: [
-      { id: 1, course: 'UI/UX Design Fundamentals', date: 'Mar 10, 2024', id_code: 'SED-CERT-2024-8821' }
-   ]
-};
-
-// Mock Detailed Progress Data
-const COURSE_PROGRESS_DETAILS: Record<number, any> = {
-   1: {
-      totalTimeSpent: '24h 15m',
-      quizAverage: '88%',
-      modules: [
-         { id: 1, title: 'Introduction to MERN Stack', status: 'Completed', score: '100%', duration: '2h 10m', lessons: 5 },
-         { id: 2, title: 'React Fundamentals', status: 'Completed', score: '92%', duration: '5h 30m', lessons: 12 },
-         { id: 3, title: 'Node.js & Express Basics', status: 'Completed', score: '85%', duration: '4h 45m', lessons: 8 },
-         { id: 4, title: 'Database Design with MongoDB', status: 'In Progress', score: '-', duration: '3h 15m', lessons: 10, current: true },
-         { id: 5, title: 'State Management (Redux)', status: 'Locked', score: '-', duration: '4h 00m', lessons: 8 },
-         { id: 6, title: 'Authentication & Security', status: 'Locked', score: '-', duration: '3h 30m', lessons: 6 },
-      ]
-   },
-   4: {
-      totalTimeSpent: '4h 30m',
-      quizAverage: '90%',
-      modules: [
-         { id: 1, title: 'Python Syntax & Variables', status: 'Completed', score: '95%', duration: '1h 30m', lessons: 4 },
-         { id: 2, title: 'Control Flow', status: 'In Progress', score: '-', duration: '2h 00m', lessons: 6, current: true },
-         { id: 3, title: 'Functions & Modules', status: 'Locked', score: '-', duration: '2h 30m', lessons: 5 },
-         { id: 4, title: 'Data Structures', status: 'Locked', score: '-', duration: '3h 00m', lessons: 8 },
-      ]
-   },
-   8: {
-      totalTimeSpent: '18h 45m',
-      quizAverage: '96%',
-      modules: [
-         { id: 1, title: 'Design Thinking', status: 'Completed', score: '98%', duration: '3h 00m', lessons: 6 },
-         { id: 2, title: 'Wireframing & Prototyping', status: 'Completed', score: '95%', duration: '5h 30m', lessons: 10 },
-         { id: 3, title: 'Visual Design Principles', status: 'Completed', score: '94%', duration: '4h 15m', lessons: 8 },
-         { id: 4, title: 'Figma Mastery', status: 'Completed', score: '97%', duration: '6h 00m', lessons: 12 },
-      ]
-   }
-};
+// Mock data removed. Using dynamic data from userService.
 
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }) => {
@@ -86,6 +28,53 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
    const [viewingCourseId, setViewingCourseId] = useState<string | number | null>(null);
    const [selectedScheduleItem, setSelectedScheduleItem] = useState<any>(null);
+   const [submissionLoading, setSubmissionLoading] = useState<string | null>(null); // assignment ID being submitted
+
+   const [profile, setProfile] = useState<UserProfile | null>(null);
+   const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+   const [assignments, setAssignments] = useState<Assignment[]>([]);
+   const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);
+   const [certificates, setCertificates] = useState<Certificate[]>([]);
+   const [loading, setLoading] = useState(true);
+
+   React.useEffect(() => {
+      const fetchData = async () => {
+         try {
+            const [userProfile, userCourses, userAssignments, userSchedule, userCerts] = await Promise.all([
+               userService.getProfile(),
+               userService.getEnrolledCourses(),
+               userService.getAssignments(),
+               userService.getSchedule(),
+               userService.getCertificates()
+            ]);
+            setProfile(userProfile);
+            setEnrolledCourses(userCourses);
+            setAssignments(userAssignments);
+            setSchedule(userSchedule);
+            setCertificates(userCerts);
+         } catch (error) {
+            console.error(error);
+         } finally {
+            setLoading(false);
+         }
+      };
+      fetchData();
+   }, []);
+
+   if (loading) {
+      return (
+         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="text-center">
+               <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+               <p className="text-slate-600 font-medium">Loading Dashboard...</p>
+            </div>
+         </div>
+      );
+   }
+
+   // Safe profile check
+   if (!profile) return <div>Error loading profile</div>;
+
 
    const SidebarItem = ({ id, icon: Icon, label }: { id: StudentTab, icon: any, label: string }) => (
       <button
@@ -103,6 +92,26 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
          <span className="font-medium">{label}</span>
       </button>
    );
+
+   const handleSubmitAssignment = async (assignmentId: string) => {
+      const text = prompt("Please enter your submission text (or URL):");
+      if (!text) return;
+
+      try {
+         setSubmissionLoading(assignmentId);
+         await userService.submitAssignment(assignmentId, text);
+         alert("Assignment submitted successfully!");
+
+         // Refresh assignments
+         const newAssignments = await userService.getAssignments();
+         setAssignments(newAssignments);
+      } catch (err) {
+         console.error("Failed to submit assignment", err);
+         alert("Failed to submit assignment. Please try again.");
+      } finally {
+         setSubmissionLoading(null);
+      }
+   };
 
    return (
       <div className="min-h-screen bg-slate-50 flex relative">
@@ -185,10 +194,10 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                <div className="px-6 py-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800 border border-slate-700">
                      <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-lg font-bold">
-                        {STUDENT_PROFILE.avatar}
+                        {profile.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full" /> : (profile.name ? profile.name.charAt(0) : 'U')}
                      </div>
                      <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-white truncate">{STUDENT_PROFILE.name}</p>
+                        <p className="text-sm font-bold text-white truncate">{profile.name}</p>
                         <p className="text-xs text-slate-400 truncate">Student Account</p>
                      </div>
                   </div>
@@ -263,14 +272,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                      <div className="bg-gradient-to-r from-brand-600 to-blue-500 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
                         <div className="relative z-10">
-                           <h1 className="text-3xl font-display font-bold mb-2">Hello, {STUDENT_PROFILE.name}! 👋</h1>
+                           <h1 className="text-3xl font-display font-bold mb-2">Hello, {profile.name}! 👋</h1>
                            <p className="text-brand-100 text-lg mb-6">You've learned 80% more this week. Keep it up!</p>
 
-                           {STUDENT_PROFILE.enrolledCourses[0] && (
+                           {enrolledCourses.length > 0 && (
                               <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-xl inline-block max-w-md">
                                  <p className="text-xs text-brand-200 uppercase font-bold mb-1">Continue Learning</p>
-                                 <h3 className="font-bold text-lg mb-1">{STUDENT_PROFILE.enrolledCourses[0].title}</h3>
-                                 <p className="text-sm text-white/80 mb-3">Next: {STUDENT_PROFILE.enrolledCourses[0].nextLesson}</p>
+                                 <h3 className="font-bold text-lg mb-1">{enrolledCourses[0].title}</h3>
+                                 <p className="text-sm text-white/80 mb-3">Next: {enrolledCourses[0].nextLesson}</p>
                                  <Button size="sm" className="bg-white text-brand-600 hover:bg-brand-50 border-none">
                                     <PlayCircle size={16} className="mr-2" /> Resume
                                  </Button>
@@ -286,7 +295,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               <div className="p-3 rounded-lg bg-blue-50 text-blue-600"><BookOpen size={24} /></div>
                               <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">Active</span>
                            </div>
-                           <h3 className="text-3xl font-bold text-slate-900 mb-1">2</h3>
+                           <h3 className="text-3xl font-bold text-slate-900 mb-1">{enrolledCourses.filter(c => c.progress < 100).length}</h3>
                            <p className="text-sm text-slate-500">Courses in Progress</p>
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -330,7 +339,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                           {STUDENT_PROFILE.enrolledCourses.map((course) => {
+                           {enrolledCourses.map((course) => {
                               const completedLessons = Math.round((course.progress / 100) * course.lessons);
                               return (
                                  <div key={course.id} className="relative">
@@ -385,7 +394,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               <Button variant="ghost" size="sm" onClick={() => setActiveTab('schedule')}>View All</Button>
                            </div>
                            <div className="divide-y divide-slate-100">
-                              {STUDENT_PROFILE.schedule.map((item) => (
+                              {schedule.map((item) => (
                                  <div key={item.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setSelectedScheduleItem(item)}>
                                     <div className="flex-shrink-0 w-14 text-center bg-slate-50 rounded-lg border border-slate-100 p-2">
                                        <div className="text-xs text-slate-500 uppercase font-bold">{item.date.split(' ')[0].substring(0, 3)}</div>
@@ -419,7 +428,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               <h3 className="font-bold text-slate-900 text-lg">Assignments</h3>
                            </div>
                            <div className="divide-y divide-slate-100">
-                              {STUDENT_PROFILE.assignments.slice(0, 3).map((assignment) => (
+                              {assignments.slice(0, 3).map((assignment) => (
                                  <div key={assignment.id} className="p-4 hover:bg-slate-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${assignment.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -460,7 +469,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                            </div>
 
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {STUDENT_PROFILE.enrolledCourses.map((course) => (
+                              {enrolledCourses.map((course) => (
                                  <div
                                     key={course.id}
                                     className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition-shadow"
@@ -526,8 +535,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                            </button>
 
                            {(() => {
-                              const course = STUDENT_PROFILE.enrolledCourses.find(c => String(c.id) === String(viewingCourseId));
-                              const details = COURSE_PROGRESS_DETAILS[Number(viewingCourseId) || 0] || {
+                              const course = enrolledCourses.find(c => String(c.id) === String(viewingCourseId));
+                              // Default progress details if not available
+                              const details = {
                                  totalTimeSpent: '2h 15m',
                                  quizAverage: '0%',
                                  modules: [
@@ -698,7 +708,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               </tr>
                            </thead>
                            <tbody className="divide-y divide-slate-100">
-                              {STUDENT_PROFILE.assignments.map((assignment) => (
+                              {assignments.map((assignment) => (
                                  <tr key={assignment.id} className="hover:bg-slate-50">
                                     <td className="px-6 py-4">
                                        <div className="font-bold text-slate-900 text-sm">{assignment.title}</div>
@@ -716,7 +726,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                     <td className="px-6 py-4 text-sm font-bold text-slate-900">{assignment.grade}</td>
                                     <td className="px-6 py-4 text-right">
                                        {assignment.status === 'Pending' && (
-                                          <Button size="sm" variant="outline">Submit</Button>
+                                          <Button
+                                             size="sm"
+                                             variant="outline"
+                                             onClick={() => handleSubmitAssignment(assignment.id)}
+                                             disabled={submissionLoading === assignment.id}
+                                          >
+                                             {submissionLoading === assignment.id ? 'Submitting...' : 'Submit'}
+                                          </Button>
                                        )}
                                        {assignment.status === 'Submitted' && (
                                           <span className="text-xs text-slate-400 italic">Under Review</span>
@@ -729,7 +746,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               ))}
                            </tbody>
                         </table>
-                        {STUDENT_PROFILE.assignments.length === 0 && (
+                        {assignments.length === 0 && (
                            <div className="p-8 text-center text-slate-500">
                               No assignments found.
                            </div>
@@ -747,7 +764,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                      </div>
 
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {STUDENT_PROFILE.certificates.map((cert) => (
+                        {certificates.map((cert) => (
                            <div key={cert.id} className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col">
                               <div className="flex items-start justify-between mb-6">
                                  <div className="p-3 bg-brand-50 text-brand-600 rounded-lg">
@@ -787,7 +804,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                      </div>
 
                      <div className="space-y-4">
-                        {STUDENT_PROFILE.schedule.map((item) => (
+                        {schedule.map((item) => (
                            <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
                               <div className="flex-shrink-0 w-16 h-16 bg-slate-50 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
                                  <span className="text-xs text-slate-500 font-bold uppercase">{item.date.split(' ')[0].substring(0, 3)}</span>
@@ -805,7 +822,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                     <span className="text-xs text-slate-400 flex items-center"><Clock size={12} className="mr-1" /> {item.time}</span>
                                  </div>
                                  <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                                 <p className="text-sm text-slate-500 mt-1">Instructor: {item.instructor}</p>
+                                 {/* Helper to show instructor if available in mixed data */}
+                                 <p className="text-sm text-slate-500 mt-1">Instructor: {(item as any).instructor || 'Course Instructor'}</p>
                               </div>
 
                               <div className="flex-shrink-0">
@@ -833,7 +851,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         <h3 className="font-bold text-slate-900 mb-6">Profile Information</h3>
                         <div className="flex items-center gap-6 mb-6">
                            <div className="w-20 h-20 rounded-full bg-brand-600 text-white flex items-center justify-center text-3xl font-bold">
-                              {STUDENT_PROFILE.avatar}
+                              {profile.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full" /> : (profile.name ? profile.name.charAt(0) : 'U')}
                            </div>
                            <div>
                               <Button variant="outline" size="sm" className="mb-2">Change Avatar</Button>
@@ -844,11 +862,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                              <input type="text" defaultValue={STUDENT_PROFILE.name} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+                              <input type="text" defaultValue={profile.name} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
                            </div>
                            <div>
                               <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                              <input type="email" defaultValue={STUDENT_PROFILE.email} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50" disabled />
+                              <input type="email" defaultValue={profile.email} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50" disabled />
                            </div>
                            <div className="md:col-span-2">
                               <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
