@@ -49,12 +49,17 @@ const Service = require('./models/Service.js');
 const BlogPost = require('./models/BlogPost.js');
 const User = require('./models/User.js');
 const SuccessStory = require('./models/SuccessStory.js');
-const data = require('./data.js');
+let data = { courses: [], partners: [], services: [], blogPosts: [] };
+try {
+  data = require('./data.js');
+} catch (error) {
+  console.warn("Warning: ./data.js not found, skipping initial data seeding.");
+}
 
-const initialCourses = data.courses;
-const initialPartners = data.partners;
-const initialServices = data.services;
-const initialBlogPosts = data.blogPosts;
+const initialCourses = data.courses || [];
+const initialPartners = data.partners || [];
+const initialServices = data.services || [];
+const initialBlogPosts = data.blogPosts || [];
 
 const initialSuccessStories = [
   {
