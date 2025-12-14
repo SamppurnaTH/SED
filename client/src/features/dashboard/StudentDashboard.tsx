@@ -691,60 +691,73 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               </div>
                            </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {enrolledCourses.map((course) => (
-                                 <div
-                                    key={course.id}
-                                    className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition-shadow"
-                                    onClick={() => setViewingCourseId(String(course.id))}
-                                 >
-                                    <div className="h-40 relative">
-                                       <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-                                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                          <Button className="rounded-full pointer-events-none"><PlayCircle size={20} className="mr-2" /> Continue</Button>
-                                       </div>
-                                       <div className="absolute bottom-4 left-4 right-4">
-                                          <div className="flex justify-between text-xs font-bold text-white mb-1">
-                                             <span>{course.progress}% Completed</span>
-                                             <span>{course.lessons} Lessons</span>
-                                          </div>
-                                          <div className="w-full bg-white/30 rounded-full h-1.5 backdrop-blur-sm">
-                                             <div style={{ width: `${course.progress}%` }} className="bg-green-400 h-1.5 rounded-full"></div>
-                                          </div>
-                                       </div>
-                                    </div>
-                                    <div className="p-6 flex-grow flex flex-col">
-                                       <div className="flex justify-between items-start mb-2">
-                                          <span className="text-xs font-bold text-brand-600 uppercase tracking-wide bg-brand-50 px-2 py-1 rounded">{course.category}</span>
-                                          <div className="flex items-center text-yellow-500 text-xs font-bold">
-                                             <Star size={12} className="fill-current mr-1" /> {course.rating}
-                                          </div>
-                                       </div>
-                                       <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-1 group-hover:text-brand-600 transition-colors">{course.title}</h3>
-                                       <p className="text-sm text-slate-500 mb-4 line-clamp-2">{course.description}</p>
-
-                                       <div className="mt-auto pt-4 border-t border-slate-100">
-                                          {course.progress === 100 ? (
-                                             <div className="flex items-center text-green-600 text-sm font-bold">
-                                                <CheckCircle size={16} className="mr-2" /> Course Completed
-                                                <span className="ml-auto text-xs text-slate-400 font-normal"> Rated 5.0</span>
-                                             </div>
-                                          ) : (
-                                             <div>
-                                                <p className="text-xs text-slate-400 uppercase font-bold mb-1">Up Next</p>
-                                                <div className="flex justify-between items-center">
-                                                   <p className="text-sm font-medium text-slate-800 truncate max-w-[70%]">{course.nextLesson}</p>
-                                                   <span className="text-brand-600 text-sm font-bold flex items-center">
-                                                      Start <ChevronRight size={16} />
-                                                   </span>
-                                                </div>
-                                             </div>
-                                          )}
-                                       </div>
-                                    </div>
+                           {enrolledCourses.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-200 shadow-sm text-center">
+                                 <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mb-4">
+                                    <BookOpen size={32} className="text-brand-600" />
                                  </div>
-                              ))}
-                           </div>
+                                 <h3 className="text-xl font-bold text-slate-900 mb-2">No courses found</h3>
+                                 <p className="text-slate-500 max-w-md mb-6">You are not enrolled in any courses yet. Explore our catalog to start learning today.</p>
+                                 <Button onClick={() => onNavigate('courses')}>
+                                    Browse Courses
+                                 </Button>
+                              </div>
+                           ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 {enrolledCourses.map((course) => (
+                                    <div
+                                       key={course.id}
+                                       className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:shadow-md transition-shadow"
+                                       onClick={() => setViewingCourseId(String(course.id))}
+                                    >
+                                       <div className="h-40 relative">
+                                          <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                             <Button className="rounded-full pointer-events-none"><PlayCircle size={20} className="mr-2" /> Continue</Button>
+                                          </div>
+                                          <div className="absolute bottom-4 left-4 right-4">
+                                             <div className="flex justify-between text-xs font-bold text-white mb-1">
+                                                <span>{course.progress}% Completed</span>
+                                                <span>{course.lessons} Lessons</span>
+                                             </div>
+                                             <div className="w-full bg-white/30 rounded-full h-1.5 backdrop-blur-sm">
+                                                <div style={{ width: `${course.progress}%` }} className="bg-green-400 h-1.5 rounded-full"></div>
+                                             </div>
+                                          </div>
+                                       </div>
+                                       <div className="p-6 flex-grow flex flex-col">
+                                          <div className="flex justify-between items-start mb-2">
+                                             <span className="text-xs font-bold text-brand-600 uppercase tracking-wide bg-brand-50 px-2 py-1 rounded">{course.category}</span>
+                                             <div className="flex items-center text-yellow-500 text-xs font-bold">
+                                                <Star size={12} className="fill-current mr-1" /> {course.rating}
+                                             </div>
+                                          </div>
+                                          <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-1 group-hover:text-brand-600 transition-colors">{course.title}</h3>
+                                          <p className="text-sm text-slate-500 mb-4 line-clamp-2">{course.description}</p>
+
+                                          <div className="mt-auto pt-4 border-t border-slate-100">
+                                             {course.progress === 100 ? (
+                                                <div className="flex items-center text-green-600 text-sm font-bold">
+                                                   <CheckCircle size={16} className="mr-2" /> Course Completed
+                                                   <span className="ml-auto text-xs text-slate-400 font-normal"> Rated 5.0</span>
+                                                </div>
+                                             ) : (
+                                                <div>
+                                                   <p className="text-xs text-slate-400 uppercase font-bold mb-1">Up Next</p>
+                                                   <div className="flex justify-between items-center">
+                                                      <p className="text-sm font-medium text-slate-800 truncate max-w-[70%]">{course.nextLesson}</p>
+                                                      <span className="text-brand-600 text-sm font-bold flex items-center">
+                                                         Start <ChevronRight size={16} />
+                                                      </span>
+                                                   </div>
+                                                </div>
+                                             )}
+                                          </div>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
                         </>
                      ) : (
                         /* Detailed Course View */
