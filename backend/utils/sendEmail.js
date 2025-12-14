@@ -27,7 +27,7 @@ const sendEmail = async (options) => {
       to: options.email,
       subject: options.subject,
       text: options.message,
-      // html: options.html // Future support for HTML templates
+      html: options.html // HTML supported
     };
 
     // Send the email; catch errors to avoid bubbling up and breaking flows like registration

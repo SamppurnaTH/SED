@@ -6,6 +6,7 @@ const User = require('../models/User');
 const { protect, protectAdmin, authorizeRoles } = require('../middleware/authMiddleware');
 const { registerValidator, loginValidator, updatePasswordValidator, deleteUserValidator } = require('../middleware/validators');
 const sendEmail = require('../utils/sendEmail');
+const { getVerificationEmailTemplate } = require('../utils/emailTemplates');
 
 const router = express.Router();
 
@@ -26,17 +27,17 @@ router.get('/csrf-token', (req, res) => {
             });
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'CSRF token generated successfully',
             csrfToken
         });
     } catch (error) {
         console.error('Error in CSRF token endpoint:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Error generating CSRF token',
-            error: error.message 
+            error: error.message
         });
     }
 });
@@ -68,22 +69,9 @@ const sendVerificationEmail = async (user, req) => {
     const backendBaseUrl = `${req.protocol}://${req.get('host')}`;
     const frontendBaseUrl = req.headers.origin || 'http://localhost:3000';
     const verificationUrl = `${backendBaseUrl}/api/auth/verify-email/${verificationToken}`;
-    
-    const message = `
-        Hi ${user.name},
 
-        Thank you for registering with SCHOLASTIC A EDU. DEPOT!
-        
-        Please verify your email address by clicking the link below:
-        ${verificationUrl}
-        
-        This link will expire in 15 minutes.
-        
-        If you did not create an account, please ignore this email.
-        
-        Best Regards,
-        The SED Team
-    `;
+    const html = getVerificationEmailTemplate(user.name, verificationUrl);
+    const message = `Hi ${user.name},\n\nPlease verify your email address by clicking the link below:\n${verificationUrl}\n\nThis link will expire in 15 minutes.`;
 
     try {
         const result = await sendEmail({
@@ -107,7 +95,7 @@ router.post('/register/student', registerValidator, async (req, res) => {
     try {
         // Check if user already exists
         let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
-        
+
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -135,9 +123,9 @@ router.post('/register/student', registerValidator, async (req, res) => {
 
         // Create token (user won't be fully logged in until email is verified)
         const token = jwt.sign(
-            { 
-                userId: user._id, 
-                email: user.email, 
+            {
+                userId: user._id,
+                email: user.email,
                 role: user.role,
                 name: user.name
             },
@@ -169,9 +157,9 @@ router.post('/register/student', registerValidator, async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: error.message || 'Server error during registration' 
+            message: error.message || 'Server error during registration'
         });
     }
 });
@@ -180,7 +168,7 @@ router.post('/register/student', registerValidator, async (req, res) => {
 router.get('/verify-email/:token', async (req, res) => {
     try {
         const verificationToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-        
+
         const user = await User.findOne({
             emailVerificationToken: verificationToken,
             emailVerificationExpire: { $gt: Date.now() }
@@ -231,7 +219,7 @@ router.post('/resend-verification', async (req, res) => {
         res.status(200).json({ message: 'Verification email sent successfully.' });
 
     } catch (error) {
-         res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
@@ -239,60 +227,60 @@ router.post('/resend-verification', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', loginValidator, async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         console.log(`Login attempt for email: ${email}`);
-        
+
         // Find user by email (case-insensitive)
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             email: { $regex: new RegExp(`^${email}$`, 'i') }
         });
-        
+
         if (!user) {
             console.log(`No user found with email: ${email}`);
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.' 
+                message: 'Invalid email or password.'
             });
         }
-        
+
         console.log(`User found: ${user.email}, Role: ${user.role}, Verified: ${user.isVerified}`);
-        
+
         // Check if user is verified (only for Students)
         if (user.role === 'Student' && !user.isVerified) {
             console.log(`Unverified student account: ${user.email}`);
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Please verify your email address before logging in.', 
-                needsVerification: true 
+                message: 'Please verify your email address before logging in.',
+                needsVerification: true
             });
         }
 
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.' 
+                message: 'Invalid email or password.'
             });
         }
 
         // Create token with user data
-        const tokenPayload = { 
-            userId: user._id, 
-            email: user.email, 
+        const tokenPayload = {
+            userId: user._id,
+            email: user.email,
             role: user.role,
             name: user.name
         };
-        
+
         console.log('Creating JWT token with payload:', tokenPayload);
-        
+
         const token = jwt.sign(
             tokenPayload,
             getJwtSecret(),
             { expiresIn: '30d' }
         );
-        
+
         // Set HTTP-only cookie
         const cookieOptions = {
             httpOnly: true,
@@ -302,15 +290,15 @@ router.post('/login', loginValidator, async (req, res) => {
             path: '/',
             domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined
         };
-        
+
         console.log('Setting session cookie with options:', cookieOptions);
         res.cookie('session_token', token, cookieOptions);
 
         // Return user data (without password)
         const { password: _, ...userData } = user.toObject();
-        
+
         console.log(`Login successful for user: ${user.email}, role: ${user.role}`);
-        
+
         // Determine redirect path based on role
         let redirectTo = '/dashboard';
         if (user.role === 'Admin') {
@@ -318,7 +306,7 @@ router.post('/login', loginValidator, async (req, res) => {
         } else if (user.role === 'MarketingAgent') {
             redirectTo = '/marketing/dashboard';
         }
-        
+
         res.status(200).json({
             success: true,
             message: 'Login successful',
@@ -330,7 +318,7 @@ router.post('/login', loginValidator, async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'An error occurred during login. Please try again.',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -341,42 +329,42 @@ router.post('/login', loginValidator, async (req, res) => {
 // POST /api/auth/admin/login
 router.post('/admin/login', async (req, res) => {
     const { email, password } = req.body;
-    
+
     try {
         // Find admin/agent user by email (case-insensitive) and role
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             email: { $regex: new RegExp(`^${email}$`, 'i') },
             role: { $in: ['Admin', 'MarketingAgent'] } // Only allow admin and marketing agent roles
         });
 
         if (!user) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.' 
+                message: 'Invalid email or password.'
             });
         }
 
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ 
+            return res.status(401).json({
                 success: false,
-                message: 'Invalid email or password.' 
+                message: 'Invalid email or password.'
             });
         }
 
         // Create token with user data
         const token = jwt.sign(
-            { 
-                userId: user._id, 
-                email: user.email, 
+            {
+                userId: user._id,
+                email: user.email,
                 role: user.role,
                 name: user.name
             },
             getJwtSecret(),
             { expiresIn: '8h' } // Shorter session for admin
         );
-        
+
         // Set HTTP-only cookie with proper CORS settings
         const cookieOptions = {
             httpOnly: true,
@@ -386,25 +374,25 @@ router.post('/admin/login', async (req, res) => {
             path: '/',
             domain: process.env.NODE_ENV === 'production' ? 'your-production-domain.com' : 'localhost'
         };
-        
+
         // In development, we need to set secure to false for localhost
         if (process.env.NODE_ENV !== 'production') {
             cookieOptions.secure = false;
             cookieOptions.sameSite = 'lax';
             delete cookieOptions.domain; // Don't set domain in development
         }
-        
+
         res.cookie('admin_session_token', token, cookieOptions);
 
         // Return user data (without password)
         const { password: _, ...userData } = user.toObject();
-        
+
         // Determine redirect path based on role
         let redirectTo = '/admin/dashboard';
         if (user.role === 'MarketingAgent') {
             redirectTo = '/marketing/dashboard';
         }
-        
+
         res.status(200).json({
             success: true,
             message: user.role === 'Admin' ? 'Admin login successful' : 'Agent login successful',
@@ -416,9 +404,9 @@ router.post('/admin/login', async (req, res) => {
 
     } catch (error) {
         console.error('Admin login error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'An error occurred during login. Please try again.' 
+            message: 'An error occurred during login. Please try again.'
         });
     }
 });
@@ -437,10 +425,10 @@ router.post('/logout', (req, res) => {
     // Clear both session tokens
     res.cookie('session_token', '', cookieOptions);
     res.cookie('admin_session_token', '', cookieOptions);
-    
-    res.status(200).json({ 
-        success: true, 
-        message: 'Logged out successfully' 
+
+    res.status(200).json({
+        success: true,
+        message: 'Logged out successfully'
     });
 });
 
@@ -448,11 +436,11 @@ router.post('/logout', (req, res) => {
 router.get('/me', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId).select('-password -__v');
-        
+
         if (!user) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'User not found' 
+                message: 'User not found'
             });
         }
 
@@ -473,9 +461,9 @@ router.get('/me', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Get profile error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Server error while fetching user profile' 
+            message: 'Server error while fetching user profile'
         });
     }
 });
@@ -494,10 +482,10 @@ router.get('/me/student', protect, authorizeRoles('Student'), (req, res) => {
 router.get('/me/admin', protectAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId).select('-password -__v -resetPasswordToken -resetPasswordExpire');
-        
+
         if (!user) {
             console.warn(`Admin/Agent not found for ID: ${req.user.userId}`);
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
                 message: 'Admin/Agent not found',
                 code: 'ADMIN_NOT_FOUND'
@@ -513,7 +501,7 @@ router.get('/me/admin', protectAdmin, async (req, res) => {
                 code: 'INSUFFICIENT_PRIVILEGES'
             });
         }
-        
+
         // Prepare user data for response
         const userData = {
             _id: user._id,
@@ -525,20 +513,20 @@ router.get('/me/admin', protectAdmin, async (req, res) => {
             lastLogin: user.lastLogin,
             permissions: user.permissions || []
         };
-        
+
         // Update last login time
         user.lastLogin = new Date();
         await user.save({ validateBeforeSave: false });
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             success: true,
             user: userData,
             timestamp: new Date().toISOString()
         });
-        
+
     } catch (error) {
         console.error('Get admin profile error:', error);
-        
+
         // Handle specific errors
         if (error.name === 'CastError') {
             return res.status(400).json({
@@ -547,8 +535,8 @@ router.get('/me/admin', protectAdmin, async (req, res) => {
                 code: 'INVALID_ID_FORMAT'
             });
         }
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             success: false,
             message: 'An error occurred while fetching admin profile',
             code: 'SERVER_ERROR',
@@ -561,10 +549,10 @@ router.get('/me/admin', protectAdmin, async (req, res) => {
 router.get('/me/marketingagent', protectAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId).select('-password -__v -resetPasswordToken -resetPasswordExpire');
-        
+
         if (!user) {
             console.warn(`Marketing agent not found for ID: ${req.user.userId}`);
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
                 message: 'Marketing agent not found',
                 code: 'MARKETING_AGENT_NOT_FOUND'
@@ -580,7 +568,7 @@ router.get('/me/marketingagent', protectAdmin, async (req, res) => {
                 code: 'INSUFFICIENT_PRIVILEGES'
             });
         }
-        
+
         // Prepare user data for response
         const userData = {
             _id: user._id,
@@ -592,20 +580,20 @@ router.get('/me/marketingagent', protectAdmin, async (req, res) => {
             lastLogin: user.lastLogin,
             permissions: user.permissions || []
         };
-        
+
         // Update last login time
         user.lastLogin = new Date();
         await user.save({ validateBeforeSave: false });
-        
-        res.status(200).json({ 
+
+        res.status(200).json({
             success: true,
             user: userData,
             timestamp: new Date().toISOString()
         });
-        
+
     } catch (error) {
         console.error('Get marketing agent profile error:', error);
-        
+
         // Handle specific errors
         if (error.name === 'CastError') {
             return res.status(400).json({
@@ -614,8 +602,8 @@ router.get('/me/marketingagent', protectAdmin, async (req, res) => {
                 code: 'INVALID_ID_FORMAT'
             });
         }
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             success: false,
             message: 'An error occurred while fetching marketing agent profile',
             code: 'SERVER_ERROR',
@@ -628,10 +616,10 @@ router.get('/me/marketingagent', protectAdmin, async (req, res) => {
 router.post('/create-admin', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        
+
         // Check if user already exists
         let user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
-        
+
         if (user) {
             return res.status(400).json({
                 success: false,
@@ -656,7 +644,7 @@ router.post('/create-admin', async (req, res) => {
 
         // Return user data (without password)
         const { password: _, ...userData } = user.toObject();
-        
+
         res.status(201).json({
             success: true,
             message: 'Admin user created successfully',
@@ -696,13 +684,13 @@ router.get('/admin-users', async (req, res) => {
 router.post('/update-password', protect, authorizeRoles('Student'), updatePasswordValidator, async (req, res) => {
     const { email } = req.user;
     const { currentPassword, newPassword } = req.body;
-    
+
     try {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        
+
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Your current password is not correct.' });
@@ -721,7 +709,7 @@ router.post('/update-password', protect, authorizeRoles('Student'), updatePasswo
 // POST /api/auth/forgot-password (Public)
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
-    
+
     try {
         const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
         if (!user) {
@@ -770,7 +758,7 @@ router.post('/forgot-password', async (req, res) => {
 // POST /api/auth/reset-password/:resetToken (Public)
 router.post('/reset-password/:resetToken', async (req, res) => {
     const { password } = req.body;
-    
+
     try {
         const resetPasswordToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
 
@@ -782,9 +770,9 @@ router.post('/reset-password/:resetToken', async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: 'Invalid token' });
         }
-        
+
         if (password.length < 6) {
-             return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+            return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
         }
 
         // Set new password
@@ -808,7 +796,7 @@ router.delete('/delete-account', protect, authorizeRoles('Student'), deleteUserV
     try {
         // Find the user
         const user = await User.findOne({ email });
-        
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -830,14 +818,14 @@ router.delete('/delete-account', protect, authorizeRoles('Student'), deleteUserV
             sameSite: 'strict'
         });
 
-        res.status(200).json({ 
-            success: true, 
-            message: 'Your account has been successfully deleted.' 
+        res.status(200).json({
+            success: true,
+            message: 'Your account has been successfully deleted.'
         });
     } catch (error) {
         console.error('Delete account error:', error);
-        res.status(500).json({ 
-            message: 'Error deleting account', 
+        res.status(500).json({
+            message: 'Error deleting account',
             error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
         });
     }
@@ -846,10 +834,10 @@ router.delete('/delete-account', protect, authorizeRoles('Student'), deleteUserV
 // Temporary route to list admin users (for debugging only)
 router.get('/list-admins', async (req, res) => {
     try {
-        const admins = await User.find({ 
-            role: { $in: ['Admin', 'MarketingAgent'] } 
+        const admins = await User.find({
+            role: { $in: ['Admin', 'MarketingAgent'] }
         }).select('-password -__v');
-        
+
         res.status(200).json({
             success: true,
             count: admins.length,

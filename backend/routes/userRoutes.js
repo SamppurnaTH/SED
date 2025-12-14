@@ -159,7 +159,7 @@ router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, 
 // @desc    Get current user profile with detailed stats
 // @route   GET /api/user/profile
 // @access  Private
-router.get('/profile', protectStudent, async (req, res) => {
+router.get('/profile', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password -emailVerificationToken');
         if (!user) return res.status(404).json({ message: 'User not found' });
