@@ -342,12 +342,18 @@ app.use("/api/submissions", require('./routes/submissionsRoutes'));
 app.use("/api/success-stories", require('./routes/successStoryRoutes'));
 app.use("/api/health", healthCheckRoutes);
 
-app.get("/", (req, res) => {
-  res.send("SED Backend Running");
+// ---------------- STATIC ASSETS ----------------
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../client/dist', 'index.html'));
 });
 
 // ---------------- ERROR HANDLER ----------------
-app.use(notFound);
+app.use('/api', notFound);
 app.use(errorHandler);
 
 // ---------------- START SERVER ----------------
