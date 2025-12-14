@@ -124,7 +124,7 @@ router.post('/register/student', registerValidator, async (req, res) => {
         // Create token (user won't be fully logged in until email is verified)
         const token = jwt.sign(
             {
-                userId: user._id,
+                userId: user._id.toString(),
                 email: user.email,
                 role: user.role,
                 name: user.name
@@ -267,7 +267,7 @@ router.post('/login', loginValidator, async (req, res) => {
 
         // Create token with user data
         const tokenPayload = {
-            userId: user._id,
+            userId: user._id.toString(), // Ensure ID is string to prevent ObjectId issues
             email: user.email,
             role: user.role,
             name: user.name
@@ -356,7 +356,7 @@ router.post('/admin/login', async (req, res) => {
         // Create token with user data
         const token = jwt.sign(
             {
-                userId: user._id,
+                userId: user._id.toString(),
                 email: user.email,
                 role: user.role,
                 name: user.name

@@ -161,8 +161,12 @@ router.post('/saved-courses', protectStudent, userProfileValidators.saveCourse, 
 // @access  Private
 router.get('/profile', protect, async (req, res) => {
     try {
+        console.log(`[PROFILE_DEBUG] Fetching profile for user: ${req.user.userId}`);
         const user = await User.findById(req.user.userId).select('-password -emailVerificationToken');
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user) {
+            console.error(`[PROFILE_DEBUG] User not found for ID: ${req.user.userId}`);
+            return res.status(404).json({ message: 'User not found' });
+        }
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });

@@ -106,6 +106,8 @@ const initialSuccessStories = [
 ];
 
 const app = express();
+// Enable trust proxy for Render (required for rate limiting to work correctly behind load balancers)
+app.set('trust proxy', 1);
 const port = 5000;
 
 // ---------------- MONGODB CONNECTION ----------------
