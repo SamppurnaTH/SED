@@ -4,7 +4,7 @@ import { ViewState } from '../../App';
 import {
   LayoutDashboard, BookOpen, Users, GraduationCap, Settings, LogOut,
   Bell, Search, Plus, MoreVertical, TrendingUp, DollarSign,
-  Filter, Menu, X, Edit, Trash2, Archive, Mail, CheckCircle, AlertCircle, Download, Award,
+  Filter, Menu, X, Edit, Trash2, Archive, Mail, CheckCircle, AlertCircle, Download, Award, Check,
   Globe, Shield, CreditCard, Save, Lock, IndianRupee, PieChart, BarChart2, Activity, MousePointer, Clock, MapPin, ArrowUpRight,
   Phone, Calendar, FileText, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, Key, Ban
 } from 'lucide-react';
@@ -1121,12 +1121,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
 
                       if (filtered.length === 0) {
                         return (
-                          <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
-                              <Bell size={32} />
+                          <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-2xl border border-slate-100 shadow-sm mx-4 mb-4">
+                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 relative">
+                              <Bell size={32} className="text-slate-300" />
+                              <span className="absolute top-0 right-0 p-2 bg-white rounded-full">
+                                <div className="w-3 h-3 bg-brand-500 rounded-full animate-ping"></div>
+                              </span>
                             </div>
-                            <h4 className="text-lg font-semibold text-slate-900 mb-1">No notifications found</h4>
-                            <p className="text-slate-500 text-sm">You're all caught up!</p>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">No notifications yet</h3>
+                            <p className="text-slate-500 max-w-md mx-auto leading-relaxed mb-6">
+                              {notificationFilter === 'unread' ? "You've read all your important messages." : "When you get new assignments, course updates, or messages, they will appear here."}
+                            </p>
+                            {notificationFilter !== 'all' && (
+                              <Button variant="outline" onClick={() => setNotificationFilter('all')}>
+                                View all notifications
+                              </Button>
+                            )}
                           </div>
                         );
                       }
@@ -1134,20 +1144,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                       return (
                         <div className="space-y-3">
                           {filtered.map((notif, idx) => (
-                            <div key={idx} className={`p-4 rounded-xl border transition-all hover:shadow-sm ${!notif.read ? 'bg-white border-brand-100 shadow-sm' : 'bg-white/50 border-slate-200'}`}>
+                            <div key={idx} className={`group relative p-4 rounded-xl border transition-all hover:shadow-md hover:border-brand-200 ${!notif.read ? 'bg-white border-brand-100 shadow-sm' : 'bg-white/50 border-slate-200'}`}>
                               <div className="flex gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${!notif.read ? 'bg-blue-100 text-brand-600' : 'bg-slate-100 text-slate-500'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${!notif.read ? 'bg-blue-100 text-brand-600 group-hover:bg-brand-200' : 'bg-slate-100 text-slate-500'}`}>
                                   <Bell size={20} />
                                 </div>
-                                <div className="flex-1">
-                                  <div className="flex justify-between items-start">
-                                    <h5 className={`text-sm font-semibold ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>{notif.title}</h5>
-                                    <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
-                                      {new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h5 className={`text-sm font-semibold truncate pr-2 ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>{notif.title}</h5>
+                                    <span className="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">
+                                      {new Date(notif.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
-                                  <p className="text-sm text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
+                                  <p className="text-sm text-slate-600 mb-2 leading-relaxed line-clamp-2">{notif.message}</p>
+
+                                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {!notif.read && (
+                                      <button
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          await adminService.markNotificationAsRead(notif._id);
+                                          setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, read: true } : n));
+                                        }}
+                                        className="flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-800 transition-colors"
+                                      >
+                                        <Check size={14} /> Mark as read
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
+
+                                {!notif.read && (
+                                  <div className="absolute top-4 right-4 w-2 h-2 bg-brand-500 rounded-full"></div>
+                                )}
                               </div>
                             </div>
                           ))}

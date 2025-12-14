@@ -194,6 +194,17 @@ export const markAllNotificationsRead = async () => {
     }
 };
 
+// Mark single notification as read
+export const markNotificationAsRead = async (id: string) => {
+    try {
+        const response = await api.put(`/notifications/${id}/read`);
+        return response.data;
+    } catch (error) {
+        console.error('Error marking notification read:', error);
+        throw error;
+    }
+};
+
 export default {
     getDashboardStats,
     getRecentEnrollments,
@@ -208,5 +219,6 @@ export default {
     getSettings,
     updateSettings,
     getNotifications,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    markNotificationAsRead
 };
