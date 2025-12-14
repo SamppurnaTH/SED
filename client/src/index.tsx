@@ -2,13 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import './src/index.css';
-import App from './src/App';
-import { AuthProvider } from './src/contexts/AuthContext';
+import './index.css';
+import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+    throw new Error("Could not find root element to mount to");
 }
 
 // Use the Client ID from environment or fallback to the one from Google Cloud Console
@@ -19,13 +19,13 @@ console.log('Google OAuth Client ID:', GOOGLE_CLIENT_ID);
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
-    </GoogleOAuthProvider>
-  </React.StrictMode>
+    <React.StrictMode>
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            <BrowserRouter>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </BrowserRouter>
+        </GoogleOAuthProvider>
+    </React.StrictMode>
 );
