@@ -42,6 +42,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
    const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
    const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread'>('all');
    const [loading, setLoading] = useState(true);
+   const [error, setError] = useState<string | null>(null);
 
    React.useEffect(() => {
       const fetchData = async () => {
@@ -61,8 +62,9 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
             setCertificates(userCerts);
             setNotifications(userNotifications);
             setHasUnreadNotifications(userNotifications.some(n => !n.read));
-         } catch (error) {
-            console.error(error);
+         } catch (err: any) {
+            console.error("Dashboard data fetch error:", err);
+            setError(err.response?.data?.message || err.message || "Failed to load dashboard data");
          } finally {
             setLoading(false);
          }
@@ -81,8 +83,25 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
       );
    }
 
+   if (error) {
+      return (
+         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+               <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <X size={32} />
+               </div>
+               <h3 className="text-xl font-bold text-slate-900 mb-2">Error Loading Profile</h3>
+               <p className="text-slate-600 mb-6">{error}</p>
+               <Button onClick={() => window.location.reload()} className="w-full">
+                  Retry
+               </Button>
+            </div>
+         </div>
+      );
+   }
+
    // Safe profile check
-   if (!profile) return <div>Error loading profile</div>;
+   if (!profile) return <div>Error loading profile (No profile data)</div>;
 
 
    const SidebarItem = ({ id, icon: Icon, label }: { id: StudentTab, icon: any, label: string }) => (
