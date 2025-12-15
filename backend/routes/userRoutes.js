@@ -269,37 +269,52 @@ router.get('/schedule', protectStudent, async (req, res) => {
 
         const Assignment = require('../models/Assignment');
         const Enrollment = require('../models/Enrollment');
+        const Event = require('../models/Event'); // Import Event model
 
+        // 1. Get Enrollments to find relevant courses
         const enrollments = await Enrollment.find({ student: req.user.userId }).populate('course');
         const courseIds = enrollments.map(e => e.course._id);
 
+        // 2. Fetch Assignments (Deadlines)
         const assignments = await Assignment.find({
             courseId: { $in: courseIds },
-            deadline: { $gte: new Date() }
-        }).limit(5);
+            deadline: { $gte: new Date() } // Future deadlines
+        }).populate('courseId', 'title');
 
-        const schedule = assignments.map(a => ({
+        const assignmentEvents = assignments.map(a => ({
             id: a._id,
-            title: `Due: ${a.title}`,
+            title: `Assignment Due: ${a.title}`,
             type: 'Deadline',
             date: a.deadline,
-            time: '11:59 PM',
-            link: `/assignments/${a._id}`
+            time: '11:59 PM', // Default deadline time
+            link: `assignment://${a._id}`, // Special internal link for frontend handling if needed, or null
+            courseName: a.courseId ? a.courseId.title : 'Course'
         }));
 
-        // Add some dummy live classes if enrolled
-        if (enrollments.length > 0) {
-            schedule.push({
-                id: 'live-1',
-                title: 'Weekly Live Q&A',
-                type: 'Live Class',
-                date: new Date(Date.now() + 86400000), // Tomorrow
-                time: '10:00 AM',
-                link: '#'
-            });
-        }
+        // 3. Fetch Real Events (Live Classes, Webinars, etc.)
+        // Filter by events meant for everyone OR specific courses the user is enrolled in
+        const events = await Event.find({
+            $or: [
+                { courseId: { $in: courseIds } }, // Course-specific events
+                { courseId: null } // General events (holidays, global webinars)
+            ],
+            date: { $gte: new Date() }
+        }).sort({ date: 1 });
 
-        res.json(schedule);
+        const calendarEvents = events.map(e => ({
+            id: e._id,
+            title: e.title,
+            type: e.type,
+            date: e.date,
+            time: e.time || 'All Day',
+            link: e.link,
+            courseName: e.courseId ? 'Course Event' : 'General' // You could populate courseId if needed for name
+        }));
+
+        // 4. Merge and Sort
+        const fullSchedule = [...assignmentEvents, ...calendarEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        res.json(fullSchedule);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

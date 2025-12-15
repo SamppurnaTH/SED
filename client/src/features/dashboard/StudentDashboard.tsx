@@ -1021,8 +1021,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                               {assignments.map((assignment) => (
                                  <div key={assignment.id} className="p-6 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row gap-6 items-start sm:items-center group">
                                     <div className={`p-4 rounded-xl flex items-center justify-center flex-shrink-0 ${assignment.status === 'Pending' ? 'bg-amber-100 text-amber-600' :
-                                          assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-600' :
-                                             'bg-green-100 text-green-600'
+                                       assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-600' :
+                                          'bg-green-100 text-green-600'
                                        }`}>
                                        <FileText size={24} />
                                     </div>
@@ -1030,8 +1030,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                     <div className="flex-grow min-w-0">
                                        <div className="flex items-center gap-2 mb-1">
                                           <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide ${assignment.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                                                assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-700' :
-                                                   'bg-green-100 text-green-700'
+                                             assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-green-100 text-green-700'
                                              }`}>
                                              {assignment.status}
                                           </span>
@@ -1143,38 +1143,56 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                         <p className="text-slate-500">Upcoming classes, deadlines, and events.</p>
                      </div>
 
-                     <div className="space-y-4">
-                        {schedule.map((item) => (
-                           <div key={item.id} className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
-                              <div className="flex-shrink-0 w-16 h-16 bg-slate-50 rounded-xl border border-slate-100 flex flex-col items-center justify-center text-center">
-                                 <span className="text-xs text-slate-500 font-bold uppercase">{item.date.split(' ')[0].substring(0, 3)}</span>
-                                 <span className="text-xl font-bold text-slate-900">{item.date.match(/\d+/) || '12'}</span>
+                     <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                        {schedule.length > 0 ? schedule.map((item, index) => (
+                           <div key={item.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+
+                              {/* Icon Marker */}
+                              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-slate-100 group-hover:bg-brand-500 group-hover:text-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-colors z-10">
+                                 {item.type === 'Deadline' ? <Clock size={18} /> :
+                                    item.type === 'Live Class' ? <Video size={18} /> :
+                                       item.type === 'Meeting' ? <User size={18} /> :
+                                          <Calendar size={18} />}
                               </div>
 
-                              <div className="flex-grow">
-                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${item.type === 'Live Class' ? 'bg-red-100 text-red-700' :
-                                       item.type === 'Deadline' ? 'bg-orange-100 text-orange-700' :
-                                          'bg-blue-100 text-blue-700'
+                              {/* Content Card */}
+                              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all relative">
+                                 {/* Arrow for desktop */}
+                                 <div className="hidden md:block absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-b border-l border-slate-200 rotate-45 md:group-odd:left-auto md:group-odd:-right-2 md:group-odd:border-l-0 md:group-odd:border-r md:group-odd:border-t md:group-even:-left-2"></div>
+
+                                 <div className="flex items-center justify-between mb-2">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${item.type === 'Deadline' ? 'bg-amber-100 text-amber-700' :
+                                          item.type === 'Live Class' ? 'bg-red-100 text-red-700' :
+                                             'bg-blue-100 text-blue-700'
                                        }`}>
                                        {item.type}
                                     </span>
-                                    <span className="text-xs text-slate-400 flex items-center"><Clock size={12} className="mr-1" /> {item.time}</span>
+                                    <time className="font-mono text-xs text-slate-400">
+                                       {new Date(item.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} • {item.time}
+                                    </time>
                                  </div>
-                                 <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                                 {/* Helper to show instructor if available in mixed data */}
-                                 <p className="text-sm text-slate-500 mt-1">Instructor: {(item as any).instructor || 'Course Instructor'}</p>
-                              </div>
+                                 <h3 className="text-lg font-bold text-slate-900 mb-1">{item.title}</h3>
+                                 <p className="text-sm text-slate-500 mb-4">{(item as any).courseName || 'General Event'}</p>
 
-                              <div className="flex-shrink-0">
-                                 {item.type === 'Live Class' ? (
-                                    <Button className="bg-red-600 hover:bg-red-700 border-none"><Video size={16} className="mr-2" /> Join Class</Button>
-                                 ) : (
-                                    <Button variant="outline" onClick={() => setSelectedScheduleItem(item)}>View Details</Button>
+                                 {item.link && (
+                                    <Button size="sm" variant="outline" className="w-full sm:w-auto h-8 text-xs" onClick={() => window.open(item.link, '_blank')}>
+                                       {item.type === 'Live Class' ? 'Join Now' : 'View Details'}
+                                    </Button>
                                  )}
                               </div>
                            </div>
-                        ))}
+                        )) : (
+                           <div className="relative z-10 bg-white rounded-xl border border-slate-200 p-12 text-center max-w-2xl mx-auto shadow-sm">
+                              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                 <Calendar size={40} className="text-slate-300" />
+                              </div>
+                              <h3 className="text-xl font-bold text-slate-900 mb-2">No Upcoming Events</h3>
+                              <p className="text-slate-500 mb-6">Your schedule is currently clear. Relax or catch up on course materials.</p>
+                              <Button variant="outline" onClick={() => setActiveTab('my-courses')}>
+                                 Browse Courses
+                              </Button>
+                           </div>
+                        )}
                      </div>
                   </div>
                )}
