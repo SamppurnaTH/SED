@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 // Layout Components
 import { Header, Footer, Hero } from './components/layout';
 // Common Components
@@ -29,13 +30,57 @@ const HomePage = ({ onNavigate }: { onNavigate: (view: ViewState) => void }) => 
 );
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>('home');
+  const navigate = ReactRouterDOM.useNavigate();
+  const location = ReactRouterDOM.useLocation();
+
+  // Helper to convert path to view state
+  const getViewFromPath = (path: string): ViewState => {
+    // Handle specific routes
+    if (path === '/') return 'home';
+    if (path.startsWith('/verify-email')) return 'verify-email';
+
+    const cleanPath = path.substring(1); // Remove leading slash
+
+    // Check if path matches any valid ViewState
+    const validViews: ViewState[] = [
+      'courses', 'services', 'service-detail', 'about', 'contact',
+      'get-started', 'login', 'forgot-password', 'reset-password',
+      'instructor', 'admin', 'student', 'student-dashboard',
+      'instructor-dashboard', 'privacy', 'terms', 'success-stories',
+      'notifications', 'connection-test'
+    ];
+
+    if (validViews.includes(cleanPath as ViewState)) {
+      return cleanPath as ViewState;
+    }
+
+    return 'home';
+  };
+
+  // Helper to convert view state to path
+  const getPathFromView = (view: ViewState): string => {
+    if (view === 'home') return '/';
+    return `/${view}`;
+  };
+
+  const [currentView, setCurrentView] = useState<ViewState>(() => getViewFromPath(location.pathname));
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
 
-  // Scroll to top when view changes
+  // Sync state with URL when location changes (e.g. back button)
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentView]);
+    const newView = getViewFromPath(location.pathname);
+    if (newView !== currentView) {
+      setCurrentView(newView);
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
+
+  // Handle navigation by updating URL
+  const handleNavigate = (view: ViewState) => {
+    if (view !== currentView) {
+      navigate(getPathFromView(view));
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
@@ -57,43 +102,43 @@ const App: React.FC = () => {
             <>
               {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) &&
                 !['admin', 'student', 'instructor-dashboard'].includes(currentView) &&
-                <Header onNavigate={setCurrentView} currentView={currentView} />}
+                <Header onNavigate={handleNavigate} currentView={currentView} />}
 
               {['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) && (
                 <div className="absolute top-0 left-0 w-full p-6 z-50 lg:hidden">
                   <div className="flex items-center justify-between">
-                    <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('home'); }} className="text-2xl font-display font-bold text-brand-600 tracking-tight">
+                    <a href="#" onClick={(e) => { e.preventDefault(); handleNavigate('home'); }} className="text-2xl font-display font-bold text-brand-600 tracking-tight">
                       SED<span className="text-slate-800">.</span>
                     </a>
-                    <button onClick={() => setCurrentView('home')} className="text-slate-500 hover:text-slate-900">Back to Home</button>
+                    <button onClick={() => handleNavigate('home')} className="text-slate-500 hover:text-slate-900">Back to Home</button>
                   </div>
                 </div>
               )}
 
               <main className="flex-grow">
-                {currentView === 'home' && <HomePage onNavigate={setCurrentView} />}
-                {currentView === 'courses' && <CoursesPage onNavigate={setCurrentView} onViewInstructor={() => { }} />}
-                {currentView === 'services' && <ServicesPage onNavigate={setCurrentView} onViewService={(id) => { setSelectedServiceId(id); setCurrentView('service-detail'); }} />}
-                {currentView === 'service-detail' && <ServiceDetailPage serviceId={selectedServiceId} onNavigate={setCurrentView} />}
-                {currentView === 'about' && <AboutPage onNavigate={setCurrentView} />}
+                {currentView === 'home' && <HomePage onNavigate={handleNavigate} />}
+                {currentView === 'courses' && <CoursesPage onNavigate={handleNavigate} onViewInstructor={() => { }} />}
+                {currentView === 'services' && <ServicesPage onNavigate={handleNavigate} onViewService={(id) => { setSelectedServiceId(id); handleNavigate('service-detail'); }} />}
+                {currentView === 'service-detail' && <ServiceDetailPage serviceId={selectedServiceId} onNavigate={handleNavigate} />}
+                {currentView === 'about' && <AboutPage onNavigate={handleNavigate} />}
                 {currentView === 'contact' && <ContactPage />}
-                {currentView === 'get-started' && <GetStartedPage onNavigate={setCurrentView} />}
-                {currentView === 'login' && <LoginPage onNavigate={setCurrentView} />}
-                {currentView === 'forgot-password' && <ForgotPasswordPage onNavigate={setCurrentView} />}
-                {currentView === 'reset-password' && <ResetPasswordPage onNavigate={setCurrentView} />}
-                {currentView === 'admin' && <AdminDashboard onNavigate={setCurrentView} />}
-                {currentView === 'student' && <StudentDashboard onNavigate={setCurrentView} />}
-                {currentView === 'instructor-dashboard' && <InstructorDashboard onNavigate={setCurrentView} />}
-                {currentView === 'privacy' && <PrivacyPolicyPage onNavigate={setCurrentView} />}
-                {currentView === 'terms' && <TermsOfServicePage onNavigate={setCurrentView} />}
-                {currentView === 'success-stories' && <SuccessStoriesPage onNavigate={setCurrentView} />}
-                {currentView === 'notifications' && <NotificationsPage onNavigate={setCurrentView} />}
+                {currentView === 'get-started' && <GetStartedPage onNavigate={handleNavigate} />}
+                {currentView === 'login' && <LoginPage onNavigate={handleNavigate} />}
+                {currentView === 'forgot-password' && <ForgotPasswordPage onNavigate={handleNavigate} />}
+                {currentView === 'reset-password' && <ResetPasswordPage onNavigate={handleNavigate} />}
+                {currentView === 'admin' && <AdminDashboard onNavigate={handleNavigate} />}
+                {currentView === 'student' && <StudentDashboard onNavigate={handleNavigate} />}
+                {currentView === 'instructor-dashboard' && <InstructorDashboard onNavigate={handleNavigate} />}
+                {currentView === 'privacy' && <PrivacyPolicyPage onNavigate={handleNavigate} />}
+                {currentView === 'terms' && <TermsOfServicePage onNavigate={handleNavigate} />}
+                {currentView === 'success-stories' && <SuccessStoriesPage onNavigate={handleNavigate} />}
+                {currentView === 'notifications' && <NotificationsPage onNavigate={handleNavigate} />}
                 {currentView === 'connection-test' && <ConnectionTestPage />}
               </main>
 
               {!['get-started', 'login', 'forgot-password', 'reset-password'].includes(currentView) &&
                 !['admin', 'student', 'instructor-dashboard'].includes(currentView) &&
-                <Footer onNavigate={setCurrentView} />}
+                <Footer onNavigate={handleNavigate} />}
 
               {!['admin', 'student', 'instructor-dashboard'].includes(currentView) && <Chatbot />}
             </>
