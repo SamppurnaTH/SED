@@ -8,7 +8,7 @@ import { ViewState } from '../../App';
 import {
    LayoutDashboard, BookOpen, Calendar, FileText, Award, Settings, LogOut,
    Bell, Search, PlayCircle, CheckCircle, Clock, User, Menu, X, ChevronRight,
-   Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle, Check, Trash2
+   Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle, Check, Trash2, Upload, AlertCircle
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { userService, UserProfile, Assignment, ScheduleEvent, Certificate, Notification } from '../../services/userService';
@@ -29,6 +29,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
    const [viewingCourseId, setViewingCourseId] = useState<string | number | null>(null);
    const [selectedScheduleItem, setSelectedScheduleItem] = useState<any>(null);
    const [submissionLoading, setSubmissionLoading] = useState<string | null>(null); // assignment ID being submitted
+   const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+   const [selectedAssignmentForSubmission, setSelectedAssignmentForSubmission] = useState<Assignment | null>(null);
 
    const [profile, setProfile] = useState<UserProfile | null>(null);
    const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
@@ -121,18 +123,26 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
       </button>
    );
 
-   const handleSubmitAssignment = async (assignmentId: string) => {
-      const text = prompt("Please enter your submission text (or URL):");
-      if (!text) return;
+   const handleOpenSubmissionModal = (assignment: Assignment) => {
+      setSelectedAssignmentForSubmission(assignment);
+      setIsSubmissionModalOpen(true);
+   };
+
+   const handleSubmitAssignment = async (text: string, fileUrl?: string) => {
+      if (!selectedAssignmentForSubmission) return;
 
       try {
-         setSubmissionLoading(assignmentId);
-         await userService.submitAssignment(assignmentId, text);
+         setSubmissionLoading(selectedAssignmentForSubmission.id);
+         await userService.submitAssignment(selectedAssignmentForSubmission.id, text, fileUrl);
+
+         // Show success (could be a toast, using alert for now but cleaner)
          alert("Assignment submitted successfully!");
 
          // Refresh assignments
          const newAssignments = await userService.getAssignments();
          setAssignments(newAssignments);
+         setIsSubmissionModalOpen(false);
+         setSelectedAssignmentForSubmission(null);
       } catch (err) {
          console.error("Failed to submit assignment", err);
          alert("Failed to submit assignment. Please try again.");
@@ -203,7 +213,75 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
             </div>
          )}
 
-         {/* Notifications Modal */}
+
+         {/* Submission Modal */}
+         {isSubmissionModalOpen && selectedAssignmentForSubmission && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                     <div>
+                        <h3 className="text-xl font-bold text-slate-900">Submit Assignment</h3>
+                        <p className="text-sm text-slate-500 mt-1">{selectedAssignmentForSubmission.title}</p>
+                     </div>
+                     <button
+                        onClick={() => setIsSubmissionModalOpen(false)}
+                        className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                     >
+                        <X size={24} />
+                     </button>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3 text-blue-800 text-sm">
+                        <AlertCircle size={20} className="flex-shrink-0" />
+                        <p>Ensure your submission meets the requirements. Once submitted, it will be sent to your instructor for grading.</p>
+                     </div>
+
+                     <form id="submission-form" onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        handleSubmitAssignment(formData.get('text') as string, formData.get('fileUrl') as string);
+                     }}>
+                        <div className="space-y-4">
+                           <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Text / Link Submission</label>
+                              <textarea
+                                 name="text"
+                                 required
+                                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none transition-shadow"
+                                 rows={4}
+                                 placeholder="Enter your answer, reflection, or link to your work here..."
+                              ></textarea>
+                           </div>
+
+                           <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-1">Attachment (Optional)</label>
+                              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer group">
+                                 <Upload size={32} className="mx-auto text-slate-400 group-hover:text-brand-500 mb-2 transition-colors" />
+                                 <p className="text-sm text-slate-600 font-medium">Click to upload file</p>
+                                 <p className="text-xs text-slate-400 mt-1">PDF, DOCX, ZIP up to 10MB</p>
+                                 {/* Hidden input for visual demo */}
+                                 <input type="file" className="hidden" />
+                              </div>
+                           </div>
+                        </div>
+                     </form>
+                  </div>
+
+                  <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                     <Button variant="outline" onClick={() => setIsSubmissionModalOpen(false)} type="button">Cancel</Button>
+                     <Button type="submit" form="submission-form" disabled={!!submissionLoading} className="min-w-[120px]">
+                        {submissionLoading ? (
+                           <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div> Sending...</>
+                        ) : (
+                           <>Submit Work</>
+                        )}
+                     </Button>
+                  </div>
+               </div>
+            </div>
+         )}
+
          {isNotificationsModalOpen && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
                <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -923,68 +1001,94 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
 
                {/* Assignments Tab */}
                {activeTab === 'assignments' && (
-                  <div className="max-w-4xl mx-auto animate-fade-in-up">
+                  <div className="max-w-5xl mx-auto animate-fade-in-up">
                      <div className="flex justify-between items-center mb-8">
                         <div>
                            <h2 className="text-2xl font-bold text-slate-900">Assignments</h2>
                            <p className="text-slate-500">Track your tasks, quizzes, and project submissions.</p>
                         </div>
+                        {/* Filter placeholder */}
+                        <div className="flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                           <button className="px-3 py-1.5 text-xs font-bold bg-brand-50 text-brand-700 rounded-md shadow-sm">All</button>
+                           <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700">Pending</button>
+                           <button className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700">Graded</button>
+                        </div>
                      </div>
 
                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <table className="w-full">
-                           <thead className="bg-slate-50 border-b border-slate-200 text-left">
-                              <tr>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Assignment Name</th>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Course</th>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Due Date</th>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Grade</th>
-                                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
-                              </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-100">
+                        {assignments.length > 0 ? (
+                           <div className="divide-y divide-slate-100">
                               {assignments.map((assignment) => (
-                                 <tr key={assignment.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4">
-                                       <div className="font-bold text-slate-900 text-sm">{assignment.title}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">{assignment.course}</td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">{assignment.dueDate}</td>
-                                    <td className="px-6 py-4">
-                                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${assignment.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
-                                          assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-700' :
-                                             'bg-green-100 text-green-700'
-                                          }`}>
-                                          {assignment.status}
-                                       </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm font-bold text-slate-900">{assignment.grade}</td>
-                                    <td className="px-6 py-4 text-right">
+                                 <div key={assignment.id} className="p-6 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row gap-6 items-start sm:items-center group">
+                                    <div className={`p-4 rounded-xl flex items-center justify-center flex-shrink-0 ${assignment.status === 'Pending' ? 'bg-amber-100 text-amber-600' :
+                                          assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-600' :
+                                             'bg-green-100 text-green-600'
+                                       }`}>
+                                       <FileText size={24} />
+                                    </div>
+
+                                    <div className="flex-grow min-w-0">
+                                       <div className="flex items-center gap-2 mb-1">
+                                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide ${assignment.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                                assignment.status === 'Submitted' ? 'bg-blue-100 text-blue-700' :
+                                                   'bg-green-100 text-green-700'
+                                             }`}>
+                                             {assignment.status}
+                                          </span>
+                                          {assignment.status === 'Pending' && new Date(assignment.dueDate) < new Date() && (
+                                             <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-red-100 text-red-700">Overdue</span>
+                                          )}
+                                       </div>
+                                       <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-brand-600 transition-colors">{assignment.title}</h3>
+                                       <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                                          <span className="flex items-center gap-1"><BookOpen size={14} className="text-slate-400" /> {assignment.course}</span>
+                                          <span className="flex items-center gap-1"><Clock size={14} className="text-slate-400" /> Due: {new Date(assignment.dueDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                       </div>
+                                    </div>
+
+                                    <div className="flex-shrink-0 flex flex-col items-end gap-2 w-full sm:w-auto">
                                        {assignment.status === 'Pending' && (
                                           <Button
-                                             size="sm"
-                                             variant="outline"
-                                             onClick={() => handleSubmitAssignment(assignment.id)}
-                                             disabled={submissionLoading === assignment.id}
+                                             onClick={() => handleOpenSubmissionModal(assignment)}
+                                             className="w-full sm:w-auto shadow-md shadow-brand-500/20"
                                           >
-                                             {submissionLoading === assignment.id ? 'Submitting...' : 'Submit'}
+                                             Submit Assignment
                                           </Button>
                                        )}
                                        {assignment.status === 'Submitted' && (
-                                          <span className="text-xs text-slate-400 italic">Under Review</span>
+                                          <div className="text-right">
+                                             <p className="text-sm font-bold text-slate-700 mb-1">Submitted</p>
+                                             <p className="text-xs text-slate-400">Waiting for review</p>
+                                          </div>
                                        )}
                                        {assignment.status === 'Graded' && (
-                                          <Button size="sm" variant="ghost" className="text-brand-600">View Feedback</Button>
+                                          <div className="flex items-center gap-4">
+                                             <div className="text-right">
+                                                <p className="text-2xl font-bold text-green-600">{assignment.grade}<span className="text-sm text-slate-400 font-normal">/100</span></p>
+                                                <p className="text-xs text-green-700 font-medium">Great Work!</p>
+                                             </div>
+                                             <Button variant="outline" size="sm">Feedback</Button>
+                                          </div>
                                        )}
-                                    </td>
-                                 </tr>
+                                    </div>
+                                 </div>
                               ))}
-                           </tbody>
-                        </table>
-                        {assignments.length === 0 && (
-                           <div className="p-8 text-center text-slate-500">
-                              No assignments found.
+                           </div>
+                        ) : (
+                           <div className="py-20 px-6 text-center flex flex-col items-center justify-center">
+                              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 relative">
+                                 <FileText size={48} className="text-slate-300" />
+                                 <div className="absolute top-0 right-0 p-2 bg-white rounded-full shadow-sm">
+                                    <CheckCircle size={20} className="text-green-500" />
+                                 </div>
+                              </div>
+                              <h3 className="text-xl font-bold text-slate-900 mb-2">You're all caught up!</h3>
+                              <p className="text-slate-500 max-w-md mx-auto mb-8">
+                                 No pending assignments found. Check back later or review your completed work.
+                              </p>
+                              <Button onClick={() => setActiveTab('my-courses')} variant="outline">
+                                 Continue Learning
+                              </Button>
                            </div>
                         )}
                      </div>
