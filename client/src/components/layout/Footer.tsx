@@ -1,6 +1,7 @@
 import React from 'react';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import { ViewState } from '../../App';
+import { CertificationBadge } from '../ui/CertificationBadge';
 
 interface FooterProps {
   onNavigate?: (view: ViewState) => void;
@@ -92,6 +93,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               >
                 <Linkedin size={20} />
               </a>
+            </div>
+
+            {/* ISO Certification Badge */}
+            <div className="mt-6 pt-6 border-t border-slate-800">
+              <CertificationBadge variant="minimal" className="opacity-80 hover:opacity-100 transition-opacity" />
             </div>
           </div>
 

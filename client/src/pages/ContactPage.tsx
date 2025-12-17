@@ -1,9 +1,11 @@
 
+
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { FAQ_ITEMS } from '../constants';
 import api from '../lib/api';
+import { CertificationBadge } from '../components/ui/CertificationBadge';
 
 export const ContactPage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -141,6 +143,11 @@ export const ContactPage: React.FC = () => {
                     <p className="text-slate-600 text-sm">Saturday: 10:00 AM - 2:00 PM</p>
                   </div>
                 </div>
+              </div>
+
+              {/* ISO Certification Badge - Trust Signal */}
+              <div className="pt-6 border-t border-slate-200">
+                <CertificationBadge variant="compact" />
               </div>
             </div>
 

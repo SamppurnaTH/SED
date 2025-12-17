@@ -1,8 +1,10 @@
 
+
 import React from 'react';
 import { ArrowRight, PlayCircle, Star } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { ViewState } from '../../App';
+import { CertificationBadge } from '../ui/CertificationBadge';
 
 interface HeroProps {
   onNavigate: (view: ViewState) => void;
@@ -22,9 +24,14 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
         <div className="animate-fade-in-up z-10">
-          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-slate-900 leading-[1.1] mb-8 tracking-tight">
+          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-slate-900 leading-[1.1] mb-6 tracking-tight">
             Launch Your <span className="text-brand-600">IT Career</span> with Confidence
           </h1>
+
+          {/* ISO Certification Badge - Trust Signal */}
+          <div className="flex justify-center mb-6">
+            <CertificationBadge variant="minimal" />
+          </div>
 
           <p className="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto">
             Master the skills that drive the future. Industry-aligned curriculum, hands-on projects, and expert mentorship designed to get you hired.

@@ -1,10 +1,12 @@
 
+
 import React, { useState } from 'react';
 import { CheckCircle, Mail, Lock, User, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { register as registerService, googleLogin as googleLoginService, AuthResponse } from '../services/authService';
 import { Button } from '../components/ui/Button';
 import { ViewState } from '../App';
+import { CertificationBadge } from '../components/ui/CertificationBadge';
 
 interface FormData {
   name: string;
@@ -209,6 +211,11 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ onNavigate }) =>
                 <p className="text-xs text-slate-400">Software Engineer at TechNova</p>
               </div>
             </div>
+          </div>
+
+          {/* ISO Certification Badge */}
+          <div className="mt-6">
+            <CertificationBadge variant="compact" />
           </div>
         </div>
       </div>
