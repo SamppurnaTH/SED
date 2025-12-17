@@ -669,7 +669,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                     type="text"
                     required
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Venu Thota"
                     value={newInstructor.name}
                     onChange={e => setNewInstructor({ ...newInstructor, name: e.target.value })}
                   />
