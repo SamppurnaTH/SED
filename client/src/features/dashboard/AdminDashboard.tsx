@@ -1560,15 +1560,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                   <h3 className="font-bold text-slate-900 text-lg">Instructors</h3>
                   <p className="text-slate-500 text-sm">Manage your teaching staff and their assignments.</p>
                 </div>
-                <div className="flex gap-3">
-                  <div className="relative">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search instructors..."
-                      className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 outline-none"
-                    />
-                  </div>
+                <div>
                   <Button onClick={() => setIsAddInstructorModalOpen(true)}>
                     <Plus size={18} className="mr-2" /> Add Instructor
                   </Button>
