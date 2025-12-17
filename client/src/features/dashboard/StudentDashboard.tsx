@@ -8,10 +8,11 @@ import { ViewState } from '../../App';
 import {
    LayoutDashboard, BookOpen, Calendar, FileText, Award, Settings, LogOut,
    Bell, Search, PlayCircle, CheckCircle, Clock, User, Menu, X, ChevronRight,
-   Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle, Check, Trash2, Upload, AlertCircle
+   Video, Download, Star, TrendingUp, ArrowRight, MoreHorizontal, ChevronLeft, Lock, HelpCircle, Check, Trash2, Upload, AlertCircle, ShoppingCart
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { userService, UserProfile, Assignment, ScheduleEvent, Certificate, Notification } from '../../services/userService';
+import { fetchCourses, CourseSummary } from '../../services/courseService';
 
 interface StudentDashboardProps {
    onNavigate: (view: ViewState) => void;
@@ -45,6 +46,11 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
    const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread'>('all');
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState<string | null>(null);
+
+   // Course Browsing Modal State
+   const [isCourseBrowsingOpen, setIsCourseBrowsingOpen] = useState(false);
+   const [availableCourses, setAvailableCourses] = useState<CourseSummary[]>([]);
+   const [coursesLoading, setCoursesLoading] = useState(false);
 
    React.useEffect(() => {
       const fetchData = async () => {
@@ -153,6 +159,155 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
 
    return (
       <div className="min-h-screen bg-slate-50 flex relative">
+
+         {/* Course Browsing Modal */}
+         {isCourseBrowsingOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[90vh]">
+                  {/* Header */}
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-brand-600 to-blue-500 text-white flex-shrink-0">
+                     <div>
+                        <h3 className="text-2xl font-bold flex items-center gap-2">
+                           <BookOpen size={28} />
+                           Browse Courses
+                        </h3>
+                        <p className="text-brand-100 mt-1">Explore our catalog and start learning today</p>
+                     </div>
+                     <button
+                        onClick={() => setIsCourseBrowsingOpen(false)}
+                        className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                     >
+                        <X size={28} />
+                     </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto p-6 bg-slate-50">
+                     {coursesLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                           <div className="text-center">
+                              <div className="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                              <p className="text-slate-600 font-medium">Loading courses...</p>
+                           </div>
+                        </div>
+                     ) : availableCourses.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                           <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                              <BookOpen size={40} className="text-slate-400" />
+                           </div>
+                           <h4 className="text-xl font-bold text-slate-900 mb-2">No courses available</h4>
+                           <p className="text-slate-500 max-w-md">Check back later for new courses.</p>
+                        </div>
+                     ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                           {availableCourses.map((course) => (
+                              <div
+                                 key={course._id}
+                                 className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col group"
+                              >
+                                 {/* Course Image */}
+                                 <div className="h-48 relative overflow-hidden bg-slate-100">
+                                    <img
+                                       src={course.image || '/placeholder.jpg'}
+                                       alt={course.title}
+                                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                    <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-bold text-brand-600 shadow-md">
+                                       {course.price}
+                                    </div>
+                                    {course.level && (
+                                       <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-white">
+                                          {course.level}
+                                       </div>
+                                    )}
+                                 </div>
+
+                                 {/* Course Info */}
+                                 <div className="p-5 flex-1 flex flex-col">
+                                    <div className="flex items-center gap-2 mb-2">
+                                       {course.category && (
+                                          <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-1 rounded">
+                                             {course.category}
+                                          </span>
+                                       )}
+                                    </div>
+
+                                    <h4 className="font-bold text-slate-900 text-lg mb-2 line-clamp-2 group-hover:text-brand-600 transition-colors">
+                                       {course.title}
+                                    </h4>
+
+                                    {course.description && (
+                                       <p className="text-sm text-slate-600 mb-4 line-clamp-2 flex-1">
+                                          {course.description}
+                                       </p>
+                                    )}
+
+                                    {/* Course Meta */}
+                                    <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 pb-4 border-b border-slate-100">
+                                       {course.lessons && (
+                                          <div className="flex items-center gap-1">
+                                             <PlayCircle size={14} />
+                                             <span>{course.lessons} Lessons</span>
+                                          </div>
+                                       )}
+                                       {course.duration && (
+                                          <div className="flex items-center gap-1">
+                                             <Clock size={14} />
+                                             <span>{course.duration}</span>
+                                          </div>
+                                       )}
+                                       {course.rating && (
+                                          <div className="flex items-center gap-1">
+                                             <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                             <span>{course.rating}</span>
+                                          </div>
+                                       )}
+                                    </div>
+
+                                    {/* Instructor */}
+                                    {course.instructor && (
+                                       <div className="flex items-center gap-2 mb-4">
+                                          <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold text-sm">
+                                             {course.instructor.charAt(0)}
+                                          </div>
+                                          <div>
+                                             <p className="text-xs text-slate-500">Instructor</p>
+                                             <p className="text-sm font-semibold text-slate-900">{course.instructor}</p>
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {/* Enroll Button */}
+                                    <Button
+                                       className="w-full group-hover:shadow-lg transition-shadow"
+                                       onClick={() => {
+                                          // Here you would implement enrollment logic
+                                          alert(`Enrolling in: ${course.title}`);
+                                          setIsCourseBrowsingOpen(false);
+                                       }}
+                                    >
+                                       <ShoppingCart size={16} className="mr-2" />
+                                       Enroll Now
+                                    </Button>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 border-t border-slate-100 bg-white flex justify-between items-center flex-shrink-0">
+                     <p className="text-sm text-slate-600">
+                        Showing <span className="font-bold text-slate-900">{availableCourses.length}</span> courses
+                     </p>
+                     <Button variant="outline" onClick={() => setIsCourseBrowsingOpen(false)}>
+                        Close
+                     </Button>
+                  </div>
+               </div>
+            </div>
+         )}
 
          {/* Schedule Detail Modal */}
          {selectedScheduleItem && (
@@ -776,7 +931,18 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
                                  </div>
                                  <h3 className="text-xl font-bold text-slate-900 mb-2">No courses found</h3>
                                  <p className="text-slate-500 max-w-md mb-6">You are not enrolled in any courses yet. Explore our catalog to start learning today.</p>
-                                 <Button onClick={() => onNavigate('courses')}>
+                                 <Button onClick={async () => {
+                                    setIsCourseBrowsingOpen(true);
+                                    setCoursesLoading(true);
+                                    try {
+                                       const courses = await fetchCourses();
+                                       setAvailableCourses(courses);
+                                    } catch (err) {
+                                       console.error('Failed to fetch courses:', err);
+                                    } finally {
+                                       setCoursesLoading(false);
+                                    }
+                                 }}>
                                     Browse Courses
                                  </Button>
                               </div>
@@ -1162,8 +1328,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({ onNavigate }
 
                                  <div className="flex items-center justify-between mb-2">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${item.type === 'Deadline' ? 'bg-amber-100 text-amber-700' :
-                                          item.type === 'Live Class' ? 'bg-red-100 text-red-700' :
-                                             'bg-blue-100 text-blue-700'
+                                       item.type === 'Live Class' ? 'bg-red-100 text-red-700' :
+                                          'bg-blue-100 text-blue-700'
                                        }`}>
                                        {item.type}
                                     </span>
