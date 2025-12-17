@@ -253,6 +253,7 @@ app.use((req, res, next) => {
     '/api/auth/login',
     '/api/auth/register',
     '/api/auth/google-login',
+    '/api/contact', // Public contact form
     '/api/health', // Add health check endpoint
     '/api/ai/chat' // Exclude AI chat endpoint from CSRF
   ];
@@ -361,6 +362,7 @@ app.use("/api/assignments", require('./routes/assignmentRoutes'));
 app.use("/api/certificates", require('./routes/certificateRoutes'));
 app.use("/api/submissions", require('./routes/submissionsRoutes'));
 app.use("/api/success-stories", require('./routes/successStoryRoutes'));
+app.use("/api/contact", contactRoutes);
 app.use("/api/health", healthCheckRoutes);
 
 // ---------------- STATIC ASSETS ----------------

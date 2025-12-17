@@ -151,15 +151,23 @@ export const ContactPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Placeholder Map */}
-            <div className="w-full h-64 bg-slate-200 rounded-xl overflow-hidden relative">
+            {/* Google Maps */}
+            <div className="w-full h-64 bg-slate-200 rounded-xl overflow-hidden relative group cursor-pointer">
               <img
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                 alt="Office Map"
-                className="w-full h-full object-cover opacity-60"
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-50 transition-opacity"
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button variant="secondary" className="shadow-lg">View on Google Maps</Button>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=50-50-33%2F2%2F1+Shop+No.1+2nd+Floor+Priyadarshini+Complex+Gurudwara+Junction+Visakhapatnam+530013"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="secondary" className="shadow-lg hover:shadow-xl transition-shadow">
+                    View on Google Maps
+                  </Button>
+                </a>
               </div>
             </div>
           </div>
