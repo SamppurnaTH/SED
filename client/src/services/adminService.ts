@@ -1,22 +1,9 @@
-import axios from 'axios';
-
-
+import api from '../lib/api';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
     return localStorage.getItem('token');
 };
-
-// Configure axios instance with auth
-const API_URL = 'http://localhost:5000/api';
-
-// Configure axios instance with auth
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
 
 // Add token to requests
 api.interceptors.request.use((config) => {

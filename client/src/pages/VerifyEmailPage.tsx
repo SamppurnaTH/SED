@@ -43,13 +43,14 @@ export default function VerifyEmailPage() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/auth/verify-email/${token}`);
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${apiBaseUrl}/auth/verify-email/${token}`);
         const data: VerifyResponse = await response.json();
 
         if (response.ok) {
           setStatus('success');
           setMessage('✓ Email verified successfully! Redirecting to login...');
-          
+
           // Redirect to login after 2 seconds
           setTimeout(() => {
             navigate('/login');
