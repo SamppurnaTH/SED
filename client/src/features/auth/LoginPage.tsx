@@ -121,6 +121,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           Back to Home
         </button>
 
+        {/* Logo for Desktop Login Panel */}
+        <div
+          className="absolute top-8 left-8 flex items-center gap-3 cursor-pointer lg:flex hidden"
+          onClick={() => onNavigate('home')}
+        >
+          <img src="/logo.png" alt="SED" className="h-10 w-auto" />
+          <span className="text-xl font-display font-bold text-slate-900">SED</span>
+        </div>
+
         <div className="max-w-md mx-auto w-full">
           <div className="text-center lg:text-left mb-10">
             <h2 className="text-3xl font-display font-bold text-slate-900 mb-2">Log in to your account</h2>
