@@ -147,22 +147,45 @@ router.get('/instructors', protect, authorize('admin'), async (req, res) => {
     }
 });
 
-// @route   GET /api/admin/courses
+// @route   GET /api/admin/dashboard/courses
 // @desc    Get all courses
 // @access  Private/Admin
 router.get('/courses', protect, authorize('admin'), async (req, res) => {
     try {
+        console.log('[ADMIN COURSES] Fetching all courses...');
+        console.log('[ADMIN COURSES] User:', req.user);
+
         const courses = await Course.find()
-            .populate('instructor', 'name email')
             .sort({ createdAt: -1 });
+
+        console.log(`[ADMIN COURSES] Found ${courses.length} courses`);
+
+        // Transform course data to match frontend expectations
+        const transformedCourses = courses.map(course => ({
+            id: course._id.toString(),
+            title: course.name,  // Map 'name' to 'title'
+            image: course.imageUrl,  // Map 'imageUrl' to 'image'
+            instructor: course.instructor?.name || 'Unknown',
+            category: course.category || 'Uncategorized',
+            price: course.pricing?.amount || 0,
+            duration: course.duration || 'N/A',
+            students: 0,  // TODO: Calculate from enrollments
+            rating: 0,  // TODO: Calculate from reviews
+            slug: course.slug,
+            description: course.description || '',
+            level: 'Beginner',  // Default level
+            lessons: course.curriculum?.length || 0
+        }));
+
+        console.log('[ADMIN COURSES] Sample transformed course:', transformedCourses[0]);
 
         res.json({
             success: true,
-            count: courses.length,
-            data: courses
+            count: transformedCourses.length,
+            data: transformedCourses
         });
     } catch (error) {
-        console.error('Error fetching courses:', error);
+        console.error('[ADMIN COURSES] Error fetching courses:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching courses'

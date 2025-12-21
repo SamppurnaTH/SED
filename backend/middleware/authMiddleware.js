@@ -94,8 +94,11 @@ const protectAdmin = (req, res, next) => {
     // First verify the token
     protect(req, res, () => {
         try {
-            // Check if user has admin or marketing agent role
-            if (req.user && ['Admin', 'MarketingAgent'].includes(req.user.role)) {
+            // Check if user has admin or marketing agent role (case-insensitive)
+            const userRole = req.user?.role?.toLowerCase();
+            const allowedRoles = ['admin', 'marketingagent'];
+
+            if (req.user && allowedRoles.includes(userRole)) {
                 console.log(`Admin access granted to: ${req.user.email} (${req.user.role})`);
                 return next();
             }
@@ -121,7 +124,7 @@ const protectAdmin = (req, res, next) => {
 // For backward compatibility
 const protectStudent = (req, res, next) => {
     protect(req, res, () => {
-        if (req.user?.role === 'Student') {
+        if (req.user?.role?.toLowerCase() === 'student') {
             next();
         } else {
             res.status(403).json({ message: 'Forbidden: Student access required' });
@@ -131,7 +134,8 @@ const protectStudent = (req, res, next) => {
 
 const protectInstructor = (req, res, next) => {
     protect(req, res, () => {
-        if (req.user?.role === 'Instructor' || req.user?.role === 'Admin') {
+        const userRole = req.user?.role?.toLowerCase();
+        if (userRole === 'instructor' || userRole === 'admin') {
             next();
         } else {
             res.status(403).json({ message: 'Forbidden: Instructor access required' });
@@ -139,7 +143,7 @@ const protectInstructor = (req, res, next) => {
     });
 };
 
-// New authorize function for lowercase roles
+// New authorize function for case-insensitive role checking
 const authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -149,7 +153,11 @@ const authorize = (...roles) => {
             });
         }
 
-        if (!roles.includes(req.user.role)) {
+        // Convert both user role and allowed roles to lowercase for case-insensitive comparison
+        const userRole = req.user.role?.toLowerCase();
+        const allowedRoles = roles.map(role => role.toLowerCase());
+
+        if (!allowedRoles.includes(userRole)) {
             return res.status(403).json({
                 success: false,
                 message: `Role (${req.user.role}) is not allowed to access this resource`

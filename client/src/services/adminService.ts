@@ -106,6 +106,17 @@ export const createCourse = async (courseData: any) => {
     }
 };
 
+// Update an existing course
+export const updateCourse = async (slug: string, courseData: any) => {
+    try {
+        const response = await api.put(`/courses/${slug}`, courseData);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating course:', error);
+        throw error;
+    }
+};
+
 // Bulk delete courses
 export const deleteCourses = async (ids: (string | number)[]) => {
     try {

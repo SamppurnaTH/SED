@@ -51,6 +51,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     lessons: 0
   });
 
+  // Edit Course Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any | null>(null);
+
   // Student Detail Modal State
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
@@ -339,6 +343,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     } catch (err: any) {
       console.error("Failed to add course:", err);
       alert("Failed to add course: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleEditCourse = (course: any) => {
+    // Load course data into editing state
+    setEditingCourse({
+      ...course,
+      price: course.price?.toString() || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingCourse) return;
+
+    const errors: string[] = [];
+
+    if (!editingCourse.title?.trim()) errors.push("Course Title is required");
+    if (!editingCourse.description?.trim()) errors.push("Description is required");
+    if (!editingCourse.instructor?.trim()) errors.push("Instructor is required");
+    if (!editingCourse.duration?.trim()) errors.push("Duration is required");
+
+    // Validate Price
+    if (!editingCourse.price?.toString().trim()) {
+      errors.push("Price is required");
+    } else {
+      const priceNum = parseFloat(editingCourse.price.toString().replace(/[^0-9.]/g, ''));
+      if (isNaN(priceNum) || priceNum < 0) {
+        errors.push("Price must be a valid positive number");
+      }
+    }
+
+    if (errors.length > 0) {
+      alert("Validation Failed:\n\n• " + errors.join("\n• "));
+      return;
+    }
+
+    try {
+      const coursePayload = {
+        title: editingCourse.title,
+        description: editingCourse.description,
+        instructor: editingCourse.instructor,
+        category: editingCourse.category,
+        price: parseFloat(editingCourse.price.toString().replace(/[^0-9.]/g, '')) || 0,
+        duration: editingCourse.duration,
+        level: editingCourse.level || 'Beginner',
+        image: editingCourse.image,
+        lessons: editingCourse.lessons || 0
+      };
+
+      await adminService.updateCourse(editingCourse.slug, coursePayload);
+
+      // Refresh courses
+      const coursesResponse = await adminService.getAllCourses();
+      if (coursesResponse.success) {
+        setCoursesList(coursesResponse.data);
+      }
+
+      alert(`Course "${editingCourse.title}" updated successfully!`);
+      setIsEditModalOpen(false);
+      setEditingCourse(null);
+    } catch (err: any) {
+      console.error("Failed to update course:", err);
+      alert("Failed to update course: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -644,6 +714,137 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
               <div className="flex justify-end gap-3 pt-8 mt-2">
                 <Button type="button" variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
                 <Button type="submit">Create Course</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Course Modal */}
+      {isEditModalOpen && editingCourse && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 flex-shrink-0">
+              <h3 className="text-xl font-bold text-slate-900">Edit Course</h3>
+              <button onClick={() => { setIsEditModalOpen(false); setEditingCourse(null); }} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCourse} className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Course Title <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="e.g. Advanced React Patterns"
+                    value={editingCourse.title || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, title: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Description <span className="text-red-500">*</span></label>
+                  <textarea
+                    required
+                    rows={3}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none resize-none"
+                    placeholder="Brief summary of the course content..."
+                    value={editingCourse.description || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, description: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Instructor <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    placeholder="Instructor Name"
+                    value={editingCourse.instructor || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, instructor: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                  <select
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
+                    value={editingCourse.category || 'Development'}
+                    onChange={e => setEditingCourse({ ...editingCourse, category: e.target.value })}
+                  >
+                    {COURSE_CATEGORIES.filter(cat => cat !== 'All').map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Price <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="₹19,999"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    value={editingCourse.price || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, price: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Duration <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 4 Weeks"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    value={editingCourse.duration || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, duration: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Level</label>
+                  <select
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white"
+                    value={editingCourse.level || 'Beginner'}
+                    onChange={e => setEditingCourse({ ...editingCourse, level: e.target.value })}
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Lessons</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    value={editingCourse.lessons || 0}
+                    onChange={e => setEditingCourse({ ...editingCourse, lessons: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+                    value={editingCourse.image || ''}
+                    onChange={e => setEditingCourse({ ...editingCourse, image: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-8 mt-2">
+                <Button type="button" variant="outline" onClick={() => { setIsEditModalOpen(false); setEditingCourse(null); }}>Cancel</Button>
+                <Button type="submit">Update Course</Button>
               </div>
             </form>
           </div>
@@ -1220,12 +1421,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center font-bold text-xs">
-                                  {item.student.charAt(0)}
+                                  {item.studentName?.charAt(0) || '?'}
                                 </div>
-                                <span className="font-medium text-slate-900 text-sm">{item.student}</span>
+                                <span className="font-medium text-slate-900 text-sm">{item.studentName || 'Unknown'}</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{item.course}</td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{item.courseName || 'Unknown Course'}</td>
                             <td className="px-6 py-4 text-sm text-slate-500">{item.date}</td>
                             <td className="px-6 py-4">
                               <StatusBadge status={item.status} />
@@ -1524,7 +1725,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                         <td className="px-6 py-4 text-sm text-slate-600">{course.students.toLocaleString()}</td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Edit Course">
+                            <button
+                              onClick={() => handleEditCourse(course)}
+                              className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                              title="Edit Course"
+                            >
                               <Edit size={18} />
                             </button>
                             <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Course" onClick={() => {
