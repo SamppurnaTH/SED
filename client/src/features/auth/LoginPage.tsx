@@ -25,10 +25,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     try {
       // Login returns user data with role information
       const userData = await login(email, password);
-      // Navigate to appropriate dashboard based on user role
-      if (userData.role === 'Admin') {
+
+      // Navigate to appropriate dashboard based on user role (case-insensitive comparison)
+      const role = userData.role?.toLowerCase();
+
+      if (role === 'admin') {
         onNavigate('admin');
-      } else if (userData.role === 'Instructor') {
+      } else if (role === 'instructor') {
         onNavigate('instructor-dashboard');
       } else {
         onNavigate('student');
