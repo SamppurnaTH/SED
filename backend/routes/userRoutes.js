@@ -176,7 +176,7 @@ router.get('/profile', protect, async (req, res) => {
 // @desc    Get enrolled courses with full details
 // @route   GET /api/user/enrolled-courses
 // @access  Private
-router.get('/enrolled-courses', protectStudent, async (req, res) => {
+router.get('/enrolled-courses', protect, async (req, res) => {
     try {
         const Enrollment = require('../models/Enrollment');
         // Fetch enrollments and populate course details
@@ -212,7 +212,7 @@ router.get('/enrolled-courses', protectStudent, async (req, res) => {
 // @desc    Get user assignments
 // @route   GET /api/user/assignments
 // @access  Private
-router.get('/assignments', protectStudent, async (req, res) => {
+router.get('/assignments', protect, async (req, res) => {
     try {
         const Assignment = require('../models/Assignment');
         const StudentSubmission = require('../models/StudentSubmission');
@@ -261,7 +261,7 @@ router.get('/assignments', protectStudent, async (req, res) => {
 // @desc    Get user schedule/events
 // @route   GET /api/user/schedule
 // @access  Private
-router.get('/schedule', protectStudent, async (req, res) => {
+router.get('/schedule', protect, async (req, res) => {
     try {
         // Mocking some schedule data based on assignments and enrolled courses for now
         // In a real app, this would query a Schedule/Event model
@@ -323,7 +323,7 @@ router.get('/schedule', protectStudent, async (req, res) => {
 // @desc    Get user certificates
 // @route   GET /api/user/certificates
 // @access  Private
-router.get('/certificates', protectStudent, async (req, res) => {
+router.get('/certificates', protect, async (req, res) => {
     try {
         const Certificate = require('../models/Certificate');
         const certificates = await Certificate.find({ userId: req.user.userId })
@@ -346,7 +346,7 @@ router.get('/certificates', protectStudent, async (req, res) => {
 // @desc    Get user notifications
 // @route   GET /api/user/notifications
 // @access  Private
-router.get('/notifications', protectStudent, async (req, res) => {
+router.get('/notifications', protect, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
         const notifications = await Notification.find({ userId: req.user.userId })
@@ -361,7 +361,7 @@ router.get('/notifications', protectStudent, async (req, res) => {
 // @desc    Mark notification as read
 // @route   PUT /api/user/notifications/:id/read
 // @access  Private
-router.put('/notifications/:id/read', protectStudent, async (req, res) => {
+router.put('/notifications/:id/read', protect, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
         const notification = await Notification.findOneAndUpdate(
@@ -379,7 +379,7 @@ router.put('/notifications/:id/read', protectStudent, async (req, res) => {
 // @desc    Delete notification
 // @route   DELETE /api/user/notifications/:id
 // @access  Private
-router.delete('/notifications/:id', protectStudent, async (req, res) => {
+router.delete('/notifications/:id', protect, async (req, res) => {
     try {
         const Notification = require('../models/Notification');
         const notification = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.user.userId });
